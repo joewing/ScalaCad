@@ -3,7 +3,7 @@ package net.joewing.csg.io
 import java.io.{FileOutputStream, OutputStream, PrintStream}
 
 import net.joewing.csg._
-import net.joewing.csg.primitives.Renderable
+import net.joewing.csg.primitives.{Primitive, ThreeDimensional}
 
 class StlAsciiFileWriter(os: OutputStream) extends StlWriter {
 
@@ -37,6 +37,6 @@ class StlAsciiFileWriter(os: OutputStream) extends StlWriter {
 object StlAsciiFileWriter {
   def write(stl: Stl, os: OutputStream): Unit = new StlAsciiFileWriter(os).write(stl)
   def write(stl: Stl, fileName: String): Unit = write(stl, new FileOutputStream(fileName))
-  def write(r: Renderable, os: OutputStream): Unit = write(Stl("", r.render.allFacets), os)
-  def write(r: Renderable, fileName: String): Unit = write(Stl(fileName, r.render.allFacets), fileName)
+  def write(r: Primitive[ThreeDimensional], os: OutputStream): Unit = write(Stl("", r.render.allFacets), os)
+  def write(r: Primitive[ThreeDimensional], fileName: String): Unit = write(Stl(fileName, r.render.allFacets), fileName)
 }

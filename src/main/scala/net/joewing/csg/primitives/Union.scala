@@ -2,12 +2,13 @@ package net.joewing.csg.primitives
 
 import net.joewing.csg.BSPTree
 
-case class Union(objs: Renderable*) extends Operation {
+case class Union[D <: Dim](a: Primitive[D], b: Primitive[D]) extends Primitive[D] {
   def render: BSPTree = {
-    objs.tail.map(_.render).foldLeft(objs.head.render) { (a, b) =>
-      val a1 = a.clip(b)
-      val b1 = b.clip(a1).inverted.clip(a1).inverted
-      a1.merge(b1)
-    }
+    val a1 = a.render
+    val b1 = b.render
+    val a2 = a1.clip(b1)
+    val b2 = b1.clip(a2).inverted.clip(a2).inverted
+    a2.merge(b2)
   }
 }
+

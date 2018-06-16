@@ -24,7 +24,6 @@ case class Cylinder(length: Double, r1: Double, r2: Double, sides: Int) extends 
   }
 
   def render: BSPTree = {
-
     val top = renderEnd(r1, 0).map(_.flip)
     val bottom = renderEnd(r2, length)
 
