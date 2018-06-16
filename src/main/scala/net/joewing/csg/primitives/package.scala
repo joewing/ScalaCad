@@ -16,5 +16,7 @@ package object primitives {
     def unary_-(): Renderable = Invert(left)
 
     def translate(x: Double = 0, y: Double = 0, z: Double = 0): Renderable = Translate(left, x, y, z)
+    def rotate(x: Double = 0, y: Double = 0, z: Double = 0): Renderable = Rotate(left, x, y, z)
+    def scale(x: Double = 1, y: Double = 1, z: Double = 1): Renderable = Scale(left, x, z, y)
   }
 }
