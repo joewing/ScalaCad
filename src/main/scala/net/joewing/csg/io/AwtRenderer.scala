@@ -6,7 +6,7 @@ import java.awt.{Color, Graphics2D}
 
 import javax.swing.{ImageIcon, JFrame, JLabel, WindowConstants}
 import net.joewing.csg._
-import net.joewing.csg.primitives.Cylinder
+import net.joewing.csg.primitives.Renderable
 import net.joewing.csg.projection.{OrthographicProjection, Projection}
 
 class AwtRenderer(stl: Stl) {
@@ -136,4 +136,5 @@ class AwtRenderer(stl: Stl) {
 
 object AwtRenderer {
   def show(stl: Stl): Unit = new AwtRenderer(stl).show()
+  def show(r: Renderable): Unit = show(Stl("ScalaCad", r.render.allFacets))
 }

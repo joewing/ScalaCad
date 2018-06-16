@@ -96,7 +96,7 @@ class BSPTreeSpec extends FunSpec with Matchers {
     }
   }
 
-  describe("invert") {
+  describe("inverted") {
     it("inverts the space") {
       val facet = Facet(Vertex(1, 0, 0), Vertex(0, 1, 0), Vertex(1, 1, 0))
       val bsp = BSPTree(Seq(facet)).inverted
@@ -108,58 +108,6 @@ class BSPTreeSpec extends FunSpec with Matchers {
     it("does nothing when performed twice") {
       val bsp = BSPTree(obj)
       bsp.inverted.inverted shouldBe bsp
-    }
-  }
-
-  describe("union") {
-    it("combines adjacent facets") {
-      val t1 = Facet(Vertex(1, 0, 0), Vertex(0, 1, 0), Vertex(1, 1, 0))
-      val bsp1 = BSPTree(Seq(t1))
-
-      val t2 = Facet(Vertex(0, 1, 0), Vertex(1, 0, 0), Vertex(0, 0, 0))
-      val bsp2 = BSPTree(Seq(t2))
-
-      val result = bsp1.union(bsp2)
-      result.plane shouldBe Plane(Vertex(0, 0, -1), 0.0)
-      result.facets shouldBe Seq(t1)
-    }
-
-    it("combines overlapping facets") {
-      val t1 = Facet(Vertex(1, 0, 0), Vertex(0, 1, 0), Vertex(1, 1, 0))
-      val bsp = BSPTree(Seq(t1))
-
-      val result = bsp.union(bsp)
-      result.plane shouldBe Plane(Vertex(0, 0, -1), 0.0)
-      result.facets shouldBe Seq(t1)
-    }
-
-    it("should return itself when unioned with itself") {
-      val bsp = BSPTree(obj)
-      bsp.union(bsp) shouldBe bsp
-    }
-  }
-
-  describe("intersect") {
-    val bsp = BSPTree(obj)
-
-    it("should return itself when intersected with itself") {
-      bsp.intersect(bsp) shouldBe bsp
-    }
-
-    it("should return nothing when intersected with itself inverted") {
-      bsp.intersect(bsp.inverted).allFacets shouldBe Seq.empty
-    }
-  }
-
-  describe("subtract") {
-    val bsp = BSPTree(obj)
-
-    it("should return nothing when subtracted from itself") {
-      bsp.subtract(bsp).allFacets shouldBe Seq.empty
-    }
-
-    it("should return itself when subtracted from its inverse") {
-      bsp.subtract(bsp.inverted) shouldBe bsp
     }
   }
 }

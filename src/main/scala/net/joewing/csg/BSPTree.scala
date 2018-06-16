@@ -17,7 +17,7 @@ final case class BSPTree(
 
   override def toString: String = allFacets.map(_.toString).mkString("\n")
 
-  // Return those facets not contained in this BSPTree.
+  // Clip facets to this BSPTree.
   def clipFacets(fs: Seq[Facet]): Seq[Facet] = {
     val result = plane.split(fs)
     val frontFacets = result.front ++ result.coFront
@@ -33,7 +33,7 @@ final case class BSPTree(
     filteredFront ++ filteredBack
   }
 
-  // Remove polygons from this BSPTree that are in `other`.
+  // Return this BSPTree clipped to the other BSPTree.
   def clip(other: BSPTree): BSPTree = BSPTree(
     plane = plane,
     facets = other.clipFacets(facets),
@@ -68,26 +68,6 @@ final case class BSPTree(
   }
 
   def merge(other: BSPTree): BSPTree = insert(other.allFacets)
-
-  def union(other: BSPTree): BSPTree = {
-    val a = clip(other)
-    val b = other.clip(a).inverted.clip(a).inverted
-    a.merge(b)
-  }
-
-  def intersect(other: BSPTree): BSPTree = {
-    val a = inverted
-    val b = other.clip(a).inverted
-    val a2 = a.clip(b)
-    val b2 = b.clip(a2)
-    a2.merge(b2).inverted
-  }
-
-  def subtract(other: BSPTree): BSPTree = {
-    val a = inverted.clip(other)
-    val b = other.clip(a).inverted.clip(a).inverted
-    a.merge(b).inverted
-  }
 }
 
 object BSPTree {
