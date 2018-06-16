@@ -3,6 +3,8 @@ package net.joewing.csg.primitives
 import net.joewing.csg.{Facet, Vertex, BSPTree}
 
 case class Sphere(r: Double = 1, slices: Int = 8, stacks: Int = 8) extends Solid {
+  require(slices >= 3, s"Need at least 3 slices, got $slices")
+  require(stacks >= 2, s"Need at least 2 stacks, got $stacks")
 
   private def vertex(x: Double, y: Double): Vertex = {
     val theta = x * 2.0 * math.Pi / slices
