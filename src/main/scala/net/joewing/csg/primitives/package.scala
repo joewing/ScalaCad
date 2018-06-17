@@ -13,7 +13,9 @@ package object primitives {
 
   def sphere(r: Double, slices: Int = 8, stacks: Int = 8): Sphere = Sphere(r, slices, stacks)
 
-  implicit class RichRenderable[D <: Dim](left: Primitive[D]) {
+  trait RichPrimitive[D <: Dim] {
+    val left: Primitive[D]
+
     def |(right: Primitive[D]): Union[D] = Union(left, right)
     def &(right: Primitive[D]): Intersection[D] = Intersection(left, right)
     def -(right: Primitive[D]): Difference[D] = Difference(left, right)
@@ -25,6 +27,17 @@ package object primitives {
     def scale(x: Double = 1, y: Double = 1, z: Double = 1): Scale[D] = Scale(left, x, z, y)
 
     def centered: Translate[D] = translate((left.maxBound + left.minBound) / -2)
+  }
+
+  implicit class RichSolid(val left: Primitive[ThreeDimensional]) extends RichPrimitive[ThreeDimensional] {
+  }
+
+  implicit class RichSurface(val left: Primitive[TwoDimensional]) extends RichPrimitive[TwoDimensional] {
+    def extrude(
+      length: Double,
+      rotation: Double = 0.0,
+      slices: Int = 1
+    ): LinearExtrude = LinearExtrude(left, length, rotation, slices)
   }
 
 }
