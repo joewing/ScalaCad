@@ -10,9 +10,9 @@ case class Circle(r: Double, sides: Int) extends Primitive[TwoDimensional] {
         val angle1 = i * math.Pi * 2.0 / sides
         val angle2 = (i + 1) * math.Pi * 2.0 / sides
         Facet(
-          Vertex(0, 0, 0),
+          Vertex(r * math.cos(angle2), r * math.sin(angle2), 0),
           Vertex(r * math.cos(angle1), r * math.sin(angle1), 0),
-          Vertex(r * math.cos(angle2), r * math.sin(angle2), 0)
+          Vertex(0, 0, 0)
         )
       }
     )
