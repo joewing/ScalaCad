@@ -1,7 +1,5 @@
 package net.joewing.csg
 
-import net.joewing.csg.primitives._
-
 final case class BSPTree(
   plane: Plane,
   facets: Seq[Facet],

@@ -100,12 +100,12 @@ class AwtRenderer(stl: Stl) {
       val dy = e.getY - lasty
       lastx = e.getX
       lasty = e.getY
-      if ((e.getModifiersEx & (InputEvent.BUTTON2_DOWN_MASK | InputEvent.CTRL_DOWN_MASK)) == 0) {
+      if ((e.getModifiersEx & (InputEvent.BUTTON3_DOWN_MASK | InputEvent.CTRL_DOWN_MASK)) == 0) {
         rotationX += math.Pi * dx / 180.0
         rotationY += math.Pi * dy / 180.0
       } else {
-        positionX += dx / 2.0
-        positionY += dy / 2.0
+        positionX += dx
+        positionY += dy
       }
       render()
     }
