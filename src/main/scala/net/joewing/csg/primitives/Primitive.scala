@@ -12,7 +12,3 @@ trait Primitive[T <: Dim] {
   def render: BSPTree
 }
 
-trait Surface extends Primitive[TwoDimensional]
-
-trait Solid extends Primitive[ThreeDimensional]
-

@@ -2,7 +2,7 @@ package net.joewing.csg.primitives
 
 import net.joewing.csg.{BSPTree, Facet, Vertex}
 
-case class Cylinder(length: Double, r1: Double, r2: Double, sides: Int) extends Solid {
+case class Cylinder(length: Double, r1: Double, r2: Double, sides: Int) extends Primitive[ThreeDimensional] {
   require(sides > 2, s"Cylinder must have at least 3 sides, got $sides")
 
   private val angle = 2.0 * math.Pi / sides

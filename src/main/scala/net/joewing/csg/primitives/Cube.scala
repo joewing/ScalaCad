@@ -2,7 +2,7 @@ package net.joewing.csg.primitives
 
 import net.joewing.csg.{BSPTree, Facet, Vertex}
 
-case class Cube(width: Double, height: Double, depth: Double) extends Solid {
+case class Cube(width: Double, height: Double, depth: Double) extends Primitive[ThreeDimensional] {
   def render: BSPTree = {
     val facets = Seq(
       Facet(Vertex(0, 0, 0), Vertex(0, height, 0), Vertex(width, height, 0)),
