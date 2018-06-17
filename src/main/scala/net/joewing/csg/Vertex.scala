@@ -49,9 +49,11 @@ case class Vertex(x1: Double, x2: Double, x3: Double) {
 
   def *(s: Double): Vertex = Vertex(x1 * s, x2 * s, x3 * s)
 
+  def /(s: Double): Vertex = Vertex(x1 / s, x2 / s, x3 / s)
+
   def length: Double = math.sqrt(dot(this))
 
-  def unit: Vertex = this * (1.0 / length)
+  def unit: Vertex = this / length
 
   def interpolate(other: Vertex, d: Double): Vertex = this + (other - this) * d
 

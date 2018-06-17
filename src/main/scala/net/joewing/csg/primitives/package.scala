@@ -20,8 +20,11 @@ package object primitives {
     def unary_-(): Invert[D] = Invert(left)
 
     def translate(x: Double = 0, y: Double = 0, z: Double = 0): Translate[D] = Translate(left, x, y, z)
+    def translate(v: Vertex): Translate[D] = translate(v.x1, v.x2, v.x3)
     def rotate(x: Double = 0, y: Double = 0, z: Double = 0): Rotate[D] = Rotate(left, x, y, z)
     def scale(x: Double = 1, y: Double = 1, z: Double = 1): Scale[D] = Scale(left, x, z, y)
+
+    def centered: Translate[D] = translate((left.maxBound + left.minBound) / -2)
   }
 
 }
