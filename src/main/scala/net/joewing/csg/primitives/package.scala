@@ -6,6 +6,10 @@ package object primitives {
 
   def rectangle(width: Double, height: Double): Rectangle = Rectangle(width, height)
 
+  def square(width: Double): Rectangle = rectangle(width, width)
+
+  def circle(r: Double, sides: Int = 8): Circle = Circle(r, sides)
+
   def cube(width: Double, height: Double, depth: Double): Cube = Cube(width, height, depth)
 
   def cylinder(length: Double, bottom: Double, top: Double, sides: Int): Cylinder =
