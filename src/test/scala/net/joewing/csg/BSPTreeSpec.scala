@@ -2,6 +2,8 @@ package net.joewing.csg
 
 import org.scalatest.{FunSpec, Matchers}
 
+import scala.collection.mutable.ArrayBuffer
+
 class BSPTreeSpec extends FunSpec with Matchers {
 
   val obj = Seq(
@@ -37,12 +39,6 @@ class BSPTreeSpec extends FunSpec with Matchers {
       val outside = Facet(Vertex(2, 0, 0), Vertex(0, 2, 0), Vertex(2, 2, 0))
       val inside = Facet(Vertex(0.25, 0.25, 0.1), Vertex(0, 0.25, 0.2), Vertex(0.25, 0.25, 0.3))
       bsp.clipFacets(Seq(inside, outside)) shouldBe Seq(inside)
-    }
-
-    it("removes facets that are not contained in the inverted BSPTree") {
-      val outside = Facet(Vertex(2, 0, 0), Vertex(0, 2, 0), Vertex(2, 2, 0))
-      val inside = Facet(Vertex(0.25, 0.25, 0.1), Vertex(0, 0.25, 0.2), Vertex(0.25, 0.25, 0.3))
-      bsp.inverted.clipFacets(Seq(inside, outside)) shouldBe Seq(outside)
     }
 
     it("splits facets that span the object") {
