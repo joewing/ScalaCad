@@ -66,6 +66,11 @@ final case class BSPTree(
   }
 
   def merge(other: BSPTree): BSPTree = insert(other.allFacets)
+
+  def simplified: BSPTree = {
+    val i = clip(this).inverted
+    i.clip(i).inverted
+  }
 }
 
 object BSPTree {
