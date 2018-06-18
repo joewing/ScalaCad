@@ -19,13 +19,12 @@ final case class BSPTree(
   def clipFacets(fs: Seq[Facet]): Seq[Facet] = {
     val result = plane.split(fs)
     val frontFacets = result.front ++ result.coFront
-    val backFacets = result.back ++ result.coBack
     val filteredFront = front match {
       case Some(f) => f.clipFacets(frontFacets)
       case None    => frontFacets
     }
     val filteredBack = back match {
-      case Some(b) => b.clipFacets(backFacets)
+      case Some(b) => b.clipFacets(result.back ++ result.coBack)
       case None    => Seq.empty
     }
     filteredFront ++ filteredBack
@@ -75,8 +74,8 @@ final case class BSPTree(
 
 object BSPTree {
   def apply(facets: Seq[Facet]): BSPTree = {
-    require(facets.nonEmpty)
-    val plane = Plane(facets.head)
+    val midpoint = facets.size >> 1
+    val plane = Plane(facets(midpoint))
     val result = plane.split(facets)
     val f = if (result.front.nonEmpty) Some(apply(result.front)) else None
     val b = if (result.back.nonEmpty) Some(apply(result.back)) else None

@@ -12,27 +12,27 @@ final case class Plane(normal: Vertex, w: Double) {
     else Plane.Coplanar
   }
 
-  def triangulate(vertices: Seq[Vertex]): Seq[Facet] = {
-    vertices.tail.sliding(2).collect { case Seq(a, b) =>
-      Facet(vertices.head, a, b)
-    }.toList
+  private def triangulate(vertices: Seq[Vertex], result: scala.collection.mutable.ArrayBuffer[Facet]): Unit = {
+    vertices.tail.sliding(2).foreach { case Seq(a, b) =>
+      result += Facet(vertices.head, a, b)
+    }
   }
 
-  def splitFacet(facet: Facet): Plane.SplitResult = {
+  def splitFacet(facet: Facet, result: Plane.SplitResult): Unit = {
     val types = facet.vertices.map(classify)
     types.foldLeft(Plane.Coplanar)(_ | _) match {
       case pt if pt == Plane.Coplanar =>
         if (normal.dot(facet.normal) > 0) {
           // Coplanar front
-          Plane.SplitResult(coFront = Seq(facet))
+          result.coFront += facet
         } else {
           // Coplanar back
-          Plane.SplitResult(coBack = Seq(facet))
+          result.coBack += facet
         }
       case pt if pt == Plane.Front    =>
-        Plane.SplitResult(front = Seq(facet))
+        result.front += facet
       case pt if pt == Plane.Back     =>
-        Plane.SplitResult(back = Seq(facet))
+        result.back += facet
       case _                          =>
         val fs = scala.collection.mutable.ArrayBuffer[Vertex]()
         val bs = scala.collection.mutable.ArrayBuffer[Vertex]()
@@ -51,31 +51,28 @@ final case class Plane(normal: Vertex, w: Double) {
             bs.append(v)
           }
         }
-        Plane.SplitResult(front = triangulate(fs), back = triangulate(bs))
+        triangulate(fs, result.front)
+        triangulate(bs, result.back)
     }
   }
 
   def split(facets: Seq[Facet]): Plane.SplitResult = {
-    val empty = Plane.SplitResult()
-    facets.foldLeft(empty) { case (acc, facet) =>
-      val result = splitFacet(facet)
-      Plane.SplitResult(
-        front = acc.front ++ result.front,
-        back = acc.back ++ result.back,
-        coFront = acc.coFront ++ result.coFront,
-        coBack = acc.coBack ++ result.coBack
-      )
+    val result = Plane.SplitResult()
+    facets.foreach { facet =>
+      splitFacet(facet, result)
     }
+    result
   }
 }
 
 object Plane {
 
+  // These are mutable to improve performance during construction.
   case class SplitResult(
-    front: Seq[Facet] = Seq.empty,
-    back: Seq[Facet] = Seq.empty,
-    coFront: Seq[Facet] = Seq.empty,
-    coBack: Seq[Facet] = Seq.empty
+    front: scala.collection.mutable.ArrayBuffer[Facet] = scala.collection.mutable.ArrayBuffer(),
+    back: scala.collection.mutable.ArrayBuffer[Facet] = scala.collection.mutable.ArrayBuffer(),
+    coFront: scala.collection.mutable.ArrayBuffer[Facet] = scala.collection.mutable.ArrayBuffer(),
+    coBack: scala.collection.mutable.ArrayBuffer[Facet] = scala.collection.mutable.ArrayBuffer()
   )
 
   val Coplanar: Int = 0

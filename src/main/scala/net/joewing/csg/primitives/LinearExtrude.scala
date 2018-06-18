@@ -37,6 +37,6 @@ case class LinearExtrude(
         (top, prevFacets ++ sides)
       }
     }._2
-    BSPTree(facets).simplified
+    BSPTree(facets)
   }
 }
