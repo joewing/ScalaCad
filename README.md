@@ -2,7 +2,7 @@
 
 ## Overview
 
-ScalaCad is a Construtive Solid Geometry library/DSL for Scala
+ScalaCad is a Constructive Solid Geometry library/DSL for Scala
 with support for creating, visualizing, and exporting 3D models.
 Models created with ScalaCad can be exported to the STL file format
 for 3D printing.
@@ -47,17 +47,17 @@ Both 2D and 3D objects can be combined using the following operations:
  - `Intersection`
  - `Union`
 
-### Visualizing a 3D Model
+## Visualizing a 3D Model
 
 Models can be visualized using `AwtRenderer.show` from the `net.joewing.csg.io`
 package.  This will open a window to display the object.
 
-### Saving a 3D Model
+## Saving a 3D Model
 
 Models can be saved to STL files using the `StlAsciiFileWriter.write` method
 from the `net.joewing.csg.io` package.
 
-### Reading a 3D Model
+## Reading a 3D Model
 
 Models can be loaded from STL files using the `StlAsciiFileReader.read` method
 from the `net.joewing.csg.io` package.
