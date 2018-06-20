@@ -69,6 +69,9 @@ class AwtRenderer(stl: Stl) {
   }
 
   private def render(): Unit = {
+
+    val start = System.currentTimeMillis
+
     val graphics = image.createGraphics
     graphics.setColor(Color.BLACK)
     graphics.fillRect(0, 0, image.getWidth, image.getHeight)
@@ -84,18 +87,27 @@ class AwtRenderer(stl: Stl) {
     )
     val xs = Array.fill[Int](3)(0)
     val ys = Array.fill[Int](3)(0)
-    val pos = Vertex(positionX, positionY, 0)
+    val cx = math.cos(rotationX)
+    val sx = math.sin(rotationX)
+    val cy = math.cos(rotationY)
+    val sy = math.sin(rotationY)
+    val sycx = sy * cx
+    val sysx = sy * sx
     paint(bsp, p) { facet =>
       facet.vertices.indices.foreach { i =>
-        val v = facet.vertices(i).rotated(x = rotationY, y = rotationX) * scale + pos
-        val projected = projection.project(v)
-        xs(i) = projected._1.toInt
-        ys(i) = projected._2.toInt
+        val v = facet.vertices(i)
+        val x = v.x1 * cx + v.x3 * sx
+        val y = v.x1 * sysx + v.x2 * cy - v.x3 * sycx
+        xs(i) = (x * scale + positionX).toInt
+        ys(i) = (y * scale + positionY).toInt
       }
       renderFacet(xs, ys, graphics)
     }
 
     frame.repaint()
+
+    val end = System.currentTimeMillis
+    println(s"Render time: ${end - start} ms")
   }
 
   private object MotionListener extends MouseMotionListener {
