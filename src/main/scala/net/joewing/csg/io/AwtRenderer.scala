@@ -35,37 +35,30 @@ class AwtRenderer(stl: Stl) {
   private val image = new BufferedImage(imageWidth, imageHeight, BufferedImage.TYPE_INT_RGB)
   private val label = new JLabel(new ImageIcon(image))
 
-  private def paint(bsp: BSPTree, p: Vertex): Seq[Facet] = {
-    val front = bsp.front.toSeq.flatMap(t => paint(t, p))
-    val back = bsp.back.toSeq.flatMap(t => paint(t, p))
+  private def paint(bsp: BSPTree, p: Vertex)(f: Facet => Unit): Unit = {
     val dp = p.dot(bsp.plane.normal)
     if (dp > 0) {
-      back ++ bsp.facets ++ front
+      bsp.back.foreach { x => paint(x, p)(f) }
+      bsp.facets.foreach(f)
+      bsp.front.foreach { x => paint(x, p)(f) }
     } else if (dp < 0) {
-      front ++ bsp.facets ++ back
+      bsp.front.foreach { x => paint(x, p)(f) }
+      bsp.facets.foreach(f)
+      bsp.back.foreach { x => paint(x, p)(f) }
     } else {
-      front ++ back
+      bsp.front.foreach { x => paint(x, p)(f) }
+      bsp.back.foreach { x => paint(x, p)(f) }
     }
   }
 
-  private def orderedPolygons: Seq[(Array[Int], Array[Int])] = {
-    val bsp = BSPTree {
-      stl.facets.map { facet =>
-        facet
-          .scaled(scale, scale, scale)
-          .rotated(x = rotationY, y = rotationX)
-          .moved(x = positionX, y = positionY)
-      }
-    }
-    paint(bsp, Vertex(0, 0, -10)).map { facet =>
-      val xs = facet.vertices.map { v =>
-        projection.project(v)._1.toInt
-      }
-      val ys = facet.vertices.map { v =>
-        projection.project(v)._2.toInt
-      }
-      (xs.toArray, ys.toArray)
-    }
+  private lazy val allFacets: Seq[Facet] = stl.facets
+  private lazy val bsp: BSPTree = BSPTree(allFacets)
+  private lazy val maxBound: Vertex = allFacets.map(_.maxBound).foldLeft(Vertex(0, 0, 0)) { (m, v) =>
+    m.copy(
+      x1 = math.max(m.x1, v.x1),
+      x2 = math.max(m.x2, v.x2),
+      x3 = math.max(m.x3, v.x3)
+    )
   }
 
   private def renderFacet(xpoints: Array[Int], ypoints: Array[Int], graphics: Graphics2D): Unit = {
@@ -79,9 +72,29 @@ class AwtRenderer(stl: Stl) {
     val graphics = image.createGraphics
     graphics.setColor(Color.BLACK)
     graphics.fillRect(0, 0, image.getWidth, image.getHeight)
-    orderedPolygons.foreach { case (xpoints, ypoints) =>
-      renderFacet(xpoints, ypoints, graphics)
+
+    val r = math.max(math.max(maxBound.x1, maxBound.x2), maxBound.x3) * 2
+
+    val rx = -rotationX + math.Pi
+    val ry = -rotationY + math.Pi
+    val p = Vertex(
+      r * math.sin(rx) * math.cos(ry),
+      r * math.sin(ry),
+      r * math.cos(rx) * math.cos(ry)
+    )
+    val xs = Array.fill[Int](3)(0)
+    val ys = Array.fill[Int](3)(0)
+    val pos = Vertex(positionX, positionY, 0)
+    paint(bsp, p) { facet =>
+      facet.vertices.indices.foreach { i =>
+        val v = facet.vertices(i).rotated(x = rotationY, y = rotationX) * scale + pos
+        val projected = projection.project(v)
+        xs(i) = projected._1.toInt
+        ys(i) = projected._2.toInt
+      }
+      renderFacet(xs, ys, graphics)
     }
+
     frame.repaint()
   }
 

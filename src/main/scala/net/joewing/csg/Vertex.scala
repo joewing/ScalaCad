@@ -33,7 +33,8 @@ case class Vertex(x1: Double, x2: Double, x3: Double) {
     Vertex(v(0), v(1), v(2))
   }
 
-  def moved(d1: Double, d2: Double, d3: Double): Vertex = Vertex(x1 + d1, x2 + d2, x3 + d3)
+  def moved(x: Double = 0.0, y: Double = 0.0, z: Double = 0.0): Vertex =
+    Vertex(x1 + x, x2 + y, x3 + z)
 
   def dot(other: Vertex): Double = x1 * other.x1 + x2 * other.x2 + x3 * other.x3
 
