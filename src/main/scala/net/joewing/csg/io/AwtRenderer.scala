@@ -43,7 +43,6 @@ class AwtRenderer(stl: Stl) {
       bsp.front.foreach { x => paint(x, p)(f) }
     } else {
       bsp.front.foreach { x => paint(x, p)(f) }
-      bsp.facets.foreach(f)
       bsp.back.foreach { x => paint(x, p)(f) }
     }
   }

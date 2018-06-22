@@ -45,7 +45,7 @@ case class LinearExtrude(
       }
       prevFacets ++ sides
     }
-    val top = base.map(_.moved(z = length).rotated(z = rotation * slices))
+    val top = base.map(_.moved(z = length).rotated(z = rotation * slices).flip)
     BSPTree(base ++ facets ++ top)
   }
 }
