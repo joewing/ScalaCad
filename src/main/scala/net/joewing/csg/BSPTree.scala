@@ -23,11 +23,10 @@ final case class BSPTree(
       case Some(f) => f.clipFacets(frontFacets)
       case None    => frontFacets
     }
-    val filteredBack = back match {
-      case Some(b) => b.clipFacets(result.back ++ result.coBack)
-      case None    => Seq.empty
+    back match {
+      case Some(b) => b.clipFacets(result.back ++ result.coBack) ++ filteredFront
+      case None    => filteredFront
     }
-    filteredFront ++ filteredBack
   }
 
   // Return this BSPTree clipped to the other BSPTree.
@@ -65,11 +64,6 @@ final case class BSPTree(
   }
 
   def merge(other: BSPTree): BSPTree = insert(other.allFacets)
-
-  def simplified: BSPTree = {
-    val i = clip(this).inverted
-    i.clip(i).inverted
-  }
 }
 
 object BSPTree {

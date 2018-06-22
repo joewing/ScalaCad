@@ -28,7 +28,7 @@ class LinearExtrudeSpec extends FunSpec with Matchers {
 
     it("creates the right number of facets for a square with 1 slice") {
       val facets = LinearExtrude(Rectangle(1, 1), 1).render.allFacets
-      facets.size shouldBe (2 + 3 * 4 + 2)
+      facets.size shouldBe (2 + 2 * 4 + 2)
     }
 
     it("creates the right number of facets for a triangle with 2 slices") {

@@ -60,7 +60,8 @@ case class Vertex(x1: Double, x2: Double, x3: Double) {
 
   def negated: Vertex = Vertex(-x1, -x2, -x3)
 
-  def approxEqual(other: Vertex, epsilon: Double = 1e-6): Boolean = {
+  def approxEqual(other: Vertex, epsilon: Double = 1e-5): Boolean = {
     math.abs(x1 - other.x1) < epsilon && math.abs(x2 - other.x2) < epsilon && math.abs(x3 - other.x3) < epsilon
   }
 }
+

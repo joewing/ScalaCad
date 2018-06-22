@@ -1,6 +1,6 @@
 package net.joewing.csg.primitives
 
-import net.joewing.csg.{BSPTree, Facet}
+import net.joewing.csg.{BSPTree, Facet, Vertex}
 
 case class LinearExtrude(
   obj: Primitive[TwoDimensional],
@@ -8,35 +8,44 @@ case class LinearExtrude(
   rotation: Double = 0.0,
   slices: Int = 1
 ) extends Primitive[ThreeDimensional] {
+
+  private def includeSide(base: Seq[Facet])(side: (Vertex, Vertex)): Boolean = {
+    val (a, b) = side
+    val count = base.foldLeft(0) { (c, f) =>
+      val c1 = if (f.v1.approxEqual(a) && f.v2.approxEqual(b)) 1 else 0
+      val c2 = if (f.v2.approxEqual(a) && f.v3.approxEqual(b)) 1 else 0
+      val c3 = if (f.v3.approxEqual(a) && f.v1.approxEqual(b)) 1 else 0
+      c + c1 + c2 + c3
+    }
+    count == 0
+  }
+
+  private def segments(base: Seq[Facet]): Seq[(Vertex, Vertex)] = {
+    val vertices = base.flatMap(_.vertices)
+    val pairs = vertices.zip(vertices.last +: vertices)
+    pairs.filter(includeSide(base))
+  }
+
   def render: BSPTree = {
     val base = obj.render.allFacets
-    val init: (Seq[Facet], Seq[Facet]) = (base, Seq.empty)
-    val facets = Vector.range(1, slices + 1).foldLeft(init) { case ((bottom, prevFacets), i) =>
-      val top = bottom.map(_.moved(z = length / slices).rotated(z = rotation))
-      val sides = bottom.zip(top).flatMap { case (b, t) =>
-        Vector(
-          Facet(t.v1, b.v2, b.v1),
-          Facet(t.v1, t.v2, b.v2),
-          Facet(t.v2, b.v3, b.v2),
-          Facet(t.v2, t.v3, b.v3),
-          Facet(t.v3, b.v1, b.v3),
-          Facet(t.v3, t.v1, b.v1)
+
+    def positionVertex(i: Int, v: Vertex): Vertex = v.moved(z = i * length / slices).rotated(z = i * rotation)
+
+    val perimeter = segments(base)
+    val facets = Vector.range(0, slices).foldLeft(Seq.empty[Facet]) { (prevFacets, i) =>
+      val sides = perimeter.flatMap { case (base1, base2) =>
+        val b1 = positionVertex(i, base1)
+        val b2 = positionVertex(i, base2)
+        val t1 = positionVertex(i + 1, base1)
+        val t2 = positionVertex(i + 1, base2)
+        Seq(
+          Facet(b1, b2, t1),
+          Facet(b2, t2, t1)
         )
       }
-      if (slices == 1) {
-        // Top and bottom
-        (top, prevFacets ++ bottom ++ top.map(_.flip) ++ sides)
-      } else if (i == 1) {
-        // Bottom
-        (top, prevFacets ++ bottom ++ sides)
-      } else if (i == slices) {
-        // Top
-        (top, prevFacets ++ top.map(_.flip) ++ sides)
-      } else {
-        // Middle
-        (top, prevFacets ++ sides)
-      }
-    }._2
-    BSPTree(facets)
+      prevFacets ++ sides
+    }
+    val top = base.map(_.moved(z = length).rotated(z = rotation * slices))
+    BSPTree(base ++ facets ++ top)
   }
 }
