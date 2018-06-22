@@ -31,6 +31,19 @@ package object primitives {
     def scale(x: Double = 1, y: Double = 1, z: Double = 1): Scale[D] = Scale(left, x, z, y)
 
     def centered: Translate[D] = translate((left.maxBound + left.minBound) / -2)
+
+    def above(other: Primitive[D], overlap: Double = 0.0): Primitive[D] = {
+      Union(translate(z = other.extent.x3 - overlap), other)
+    }
+    def below(other: Primitive[D], overlap: Double = 0.0): Primitive[D] = {
+      Union(left, Translate(other, z = left.extent.x3 - overlap))
+    }
+    def beside(right: Primitive[D], overlap: Double = 0.0): Primitive[D] = {
+      Union(translate(x = right.extent.x1 - overlap), right)
+    }
+    def behind(other: Primitive[D], overlap: Double = 0.0): Primitive[D] = {
+      Union(translate(y = other.extent.x2 - overlap), other)
+    }
   }
 
   implicit class RichSolid(val left: Primitive[ThreeDimensional]) extends RichPrimitive[ThreeDimensional] {

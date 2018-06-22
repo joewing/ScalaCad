@@ -41,7 +41,7 @@ object ScrewExample extends App {
     cap - nutThreads
   }
 
-  val obj = screw | nut.translate(x = nutRadius + nutRadius * 2)
+  val obj = screw.beside(nut, overlap = -nutRadius)
   StlAsciiFileWriter.write(obj, "screw.stl")
   AwtRenderer.show(obj)
 }
