@@ -15,14 +15,14 @@ object ScrewExample extends App {
   val threadRatio = 0.75
 
   val nutLength = 4.0
-  val nutRadius = 10.0
+  val nutRadius = 8.0
   val nutSides = 6
 
   val nutTurns = screwTurns * nutLength / screwLength
 
   def threads(radius: Double, length: Double, turns: Double): Primitive[ThreeDimensional] = {
     val slices = (length / resolution).toInt
-    val radiansPerSlice = -math.Pi * 2.0 * turns / slices
+    val radiansPerSlice = math.Pi * 2.0 * turns / slices
     circle(radius, screwSides).scale(x = threadRatio).extrude(length, radiansPerSlice, slices)
   }
 
@@ -32,7 +32,7 @@ object ScrewExample extends App {
 
   def screw: Primitive[ThreeDimensional] = screwThreads above cap
 
-  def nutThreads = threads(screwRadius - tolerance, nutLength, nutTurns)
+  def nutThreads = threads(screwRadius + tolerance, nutLength, nutTurns)
 
   def nut: Primitive[ThreeDimensional] = cap - nutThreads
 
