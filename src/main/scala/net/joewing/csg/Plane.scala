@@ -13,8 +13,12 @@ final case class Plane(normal: Vertex, w: Double) {
   }
 
   private def triangulate(vertices: Seq[Vertex], result: scala.collection.mutable.ArrayBuffer[Facet]): Unit = {
-    vertices.tail.sliding(2).foreach { case Seq(a, b) =>
-      result += Facet(vertices.head, a, b)
+    val size = vertices.size
+    Vector.range(0, size - 2).foreach { i =>
+      val a = vertices((i * 2 + 0) % size)
+      val b = vertices((i * 2 + 1) % size)
+      val c = vertices((i * 2 + 2) % size)
+      result += Facet(a, b, c)
     }
   }
 
@@ -42,13 +46,13 @@ final case class Plane(normal: Vertex, w: Double) {
           val tj = types(j)
           val vi = facet.vertices(i)
           val vj = facet.vertices(j)
-          if (ti != Plane.Back) fs.append(vi)
-          if (ti != Plane.Front) bs.append(vi)
+          if (ti != Plane.Back) fs += vi
+          if (ti != Plane.Front) bs += vi
           if ((ti | tj) == Plane.Spanning) {
             val t = (w - normal.dot(vi)) / normal.dot(vj - vi)
             val v = vi.interpolate(vj, t)
-            fs.append(v)
-            bs.append(v)
+            fs += v
+            bs += v
           }
         }
         triangulate(fs, result.front)

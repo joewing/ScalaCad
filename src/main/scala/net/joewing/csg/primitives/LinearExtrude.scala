@@ -13,11 +13,14 @@ case class LinearExtrude(
     val (a, b) = side
     val count = base.foldLeft(0) { (c, f) =>
       val c1 = if (f.v1.approxEqual(a) && f.v2.approxEqual(b)) 1 else 0
-      val c2 = if (f.v2.approxEqual(a) && f.v3.approxEqual(b)) 1 else 0
-      val c3 = if (f.v3.approxEqual(a) && f.v1.approxEqual(b)) 1 else 0
-      c + c1 + c2 + c3
+      val c2 = if (f.v2.approxEqual(a) && f.v1.approxEqual(b)) 1 else 0
+      val c3 = if (f.v2.approxEqual(a) && f.v3.approxEqual(b)) 1 else 0
+      val c4 = if (f.v3.approxEqual(a) && f.v2.approxEqual(b)) 1 else 0
+      val c5 = if (f.v3.approxEqual(a) && f.v1.approxEqual(b)) 1 else 0
+      val c6 = if (f.v1.approxEqual(a) && f.v3.approxEqual(b)) 1 else 0
+      c + c1 + c2 + c3 + c4 + c5 + c6
     }
-    count == 0
+    count == 1
   }
 
   private def segments(base: Seq[Facet]): Seq[(Vertex, Vertex)] = {
@@ -29,7 +32,14 @@ case class LinearExtrude(
   def render: BSPTree = {
     val base = obj.render.allFacets
 
-    def positionVertex(i: Int, v: Vertex): Vertex = v.moved(z = i * length / slices).rotated(z = i * rotation)
+    def positionVertex(i: Int, v: Vertex): Vertex = {
+      val angle = i * rotation
+      Vertex(
+        v.x1 * math.cos(angle) - v.x2 * math.sin(angle),
+        v.x1 * math.sin(angle) + v.x2 * math.cos(angle),
+        i * length / slices
+      )
+    }
 
     val perimeter = segments(base)
     val facets = Vector.range(0, slices).foldLeft(Seq.empty[Facet]) { (prevFacets, i) =>
@@ -47,9 +57,9 @@ case class LinearExtrude(
     }
     val top = base.map { facet =>
       Facet(
+        positionVertex(slices, facet.v1),
         positionVertex(slices, facet.v3),
-        positionVertex(slices, facet.v2),
-        positionVertex(slices, facet.v1)
+        positionVertex(slices, facet.v2)
       )
     }
     BSPTree(base ++ facets ++ top)

@@ -23,7 +23,7 @@ final case class Facet(v1: Vertex, v2: Vertex, v3: Vertex) {
     max3(v1.x3, v2.x3, v3.x3)
   )
 
-  lazy val vertices: Seq[Vertex] = Seq(v1, v2, v3)
+  lazy val vertices: Seq[Vertex] = Vector(v1, v2, v3)
 
   def scaled(x: Double = 1, y: Double = 1, z: Double = 1): Facet = Facet(
     v1.scaled(x, y, z),

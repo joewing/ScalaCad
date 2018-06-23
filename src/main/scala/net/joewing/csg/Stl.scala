@@ -26,4 +26,9 @@ case class Stl(name: String, facets: Seq[Facet]) {
       )
     }
   }
+
+  def fixed: Stl = {
+    val moved = facets.map(f => f.moved(-minBound.x1, -minBound.x2, -minBound.x3))
+    copy(facets = moved)
+  }
 }

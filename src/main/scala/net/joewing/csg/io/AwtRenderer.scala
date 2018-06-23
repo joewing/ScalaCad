@@ -65,6 +65,8 @@ class AwtRenderer(stl: Stl) {
   ): Unit = {
     graphics.setColor(color)
     graphics.fillPolygon(xpoints, ypoints, xpoints.length)
+    graphics.setColor(Color.white)
+    graphics.drawPolygon(xpoints, ypoints, xpoints.length)
   }
 
   private def render(): Unit = {
@@ -131,7 +133,7 @@ class AwtRenderer(stl: Stl) {
       lasty = e.getY
       if ((e.getModifiersEx & (InputEvent.BUTTON3_DOWN_MASK | InputEvent.CTRL_DOWN_MASK)) == 0) {
         rotationX += math.Pi * dx / 180.0
-        rotationY += math.Pi * dy / 180.0
+        rotationY -= math.Pi * dy / 180.0
       } else {
         positionX += dx
         positionY += dy

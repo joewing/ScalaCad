@@ -7,10 +7,12 @@ import net.joewing.csg.primitives.{Primitive, ThreeDimensional}
 
 class StlAsciiFileWriter(os: OutputStream) extends StlWriter {
 
-  private def vertexString(v: Vertex): String = s"${v.x1} ${v.x2} ${v.x3}"
+  private def fmt(d: Double): String = f"$d%.6e"
+
+  private def vertexString(v: Vertex): String = s"${fmt(v.x1)} ${fmt(v.x2)} ${fmt(v.x3)}"
 
   private def writeFacet(ps: PrintStream, facet: Facet): Unit = {
-    ps.println(s"  facet normal ${vertexString(facet.normal)}")
+    ps.println(s"  facet normal 0 0 0")
     ps.println(s"    outer loop")
     facet.vertices.foreach { v =>
       ps.println(s"      vertex ${vertexString(v)}")
@@ -20,15 +22,17 @@ class StlAsciiFileWriter(os: OutputStream) extends StlWriter {
   }
 
   def write(stl: Stl): Unit = {
+    val fixedStl = stl.fixed
     val ps = new PrintStream(os)
     try {
-      ps.println(s"solid ${stl.name}")
-      stl.facets.foreach { facet =>
+      ps.println(s"solid ${fixedStl.name}")
+      fixedStl.facets.foreach { facet =>
         writeFacet(ps, facet)
       }
-      ps.println(s"endsolid ${stl.name}")
+      ps.println(s"endsolid ${fixedStl.name}")
     } finally {
       ps.close()
+      println(s"Wrote ${fixedStl.facets.size} facets")
     }
   }
 
