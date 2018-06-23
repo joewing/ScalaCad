@@ -57,11 +57,14 @@ class AwtRenderer(stl: Stl) {
     )
   }
 
-  private def renderFacet(xpoints: Array[Int], ypoints: Array[Int], graphics: Graphics2D): Unit = {
-    graphics.setColor(Color.BLUE)
+  private def renderFacet(
+    xpoints: Array[Int],
+    ypoints: Array[Int],
+    color: Color,
+    graphics: Graphics2D
+  ): Unit = {
+    graphics.setColor(color)
     graphics.fillPolygon(xpoints, ypoints, xpoints.length)
-    graphics.setColor(Color.WHITE)
-    graphics.drawPolygon(xpoints, ypoints, xpoints.length)
   }
 
   private def render(): Unit = {
@@ -81,6 +84,8 @@ class AwtRenderer(stl: Stl) {
       r * math.sin(ry),
       r * math.cos(rx) * math.cos(ry)
     )
+    val lightSource = p.unit
+
     val xs = Array.fill[Int](3)(0)
     val ys = Array.fill[Int](3)(0)
     val cx = math.cos(rotationX)
@@ -97,7 +102,10 @@ class AwtRenderer(stl: Stl) {
         xs(i) = (x * scale + positionX).toInt
         ys(i) = (y * scale + positionY).toInt
       }
-      renderFacet(xs, ys, graphics)
+      val v = facet.normal.dot(lightSource)
+      val brightness = math.max(0.1, math.min(1.0, v)).toFloat
+      val color = new Color(0.0f, 0.0f, brightness)
+      renderFacet(xs, ys, color, graphics)
     }
 
     frame.repaint()
