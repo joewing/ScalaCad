@@ -36,7 +36,7 @@ package object primitives {
       Union(translate(z = other.extent.x3 - overlap), other)
     }
     def below(other: Primitive[D], overlap: Double = 0.0): Primitive[D] = {
-      Union(left, Translate(other, z = left.extent.x3 - overlap))
+      Union(translate(z = -left.extent.x3 - overlap), other)
     }
     def beside(right: Primitive[D], overlap: Double = 0.0): Primitive[D] = {
       Union(translate(x = right.extent.x1 - overlap), right)

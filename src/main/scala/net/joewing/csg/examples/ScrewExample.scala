@@ -6,12 +6,13 @@ import net.joewing.csg.primitives._
 object ScrewExample extends App {
 
   val resolution = 0.2
+  val tolerance = 0.4
 
   val screwTurns = 2.0
   val screwLength = 8.0
   val screwSides = 20
   val screwRadius = 4.0
-  val innerRadius = 3.0
+  val threadRatio = 0.75
 
   val nutLength = 4.0
   val nutRadius = 10.0
@@ -19,27 +20,21 @@ object ScrewExample extends App {
 
   val nutTurns = screwTurns * nutLength / screwLength
 
-  def threads(length: Double, turns: Double): Primitive[ThreeDimensional] = {
+  def threads(radius: Double, length: Double, turns: Double): Primitive[ThreeDimensional] = {
     val slices = (length / resolution).toInt
-    val radiansPerSlice = math.Pi * 2.0 * turns / slices
-    circle(screwRadius, screwSides).scale(x = innerRadius / screwRadius).extrude(length, radiansPerSlice, slices)
+    val radiansPerSlice = -math.Pi * 2.0 * turns / slices
+    circle(radius, screwSides).scale(x = threadRatio).extrude(length, radiansPerSlice, slices)
   }
 
-  def cap: Primitive[ThreeDimensional] = {
-    cylinder(nutLength, nutRadius, nutRadius, nutSides)
-  }
+  def cap: Primitive[ThreeDimensional] = cylinder(nutLength, nutRadius, nutRadius, nutSides)
 
-  def screwThreads = threads(screwLength, screwTurns)
+  def screwThreads = threads(screwRadius, screwLength, screwTurns)
 
-  def screw: Primitive[ThreeDimensional] = {
-    cap | screwThreads.translate(z = nutLength)
-  }
+  def screw: Primitive[ThreeDimensional] = screwThreads above cap
 
-  def nutThreads = threads(nutLength, nutTurns)
+  def nutThreads = threads(screwRadius - tolerance, nutLength, nutTurns)
 
-  def nut: Primitive[ThreeDimensional] = {
-    cap - nutThreads
-  }
+  def nut: Primitive[ThreeDimensional] = cap - nutThreads
 
   val obj = screw.beside(nut, overlap = -nutRadius)
   StlAsciiFileWriter.write(obj, "screw.stl")
