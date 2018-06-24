@@ -9,12 +9,16 @@ import net.joewing.csg._
 import net.joewing.csg.primitives.{Primitive, ThreeDimensional}
 import net.joewing.csg.projection.{OrthographicProjection, Projection}
 
-class AwtRenderer(stl: Stl) {
+class AwtRenderer(
+  stl: Stl,
+  imageWidth: Int,
+  imageHeight: Int,
+  showVertices: Boolean,
+  showBackfaces: Boolean
+) {
 
   private val projection: Projection = OrthographicProjection
 
-  private val imageWidth = 800
-  private val imageHeight = 600
   private val (initialScale, initialX, initialY): (Double, Double, Double) = {
     val buffer = (imageWidth * 0.05).toInt
     val (minx, miny) = projection.project(stl.minBound)
@@ -43,6 +47,9 @@ class AwtRenderer(stl: Stl) {
       bsp.front.foreach { x => paint(x, p)(f) }
     } else {
       bsp.front.foreach { x => paint(x, p)(f) }
+      if (showBackfaces) {
+        bsp.facets.foreach(f)
+      }
       bsp.back.foreach { x => paint(x, p)(f) }
     }
   }
@@ -65,8 +72,10 @@ class AwtRenderer(stl: Stl) {
   ): Unit = {
     graphics.setColor(color)
     graphics.fillPolygon(xpoints, ypoints, xpoints.length)
-    graphics.setColor(Color.white)
-    graphics.drawPolygon(xpoints, ypoints, xpoints.length)
+    if (showVertices) {
+      graphics.setColor(Color.white)
+      graphics.drawPolygon(xpoints, ypoints, xpoints.length)
+    }
   }
 
   private def render(): Unit = {
@@ -166,6 +175,26 @@ class AwtRenderer(stl: Stl) {
 }
 
 object AwtRenderer {
-  def show(stl: Stl): Unit = new AwtRenderer(stl).show()
+
+  val defaultWidth: Int = 800
+  val defaultHeight: Int = 600
+
+  def show(
+    stl: Stl,
+    imageWidth: Int = defaultWidth,
+    imageHeight: Int = defaultHeight,
+    showBackfaces: Boolean = false,
+    showVertices: Boolean = false
+  ): Unit = {
+    val renderer = new AwtRenderer(
+      stl = stl,
+      imageWidth = imageWidth,
+      imageHeight = imageHeight,
+      showVertices = showVertices,
+      showBackfaces = showBackfaces
+    )
+    renderer.show()
+  }
+
   def show(r: Primitive[ThreeDimensional]): Unit = show(Stl("ScalaCad", r.render.allFacets))
 }

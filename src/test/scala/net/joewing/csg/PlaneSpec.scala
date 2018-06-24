@@ -80,7 +80,7 @@ class PlaneSpec extends FunSpec with Matchers {
       plane.splitFacet(f, result)
       result.front shouldBe Seq(
         Facet(Vertex(0.5, 0, 0), Vertex(1, 0, 1), Vertex(1, 1, 1)),
-        Facet(Vertex(0.5, 0, 0), Vertex(1, 1, 1), Vertex(0.5, 0.5, 0))
+        Facet(Vertex(1, 1, 1), Vertex(0.5, 0.5, 0), Vertex(0.5, 0, 0))
       )
       result.back shouldBe Seq(Facet(Vertex(0, 0, -1), Vertex(0.5, 0, 0), Vertex(0.5, 0.5, 0)))
       result.coFront shouldBe Seq.empty
