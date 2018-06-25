@@ -37,12 +37,19 @@ case class LinearExtrude(
 
     val perimeter = segments(base)
     val polygons = Vector.range(0, slices).foldLeft(Seq.empty[Polygon]) { (prev, i) =>
-      prev ++ perimeter.map { case (base1, base2) =>
+      prev ++ perimeter.flatMap { case (base1, base2) =>
         val b1 = positionVertex(i, base1)
         val b2 = positionVertex(i, base2)
         val t1 = positionVertex(i + 1, base1)
         val t2 = positionVertex(i + 1, base2)
-        Polygon(Seq(b1, b2, t2, t1))
+        if (rotation == 0.0) {
+          Seq(Polygon(Seq(b1, b2, t2, t1)))
+        } else {
+          Seq(
+            Polygon(Seq(b1, b2, t1)),
+            Polygon(Seq(b2, t2, t1))
+          )
+        }
       }
     }
     val top = base.map { polygon =>
