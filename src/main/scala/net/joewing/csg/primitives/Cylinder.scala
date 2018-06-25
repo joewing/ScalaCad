@@ -1,23 +1,20 @@
 package net.joewing.csg.primitives
 
-import net.joewing.csg.{BSPTree, Facet, Vertex}
+import net.joewing.csg.{BSPTree, Polygon, Vertex}
 
 case class Cylinder(length: Double, r1: Double, r2: Double, sides: Int) extends Primitive[ThreeDimensional] {
   require(sides > 2, s"Cylinder must have at least 3 sides, got $sides")
 
   private val angle = 2.0 * math.Pi / sides
 
-  private def renderEnd(r: Double, z: Double): Seq[Facet] = {
+  private def renderEnd(r: Double, z: Double): Seq[Polygon] = {
     if (r > 0) {
-      (0 until sides).map { i =>
+      val vertices = Vector.range(0, sides).map { i =>
         val theta1 = angle * i
         val theta2 = angle * (i + 1)
-        Facet(
-          Vertex(0, 0, z),
-          Vertex(r * math.cos(theta1), r * math.sin(theta1), z),
-          Vertex(r * math.cos(theta2), r * math.sin(theta2), z)
-        )
-      }.toSeq
+        Vertex(r * math.cos(theta1), r * math.sin(theta1), z)
+      }
+      Seq(Polygon(vertices))
     } else {
       Seq.empty
     }
@@ -27,8 +24,8 @@ case class Cylinder(length: Double, r1: Double, r2: Double, sides: Int) extends 
     val top = renderEnd(r1, 0).map(_.flip)
     val bottom = renderEnd(r2, length)
 
-    // 2 triangles per side
-    val shaft = Range(0, sides).flatMap { i =>
+    // 1 square per side.
+    val shaft = Range(0, sides).map { i =>
       val theta1 = angle * i
       val theta2 = angle * (i + 1)
       val x1a = r1 * math.cos(theta1)
@@ -42,17 +39,13 @@ case class Cylinder(length: Double, r1: Double, r2: Double, sides: Int) extends 
       val v1 = Vertex(x2a, y2a, 0)
       val v2 = Vertex(x1a, y1a, 0)
       val v3 = Vertex(x2b, y2b, length)
-      val v4 = v3
-      val v5 = v2
-      val v6 = Vertex(x1b, y1b, length)
-      val f1 = Facet(v3, v2, v1)
-      val f2 = Facet(v6, v5, v4)
+      val v4 = Vertex(x1b, y1b, length)
       if (r1 == 0) {
-        Seq(f2)
+        Polygon(Seq(v4, v2, v3))
       } else if (r2 == 0) {
-        Seq(f1)
+        Polygon(Seq(v3, v2, v1))
       } else {
-        Seq(f1, f2)
+        Polygon(Seq(v3, v4, v2, v1))
       }
     }
 

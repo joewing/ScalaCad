@@ -12,40 +12,30 @@ final case class Plane(normal: Vertex, w: Double) {
     else Plane.Coplanar
   }
 
-  private def triangulate(vertices: Seq[Vertex], result: scala.collection.mutable.ArrayBuffer[Facet]): Unit = {
-    val size = vertices.size
-    Vector.range(0, size - 2).foreach { i =>
-      val a = vertices((i * 2 + 0) % size)
-      val b = vertices((i * 2 + 1) % size)
-      val c = vertices((i * 2 + 2) % size)
-      result += Facet(a, b, c)
-    }
-  }
-
-  def splitFacet(facet: Facet, result: Plane.SplitResult): Unit = {
-    val types = facet.vertices.map(classify)
+  def splitPolygon(polygon: Polygon, result: Plane.SplitResult): Unit = {
+    val types = polygon.vertices.map(classify)
     types.foldLeft(Plane.Coplanar)(_ | _) match {
       case pt if pt == Plane.Coplanar =>
-        if (normal.dot(facet.normal) > 0) {
+        if (normal.dot(polygon.normal) > 0) {
           // Coplanar front
-          result.coFront += facet
+          result.coFront += polygon
         } else {
           // Coplanar back
-          result.coBack += facet
+          result.coBack += polygon
         }
       case pt if pt == Plane.Front    =>
-        result.front += facet
+        result.front += polygon
       case pt if pt == Plane.Back     =>
-        result.back += facet
+        result.back += polygon
       case _                          =>
         val fs = scala.collection.mutable.ArrayBuffer[Vertex]()
         val bs = scala.collection.mutable.ArrayBuffer[Vertex]()
-        facet.vertices.indices.foreach { i =>
-          val j = (i + 1) % facet.vertices.length
+        polygon.vertices.indices.foreach { i =>
+          val j = (i + 1) % polygon.vertices.length
           val ti = types(i)
           val tj = types(j)
-          val vi = facet.vertices(i)
-          val vj = facet.vertices(j)
+          val vi = polygon.vertices(i)
+          val vj = polygon.vertices(j)
           if (ti != Plane.Back) fs += vi
           if (ti != Plane.Front) bs += vi
           if ((ti | tj) == Plane.Spanning) {
@@ -55,15 +45,15 @@ final case class Plane(normal: Vertex, w: Double) {
             bs += v
           }
         }
-        triangulate(fs, result.front)
-        triangulate(bs, result.back)
+        result.front += Polygon(fs)
+        result.back += Polygon(bs)
     }
   }
 
-  def split(facets: Seq[Facet]): Plane.SplitResult = {
+  def split(polygons: Seq[Polygon]): Plane.SplitResult = {
     val result = Plane.SplitResult()
-    facets.foreach { facet =>
-      splitFacet(facet, result)
+    polygons.foreach { polygon =>
+      splitPolygon(polygon, result)
     }
     result
   }
@@ -73,10 +63,10 @@ object Plane {
 
   // These are mutable to improve performance during construction.
   case class SplitResult(
-    front: scala.collection.mutable.ArrayBuffer[Facet] = scala.collection.mutable.ArrayBuffer(),
-    back: scala.collection.mutable.ArrayBuffer[Facet] = scala.collection.mutable.ArrayBuffer(),
-    coFront: scala.collection.mutable.ArrayBuffer[Facet] = scala.collection.mutable.ArrayBuffer(),
-    coBack: scala.collection.mutable.ArrayBuffer[Facet] = scala.collection.mutable.ArrayBuffer()
+    front: scala.collection.mutable.ArrayBuffer[Polygon] = scala.collection.mutable.ArrayBuffer(),
+    back: scala.collection.mutable.ArrayBuffer[Polygon] = scala.collection.mutable.ArrayBuffer(),
+    coFront: scala.collection.mutable.ArrayBuffer[Polygon] = scala.collection.mutable.ArrayBuffer(),
+    coBack: scala.collection.mutable.ArrayBuffer[Polygon] = scala.collection.mutable.ArrayBuffer()
   )
 
   val Coplanar: Int = 0
@@ -85,4 +75,6 @@ object Plane {
   val Spanning: Int = 3
 
   def apply(facet: Facet): Plane = Plane(facet.normal, facet.normal.dot(facet.v1))
+
+  def apply(polygon: Polygon): Plane = Plane(polygon.normal, polygon.normal.dot(polygon.vertices.head))
 }

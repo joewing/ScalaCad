@@ -11,7 +11,7 @@ class IntersectionSpec extends FunSpec with Matchers {
     }
 
     it("should return nothing when intersected with itself inverted") {
-      Intersection(obj, Invert(obj)).render.allFacets shouldBe Seq.empty
+      Intersection(obj, Invert(obj)).render.allPolygons shouldBe Seq.empty
     }
   }
 }

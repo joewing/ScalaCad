@@ -1,6 +1,6 @@
 package net.joewing.csg.primitives
 
-import net.joewing.csg.{BSPTree, Facet, Vertex}
+import net.joewing.csg.{BSPTree, Polygon, Vertex}
 
 case class LinearExtrude(
   obj: Primitive[TwoDimensional],
@@ -9,28 +9,21 @@ case class LinearExtrude(
   slices: Int = 1
 ) extends Primitive[ThreeDimensional] {
 
-  private def includeSide(base: Seq[Facet])(side: (Vertex, Vertex)): Boolean = {
+  private def includeSide(base: Seq[Polygon])(side: (Vertex, Vertex)): Boolean = {
     val (a, b) = side
-    val count = base.foldLeft(0) { (c, f) =>
-      val c1 = if (f.v1.approxEqual(a) && f.v2.approxEqual(b)) 1 else 0
-      val c2 = if (f.v2.approxEqual(a) && f.v1.approxEqual(b)) 1 else 0
-      val c3 = if (f.v2.approxEqual(a) && f.v3.approxEqual(b)) 1 else 0
-      val c4 = if (f.v3.approxEqual(a) && f.v2.approxEqual(b)) 1 else 0
-      val c5 = if (f.v3.approxEqual(a) && f.v1.approxEqual(b)) 1 else 0
-      val c6 = if (f.v1.approxEqual(a) && f.v3.approxEqual(b)) 1 else 0
-      c + c1 + c2 + c3 + c4 + c5 + c6
+    !base.flatMap(_.edges).forall { case (otherb, othera) =>
+      !othera.approxEqual(a) || !otherb.approxEqual(b)
     }
-    count == 1
   }
 
-  private def segments(base: Seq[Facet]): Seq[(Vertex, Vertex)] = {
+  private def segments(base: Seq[Polygon]): Seq[(Vertex, Vertex)] = {
     val vertices = base.flatMap(_.vertices)
     val pairs = vertices.zip(vertices.last +: vertices)
     pairs.filter(includeSide(base))
   }
 
   def render: BSPTree = {
-    val base = obj.render.allFacets
+    val base = obj.render.allPolygons
 
     def positionVertex(i: Int, v: Vertex): Vertex = {
       val angle = i * rotation
@@ -42,26 +35,19 @@ case class LinearExtrude(
     }
 
     val perimeter = segments(base)
-    val facets = Vector.range(0, slices).foldLeft(Seq.empty[Facet]) { (prevFacets, i) =>
-      val sides = perimeter.flatMap { case (base1, base2) =>
+    val polygons = Vector.range(0, slices).foldLeft(Seq.empty[Polygon]) { (prev, i) =>
+      prev ++ perimeter.map { case (base1, base2) =>
         val b1 = positionVertex(i, base1)
         val b2 = positionVertex(i, base2)
         val t1 = positionVertex(i + 1, base1)
         val t2 = positionVertex(i + 1, base2)
-        Seq(
-          Facet(b1, b2, t1),
-          Facet(b2, t2, t1)
-        )
+        Polygon(Seq(b1, b2, t2, t1))
       }
-      prevFacets ++ sides
     }
-    val top = base.map { facet =>
-      Facet(
-        positionVertex(slices, facet.v1),
-        positionVertex(slices, facet.v3),
-        positionVertex(slices, facet.v2)
-      )
+    val top = base.map { polygon =>
+      Polygon(polygon.vertices.map(v => positionVertex(slices, v)))
     }
-    BSPTree(base ++ facets ++ top)
+    println(polygons)
+    BSPTree(base ++ polygons ++ top)
   }
 }

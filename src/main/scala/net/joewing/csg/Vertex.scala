@@ -4,7 +4,7 @@ import breeze.linalg.{DenseMatrix, DenseVector}
 
 case class Vertex(x1: Double, x2: Double, x3: Double) {
 
-  override def toString: String = f"[$x1%.2f, $x2%.2f, $x3%.2f]"
+  override def toString: String = f"[$x1%.4f, $x2%.4f, $x3%.4f]"
 
   private def rx(radians: Double): DenseMatrix[Double] = DenseMatrix(
     DenseVector(1.0, 0.0, 0.0),

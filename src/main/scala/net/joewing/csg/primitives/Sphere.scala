@@ -1,6 +1,6 @@
 package net.joewing.csg.primitives
 
-import net.joewing.csg.{Facet, Vertex, BSPTree}
+import net.joewing.csg.{BSPTree, Polygon, Vertex}
 
 case class Sphere(r: Double = 1, slices: Int = 8, stacks: Int = 8) extends Primitive[ThreeDimensional] {
   require(slices >= 3, s"Need at least 3 slices, got $slices")
@@ -17,19 +17,19 @@ case class Sphere(r: Double = 1, slices: Int = 8, stacks: Int = 8) extends Primi
   }
 
   def render: BSPTree = {
-    val fs = Vector.tabulate(slices, stacks) { (x, y) =>
+    val polygons = Vector.tabulate(slices, stacks) { (x, y) =>
       val v1 = vertex(x, y)
       val v2 = vertex(x + 1, y)
       val v3 = vertex(x + 1, y + 1)
       val v4 = vertex(x, y + 1)
       if (y == 0) {
-        Vector(Facet(v1, v3, v4))
+        Vector(Polygon(Seq(v1, v3, v4)))
       } else if (y == stacks - 1) {
-        Vector(Facet(v1, v2, v4))
+        Vector(Polygon(Seq(v1, v2, v4)))
       } else {
-        Vector(Facet(v1, v2, v3), Facet(v1, v3, v4))
+        Vector(Polygon(Seq(v1, v2, v3, v4)))
       }
     }.flatten.flatten
-    BSPTree(fs)
+    BSPTree(polygons)
   }
 }

@@ -22,17 +22,17 @@ class LinearExtrudeSpec extends FunSpec with Matchers {
     }
 
     it("creates the right number of facets for a triangle with 1 slice") {
-      val facets = LinearExtrude(Triangle(1, 1), 1).render.allFacets
+      val facets = LinearExtrude(Triangle(1, 1), 1).render.allPolygons
       facets.size shouldBe (1 + 2 * 3 + 1)
     }
 
     it("creates the right number of facets for a square with 1 slice") {
-      val facets = LinearExtrude(Rectangle(1, 1), 1).render.allFacets
+      val facets = LinearExtrude(Rectangle(1, 1), 1).render.allPolygons
       facets.size shouldBe (2 + 2 * 4 + 2)
     }
 
     it("creates the right number of facets for a triangle with 2 slices") {
-      val facets = LinearExtrude(Triangle(1, 1), 1, slices = 2).render.allFacets
+      val facets = LinearExtrude(Triangle(1, 1), 1, slices = 2).render.allPolygons
       facets.size shouldBe (1 + 2 * 3 + 2 * 3 + 1)
     }
   }

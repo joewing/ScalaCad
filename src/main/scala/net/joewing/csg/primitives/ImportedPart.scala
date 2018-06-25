@@ -4,7 +4,7 @@ import net.joewing.csg.io.StlAsciiFileReader
 import net.joewing.csg.{BSPTree, Facet, Stl}
 
 case class ImportedPart(facets: Seq[Facet]) extends Primitive[ThreeDimensional] {
-  def render: BSPTree = BSPTree(facets)
+  def render: BSPTree = BSPTree.fromFacets(facets)
 }
 
 object ImportedPart {

@@ -22,17 +22,16 @@ class StlAsciiFileWriter(os: OutputStream) extends StlWriter {
   }
 
   def write(stl: Stl): Unit = {
-    val fixedStl = stl.fixed
     val ps = new PrintStream(os)
     try {
-      ps.println(s"solid ${fixedStl.name}")
-      fixedStl.facets.foreach { facet =>
+      ps.println(s"solid ${stl.name}")
+      stl.facets.foreach { facet =>
         writeFacet(ps, facet)
       }
-      ps.println(s"endsolid ${fixedStl.name}")
+      ps.println(s"endsolid ${stl.name}")
     } finally {
       ps.close()
-      println(s"Wrote ${fixedStl.facets.size} facets")
+      println(s"Wrote ${stl.facets.size} facets")
     }
   }
 
@@ -41,6 +40,6 @@ class StlAsciiFileWriter(os: OutputStream) extends StlWriter {
 object StlAsciiFileWriter {
   def write(stl: Stl, os: OutputStream): Unit = new StlAsciiFileWriter(os).write(stl)
   def write(stl: Stl, fileName: String): Unit = write(stl, new FileOutputStream(fileName))
-  def write(r: Primitive[ThreeDimensional], os: OutputStream): Unit = write(Stl("", r.render.allFacets), os)
-  def write(r: Primitive[ThreeDimensional], fileName: String): Unit = write(Stl(fileName, r.render.allFacets), fileName)
+  def write(r: Primitive[ThreeDimensional], os: OutputStream): Unit = write(Stl("", r.render.toFacets), os)
+  def write(r: Primitive[ThreeDimensional], fileName: String): Unit = write(Stl(fileName, r.render.toFacets), fileName)
 }

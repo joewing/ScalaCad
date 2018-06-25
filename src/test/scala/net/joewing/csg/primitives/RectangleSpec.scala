@@ -10,7 +10,7 @@ class RectangleSpec extends FunSpec with Matchers {
     }
 
     it("has the right normals") {
-      val facets = Rectangle(1, 2).render.allFacets
+      val facets = Rectangle(1, 2).render.allPolygons
       facets.foreach { facet =>
         facet.normal.x3 should be < 0.0
       }

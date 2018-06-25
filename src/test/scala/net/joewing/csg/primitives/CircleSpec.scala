@@ -21,11 +21,11 @@ class CircleSpec extends FunSpec with Matchers {
   describe("render") {
     it("should return the right number of facets") {
       val slices = 8
-      Circle(4, slices).render.allFacets.size shouldBe slices
+      Circle(4, slices).render.allPolygons.size shouldBe slices
     }
 
     it("should have all normals pointing down") {
-      val facets = Circle(4, 6).render.allFacets
+      val facets = Circle(4, 6).render.allPolygons
       facets.foreach { facet =>
         facet.normal.x3 should be < 0.0
       }

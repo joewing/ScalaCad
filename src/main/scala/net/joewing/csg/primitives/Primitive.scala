@@ -11,7 +11,7 @@ class ThreeDimensional extends Dim
 trait Primitive[T <: Dim] {
 
   private def reduceVertices(op: (Double, Double) => Double): Vertex = {
-    val vs = render.allFacets.flatMap(_.vertices)
+    val vs = render.allPolygons.flatMap(_.vertices)
     vs.tail.foldLeft(vs.head) { (b, v) =>
       Vertex(op(b.x1, v.x1), op(b.x2, v.x2), op(b.x3, v.x3))
     }

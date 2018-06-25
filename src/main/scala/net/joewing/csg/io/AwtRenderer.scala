@@ -10,19 +10,34 @@ import net.joewing.csg.primitives.{Primitive, ThreeDimensional}
 import net.joewing.csg.projection.{OrthographicProjection, Projection}
 
 class AwtRenderer(
-  stl: Stl,
+  title: String,
+  bsp: BSPTree,
   imageWidth: Int,
   imageHeight: Int,
   showVertices: Boolean,
   showBackfaces: Boolean
 ) {
 
-  private val projection: Projection = OrthographicProjection
+  private lazy val polygons: Seq[Polygon] = bsp.allPolygons
+  private val minBound: Vertex = polygons.flatMap(_.vertices).reduceLeft { (m, v) =>
+    m.copy(
+      x1 = math.min(m.x1, v.x1),
+      x2 = math.min(m.x2, v.x2),
+      x3 = math.min(m.x3, v.x3)
+    )
+  }
+  private val maxBound: Vertex = polygons.flatMap(_.vertices).reduceLeft { (m, v) =>
+    m.copy(
+      x1 = math.max(m.x1, v.x1),
+      x2 = math.max(m.x2, v.x2),
+      x3 = math.max(m.x3, v.x3)
+    )
+  }
 
   private val (initialScale, initialX, initialY): (Double, Double, Double) = {
     val buffer = (imageWidth * 0.05).toInt
-    val (minx, miny) = projection.project(stl.minBound)
-    val (maxx, maxy) = projection.project(stl.maxBound)
+    val (minx, miny) = (minBound.x1, minBound.x2)
+    val (maxx, maxy) = (maxBound.x1, maxBound.x2)
     val scalex = (imageWidth - buffer) / (maxx - minx)
     val scaley = (imageHeight - buffer) / (maxy - miny)
     val s = math.min(scalex, scaley)
@@ -35,33 +50,23 @@ class AwtRenderer(
   private var positionX: Double = initialX
   private var positionY: Double = initialY
 
-  private val frame = new JFrame(stl.name)
+  private val frame = new JFrame(title)
   private val image = new BufferedImage(imageWidth, imageHeight, BufferedImage.TYPE_INT_RGB)
   private val label = new JLabel(new ImageIcon(image))
 
-  private def paint(bsp: BSPTree, p: Vertex)(f: Facet => Unit): Unit = {
+  private def paint(bsp: BSPTree, p: Vertex)(f: Polygon => Unit): Unit = {
     val dp = p.dot(bsp.plane.normal)
     if (dp > 0) {
       bsp.back.foreach { x => paint(x, p)(f) }
-      bsp.facets.foreach(f)
+      bsp.polygons.foreach(f)
       bsp.front.foreach { x => paint(x, p)(f) }
     } else {
       bsp.front.foreach { x => paint(x, p)(f) }
       if (showBackfaces) {
-        bsp.facets.foreach(f)
+        bsp.polygons.foreach(f)
       }
       bsp.back.foreach { x => paint(x, p)(f) }
     }
-  }
-
-  private lazy val allFacets: Seq[Facet] = stl.facets
-  private lazy val bsp: BSPTree = BSPTree(allFacets)
-  private lazy val maxBound: Vertex = allFacets.map(_.maxBound).foldLeft(Vertex(0, 0, 0)) { (m, v) =>
-    m.copy(
-      x1 = math.max(m.x1, v.x1),
-      x2 = math.max(m.x2, v.x2),
-      x3 = math.max(m.x3, v.x3)
-    )
   }
 
   private def renderFacet(
@@ -97,23 +102,24 @@ class AwtRenderer(
     )
     val lightSource = p.unit
 
-    val xs = Array.fill[Int](3)(0)
-    val ys = Array.fill[Int](3)(0)
     val cx = math.cos(rotationX)
     val sx = math.sin(rotationX)
     val cy = math.cos(rotationY)
     val sy = math.sin(rotationY)
     val sycx = sy * cx
     val sysx = sy * sx
-    paint(bsp, p) { facet =>
-      facet.vertices.indices.foreach { i =>
-        val v = facet.vertices(i)
+    paint(bsp, p) { polygon =>
+      val sz = polygon.vertices.size
+      val xs = Array.fill[Int](sz)(0)
+      val ys = Array.fill[Int](sz)(0)
+      polygon.vertices.indices.foreach { i =>
+        val v = polygon.vertices(i)
         val x = v.x1 * cx + v.x3 * sx
         val y = v.x1 * sysx + v.x2 * cy - v.x3 * sycx
         xs(i) = (x * scale + positionX).toInt
         ys(i) = (y * scale + positionY).toInt
       }
-      val v = facet.normal.dot(lightSource)
+      val v = polygon.normal.dot(lightSource)
       val brightness = math.max(0.1, math.min(1.0, v)).toFloat
       val color = new Color(0.0f, 0.0f, brightness)
       renderFacet(xs, ys, color, graphics)
@@ -187,7 +193,8 @@ object AwtRenderer {
     showVertices: Boolean = false
   ): Unit = {
     val renderer = new AwtRenderer(
-      stl = stl,
+      title = stl.name,
+      bsp = BSPTree(stl.facets.map(f => Polygon(f.vertices))),
       imageWidth = imageWidth,
       imageHeight = imageHeight,
       showVertices = showVertices,
@@ -196,5 +203,15 @@ object AwtRenderer {
     renderer.show()
   }
 
-  def show(r: Primitive[ThreeDimensional]): Unit = show(Stl("ScalaCad", r.render.allFacets))
+  def show(r: Primitive[ThreeDimensional]): Unit = {
+    val renderer = new AwtRenderer(
+      title = "ScalaCad",
+      bsp = r.render,
+      imageWidth = defaultWidth,
+      imageHeight = defaultHeight,
+      showVertices = true,
+      showBackfaces = false
+    )
+    renderer.show()
+  }
 }

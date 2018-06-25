@@ -2,29 +2,29 @@ package net.joewing.csg
 
 final case class BSPTree(
   plane: Plane,
-  facets: Seq[Facet],
+  polygons: Seq[Polygon],
   front: Option[BSPTree],
   back: Option[BSPTree]
 ) {
 
-  def allFacets: Seq[Facet] = {
-    val f: Seq[Facet] = front.map(_.allFacets).toSeq.flatten
-    val b: Seq[Facet] = back.map(_.allFacets).toSeq.flatten
-    facets ++ f ++ b
+  def allPolygons: Seq[Polygon] = {
+    val f: Seq[Polygon] = front.map(_.allPolygons).toSeq.flatten
+    val b: Seq[Polygon] = back.map(_.allPolygons).toSeq.flatten
+    polygons ++ f ++ b
   }
 
-  override def toString: String = allFacets.map(_.toString).mkString("\n")
+  override def toString: String = allPolygons.map(_.toString).mkString("\n")
 
   // Clip facets to this BSPTree.
-  def clipFacets(fs: Seq[Facet]): Seq[Facet] = {
-    val result = plane.split(fs)
+  def clipPolygons(ps: Seq[Polygon]): Seq[Polygon] = {
+    val result = plane.split(ps)
     val frontFacets = result.front ++ result.coFront
     val filteredFront = front match {
-      case Some(f) => f.clipFacets(frontFacets)
+      case Some(f) => f.clipPolygons(frontFacets)
       case None    => frontFacets
     }
     back match {
-      case Some(b) => b.clipFacets(result.back ++ result.coBack) ++ filteredFront
+      case Some(b) => b.clipPolygons(result.back ++ result.coBack) ++ filteredFront
       case None    => filteredFront
     }
   }
@@ -32,23 +32,23 @@ final case class BSPTree(
   // Return this BSPTree clipped to the other BSPTree.
   def clip(other: BSPTree): BSPTree = BSPTree(
     plane = plane,
-    facets = other.clipFacets(facets),
+    polygons = other.clipPolygons(polygons),
     front = front.map(_.clip(other)),
     back = back.map(_.clip(other))
   )
 
   def inverted: BSPTree = BSPTree(
     plane = plane.flip,
-    facets = facets.map(_.flip),
+    polygons = polygons.map(_.flip),
     front = back.map(_.inverted),
     back = front.map(_.inverted)
   )
 
-  def insert(fs: Seq[Facet]): BSPTree = {
-    if (fs.isEmpty) {
+  def insert(ps: Seq[Polygon]): BSPTree = {
+    if (ps.isEmpty) {
       this
     } else {
-      val result = plane.split(fs)
+      val result = plane.split(ps)
       val f: Option[BSPTree] = front match {
         case Some(x)                       => Some(x.insert(result.front))
         case None if result.front.nonEmpty => Some(BSPTree.apply(result.front))
@@ -59,18 +59,21 @@ final case class BSPTree(
         case None if result.back.nonEmpty  => Some(BSPTree.apply(result.back))
         case None                          => None
       }
-      BSPTree(plane, facets ++ result.coFront ++ result.coBack, f, b)
+      BSPTree(plane, polygons ++ result.coFront ++ result.coBack, f, b)
     }
   }
 
-  def merge(other: BSPTree): BSPTree = insert(other.allFacets)
+  def merge(other: BSPTree): BSPTree = insert(other.allPolygons)
+
+  def toFacets: Seq[Facet] = allPolygons.flatMap(_.facets)
 }
 
 object BSPTree {
-  def apply(facets: Seq[Facet]): BSPTree = {
-    val midpoint = facets.size >> 1
-    val plane = Plane(facets(midpoint))
-    val result = plane.split(facets)
+  def fromFacets(facets: Seq[Facet]): BSPTree = apply(facets.map(f => Polygon(f.vertices)))
+  def apply(polygons: Seq[Polygon]): BSPTree = {
+    val midpoint = polygons.size >> 1
+    val plane = Plane(polygons(midpoint))
+    val result = plane.split(polygons)
     val f = if (result.front.nonEmpty) Some(apply(result.front)) else None
     val b = if (result.back.nonEmpty) Some(apply(result.back)) else None
     BSPTree(plane, result.coFront ++ result.coBack, f, b)
