@@ -11,9 +11,10 @@ case class LinearExtrude(
 
   private def includeSide(base: Seq[Polygon])(side: (Vertex, Vertex)): Boolean = {
     val (a, b) = side
-    !base.flatMap(_.edges).forall { case (otherb, othera) =>
-      !othera.approxEqual(a) || !otherb.approxEqual(b)
+    val count = base.flatMap(_.edges).count { case (othera, otherb) =>
+      (othera.approxEqual(a) && otherb.approxEqual(b)) || (othera.approxEqual(b) && otherb.approxEqual(a))
     }
+    count == 1
   }
 
   private def segments(base: Seq[Polygon]): Seq[(Vertex, Vertex)] = {
@@ -45,9 +46,8 @@ case class LinearExtrude(
       }
     }
     val top = base.map { polygon =>
-      Polygon(polygon.vertices.map(v => positionVertex(slices, v)))
+      Polygon(polygon.vertices.map(v => positionVertex(slices, v)).reverse)
     }
-    println(polygons)
     BSPTree(base ++ polygons ++ top)
   }
 }
