@@ -19,7 +19,7 @@ class BSPTreeSpec extends FunSpec with Matchers {
       val bsp = BSPTree.fromFacets(Seq(facet))
 
       bsp.plane shouldBe Plane(Vertex(0, 0, -1), 0.0)
-      bsp.polygons shouldBe Seq(facet)
+      bsp.toFacets shouldBe Seq(facet)
     }
   }
 
@@ -27,7 +27,7 @@ class BSPTreeSpec extends FunSpec with Matchers {
     it("returns all facets in the tree") {
       val facet = Facet(Vertex(1, 0, 0), Vertex(0, 1, 0), Vertex(1, 1, 0))
       val bsp = BSPTree.fromFacets(Seq(facet))
-      bsp.allPolygons shouldBe Seq(facet)
+      bsp.toFacets shouldBe Seq(facet)
     }
   }
 
@@ -68,7 +68,7 @@ class BSPTreeSpec extends FunSpec with Matchers {
     it("the inverted bsp splits facets that span the object") {
       val spanning = Polygon(Seq(Vertex(0, 0, 0.5), Vertex(0, 1, 0.5), Vertex(1, 1, 0.5)))
       val result = bsp.inverted.clipPolygons(Seq(spanning))
-      result.length shouldBe 2
+      result.length shouldBe 1
 
       result.foreach { f =>
         f.normal shouldBe spanning.normal

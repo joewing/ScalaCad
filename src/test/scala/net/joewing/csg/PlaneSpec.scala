@@ -79,10 +79,9 @@ class PlaneSpec extends FunSpec with Matchers {
       val result = Plane.SplitResult()
       plane.splitPolygon(f, result)
       result.front shouldBe Seq(
-        Facet(Vertex(0.5, 0, 0), Vertex(1, 0, 1), Vertex(1, 1, 1)),
-        Facet(Vertex(1, 1, 1), Vertex(0.5, 0.5, 0), Vertex(0.5, 0, 0))
+        Polygon(Seq(Vertex(0.5, 0, 0), Vertex(1, 0, 1), Vertex(1, 1, 1), Vertex(0.5, 0.5, 0)))
       )
-      result.back shouldBe Seq(Facet(Vertex(0, 0, -1), Vertex(0.5, 0, 0), Vertex(0.5, 0.5, 0)))
+      result.back shouldBe Seq(Polygon(Seq(Vertex(0, 0, -1), Vertex(0.5, 0, 0), Vertex(0.5, 0.5, 0))))
       result.coFront shouldBe Seq.empty
       result.coBack shouldBe Seq.empty
     }

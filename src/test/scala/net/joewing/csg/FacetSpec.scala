@@ -8,11 +8,4 @@ class FacetSpec extends FunSpec with Matchers {
       Facet(Vertex(0, 0, 0), Vertex(0, 1, 0), Vertex(1, 1, 0)).normal shouldBe Vertex(0, 0, -1)
     }
   }
-
-  describe("flip") {
-    it("flips the normal") {
-      Facet(Vertex(0, 0, 0), Vertex(0, 1, 0), Vertex(1, 1, 0)).flip.normal shouldBe Vertex(0, 0, 1)
-    }
-  }
-
 }
