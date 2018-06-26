@@ -182,35 +182,24 @@ class AwtRenderer(
 
 object AwtRenderer {
 
+  val title: String = "ScalaCad"
   val defaultWidth: Int = 800
   val defaultHeight: Int = 600
 
   def show(
-    stl: Stl,
+    r: Primitive[ThreeDimensional],
     imageWidth: Int = defaultWidth,
     imageHeight: Int = defaultHeight,
     showBackfaces: Boolean = false,
     showVertices: Boolean = false
   ): Unit = {
     val renderer = new AwtRenderer(
-      title = stl.name,
-      bsp = BSPTree(stl.facets.map(f => Polygon(f.vertices))),
+      title = title,
+      bsp = r.render,
       imageWidth = imageWidth,
       imageHeight = imageHeight,
       showVertices = showVertices,
       showBackfaces = showBackfaces
-    )
-    renderer.show()
-  }
-
-  def show(r: Primitive[ThreeDimensional]): Unit = {
-    val renderer = new AwtRenderer(
-      title = "ScalaCad",
-      bsp = r.render,
-      imageWidth = defaultWidth,
-      imageHeight = defaultHeight,
-      showVertices = true,
-      showBackfaces = false
     )
     renderer.show()
   }

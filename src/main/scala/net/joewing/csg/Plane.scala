@@ -74,7 +74,5 @@ object Plane {
   val Back: Int = 2
   val Spanning: Int = 3
 
-  def apply(facet: Facet): Plane = Plane(facet.normal, facet.normal.dot(facet.v1))
-
   def apply(polygon: Polygon): Plane = Plane(polygon.normal, polygon.normal.dot(polygon.vertices.head))
 }

@@ -1,13 +1,7 @@
 package net.joewing.csg.primitives
 
-import net.joewing.csg.io.StlAsciiFileReader
-import net.joewing.csg.{BSPTree, Facet, Stl}
+import net.joewing.csg.{BSPTree, Polygon}
 
-case class ImportedPart(facets: Seq[Facet]) extends Primitive[ThreeDimensional] {
-  def render: BSPTree = BSPTree.fromFacets(facets)
-}
-
-object ImportedPart {
-  def fromStl(stl: Stl): ImportedPart = ImportedPart(stl.facets)
-  def fromFile(fileName: String): ImportedPart = fromStl(StlAsciiFileReader.read(fileName))
+case class ImportedPart(polygons: Seq[Polygon]) extends Primitive[ThreeDimensional] {
+  def render: BSPTree = BSPTree(polygons)
 }

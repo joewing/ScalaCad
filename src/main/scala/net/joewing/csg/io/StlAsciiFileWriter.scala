@@ -5,7 +5,7 @@ import java.io.{FileOutputStream, OutputStream, PrintStream}
 import net.joewing.csg._
 import net.joewing.csg.primitives.{Primitive, ThreeDimensional}
 
-class StlAsciiFileWriter(os: OutputStream) extends StlWriter {
+class StlAsciiFileWriter(os: OutputStream) {
 
   private def fmt(d: Double): String = f"$d%.6e"
 
@@ -21,25 +21,24 @@ class StlAsciiFileWriter(os: OutputStream) extends StlWriter {
     ps.println(s"  endfacet")
   }
 
-  def write(stl: Stl): Unit = {
+  def write(name: String, polygons: Seq[Polygon]): Unit = {
     val ps = new PrintStream(os)
     try {
-      ps.println(s"solid ${stl.name}")
-      stl.facets.foreach { facet =>
+      ps.println(s"solid $name")
+      Facet.fromPolygons(polygons).foreach { facet =>
         writeFacet(ps, facet)
       }
-      ps.println(s"endsolid ${stl.name}")
+      ps.println(s"endsolid $name")
     } finally {
       ps.close()
-      println(s"Wrote ${stl.facets.size} facets")
     }
   }
 
 }
 
 object StlAsciiFileWriter {
-  def write(stl: Stl, os: OutputStream): Unit = new StlAsciiFileWriter(os).write(stl)
-  def write(stl: Stl, fileName: String): Unit = write(stl, new FileOutputStream(fileName))
-  def write(r: Primitive[ThreeDimensional], os: OutputStream): Unit = write(Stl("", r.render.facets), os)
-  def write(r: Primitive[ThreeDimensional], fileName: String): Unit = write(Stl(fileName, r.render.facets), fileName)
+  def write(r: Primitive[ThreeDimensional], os: OutputStream): Unit = {
+    new StlAsciiFileWriter(os).write("", r.render.allPolygons)
+  }
+  def write(r: Primitive[ThreeDimensional], fileName: String): Unit = write(r, new FileOutputStream(fileName))
 }

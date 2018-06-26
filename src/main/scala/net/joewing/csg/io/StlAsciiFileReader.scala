@@ -1,12 +1,15 @@
 package net.joewing.csg.io
 
-import java.io.{FileInputStream, InputStream, InputStreamReader}
+import java.io.{InputStream, InputStreamReader}
 
 import net.joewing.csg._
+import net.joewing.csg.primitives.ImportedPart
 
 import scala.util.parsing.combinator.JavaTokenParsers
 
-class StlAsciiFileReader(is: InputStream) extends StlReader {
+class StlAsciiFileReader(is: InputStream) {
+
+  private case class Stl(name: String, facets: Seq[Facet])
 
   private object StlParser extends JavaTokenParsers {
 
@@ -49,9 +52,9 @@ class StlAsciiFileReader(is: InputStream) extends StlReader {
     def parse(is: InputStream): ParseResult[Stl] = parseAll(solid, new InputStreamReader(is))
   }
 
-  def read: Stl = {
+  def read: ImportedPart = {
     StlParser.parse(is) match {
-      case StlParser.Success(stl,_ ) => stl
+      case StlParser.Success(stl,_ ) => ImportedPart(stl.facets.map(f => Polygon(f.vertices)))
       case StlParser.Error(msg, _)   => throw new IllegalArgumentException(s"parse error: $msg")
       case StlParser.Failure(msg, _) => throw new IllegalArgumentException(s"parse failure: $msg")
     }
@@ -59,6 +62,5 @@ class StlAsciiFileReader(is: InputStream) extends StlReader {
 }
 
 object StlAsciiFileReader {
-  def read(is: InputStream): Stl = new StlAsciiFileReader(is).read
-  def read(fileName: String): Stl = read(new FileInputStream(fileName))
+  def read(is: InputStream): ImportedPart = new StlAsciiFileReader(is).read
 }

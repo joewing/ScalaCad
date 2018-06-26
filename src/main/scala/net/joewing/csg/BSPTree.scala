@@ -18,10 +18,10 @@ final case class BSPTree(
   // Clip facets to this BSPTree.
   def clipPolygons(ps: Seq[Polygon]): Seq[Polygon] = {
     val result = plane.split(ps)
-    val frontFacets = result.front ++ result.coFront
+    val frontPolygons = result.front ++ result.coFront
     val filteredFront = front match {
-      case Some(f) => f.clipPolygons(frontFacets)
-      case None    => frontFacets
+      case Some(f) => f.clipPolygons(frontPolygons)
+      case None    => frontPolygons
     }
     back match {
       case Some(b) => b.clipPolygons(result.back ++ result.coBack) ++ filteredFront
@@ -64,12 +64,9 @@ final case class BSPTree(
   }
 
   def merge(other: BSPTree): BSPTree = insert(other.allPolygons)
-
-  def facets: Seq[Facet] = allPolygons.flatMap(_.facets)
 }
 
 object BSPTree {
-  def fromFacets(facets: Seq[Facet]): BSPTree = apply(facets.map(f => Polygon(f.vertices)))
   def apply(polygons: Seq[Polygon]): BSPTree = {
     val midpoint = polygons.size >> 1
     val plane = Plane(polygons(midpoint))

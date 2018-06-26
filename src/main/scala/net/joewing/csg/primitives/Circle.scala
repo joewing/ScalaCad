@@ -1,6 +1,6 @@
 package net.joewing.csg.primitives
 
-import net.joewing.csg.{BSPTree, Facet, Polygon, Vertex}
+import net.joewing.csg.{BSPTree, Polygon, Vertex}
 
 case class Circle(r: Double, sides: Int) extends Primitive[TwoDimensional] {
   require(sides >= 3, s"sides must be at least 3 (got $sides)")

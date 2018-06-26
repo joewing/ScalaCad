@@ -1,6 +1,6 @@
 package net.joewing.csg.primitives
 
-import net.joewing.csg.{BSPTree, Facet, Polygon, Vertex}
+import net.joewing.csg.{BSPTree, Polygon, Vertex}
 
 case class Cube(width: Double, height: Double, depth: Double) extends Primitive[ThreeDimensional] {
   def render: BSPTree = {

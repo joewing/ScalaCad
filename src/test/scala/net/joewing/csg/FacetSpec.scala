@@ -1,5 +1,6 @@
 package net.joewing.csg
 
+import net.joewing.csg.io.Facet
 import org.scalatest.{FunSpec, Matchers}
 
 class FacetSpec extends FunSpec with Matchers {

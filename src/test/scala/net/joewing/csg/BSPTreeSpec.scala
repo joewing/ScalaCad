@@ -7,41 +7,41 @@ import scala.collection.mutable.ArrayBuffer
 class BSPTreeSpec extends FunSpec with Matchers {
 
   val obj = Seq(
-    Facet(Vertex(-0.5, 1, 0), Vertex(1, 0, 0), Vertex(0, 0, 1)),
-    Facet(Vertex(-0.5, -1, 0), Vertex(-0.5, 1, 0), Vertex(0, 0, 1)),
-    Facet(Vertex(1, 0, 0), Vertex(-0.5, -1, 0), Vertex(0, 0, 1)),
-    Facet(Vertex(1, 0, 0), Vertex(-0.5, 1, 0), Vertex(-0.5, -1, 0))
+    Polygon(Seq(Vertex(-0.5, 1, 0), Vertex(1, 0, 0), Vertex(0, 0, 1))),
+    Polygon(Seq(Vertex(-0.5, -1, 0), Vertex(-0.5, 1, 0), Vertex(0, 0, 1))),
+    Polygon(Seq(Vertex(1, 0, 0), Vertex(-0.5, -1, 0), Vertex(0, 0, 1))),
+    Polygon(Seq(Vertex(1, 0, 0), Vertex(-0.5, 1, 0), Vertex(-0.5, -1, 0)))
   )
 
   describe("apply") {
-    it("creates a BSP from a single facet") {
-      val facet = Facet(Vertex(1, 0, 0), Vertex(0, 1, 0), Vertex(1, 1, 0))
-      val bsp = BSPTree.fromFacets(Seq(facet))
+    it("creates a BSP from a single polygon") {
+      val polygon = Polygon(Seq(Vertex(1, 0, 0), Vertex(0, 1, 0), Vertex(1, 1, 0)))
+      val bsp = BSPTree(Seq(polygon))
 
       bsp.plane shouldBe Plane(Vertex(0, 0, -1), 0.0)
-      bsp.facets shouldBe Seq(facet)
+      bsp.allPolygons shouldBe Seq(polygon)
     }
   }
 
-  describe("allFacets") {
-    it("returns all facets in the tree") {
-      val facet = Facet(Vertex(1, 0, 0), Vertex(0, 1, 0), Vertex(1, 1, 0))
-      val bsp = BSPTree.fromFacets(Seq(facet))
-      bsp.facets shouldBe Seq(facet)
+  describe("allPolygons") {
+    it("returns all polygons in the tree") {
+      val polygon = Polygon(Seq(Vertex(1, 0, 0), Vertex(0, 1, 0), Vertex(1, 1, 0)))
+      val bsp = BSPTree(Seq(polygon))
+      bsp.allPolygons shouldBe Seq(polygon)
     }
   }
 
-  describe("clipFacets") {
+  describe("clipPolygons") {
 
-    val bsp = BSPTree.fromFacets(obj)
+    val bsp = BSPTree(obj)
 
-    it("removes facets that are not contained in this BSPTree") {
+    it("removes polygons that are not contained in this BSPTree") {
       val outside = Polygon(Seq(Vertex(2, 0, 0), Vertex(0, 2, 0), Vertex(2, 2, 0)))
       val inside = Polygon(Seq(Vertex(0.25, 0.25, 0.1), Vertex(0, 0.25, 0.2), Vertex(0.25, 0.25, 0.3)))
       bsp.clipPolygons(Seq(inside, outside)) shouldBe Seq(inside)
     }
 
-    it("splits facets that span the object") {
+    it("splits polygons that span the object") {
       val spanning = Polygon(Seq(Vertex(0, 0, 0.5), Vertex(0, 1, 0.5), Vertex(1, 1, 0.5)))
       val result = bsp.clipPolygons(Seq(spanning))
       result.length shouldBe 1
@@ -58,14 +58,14 @@ class BSPTreeSpec extends FunSpec with Matchers {
       result.head.vertices(2).x3 shouldBe 0.5
     }
 
-    it("splits facets that span the object preserving the orientation") {
+    it("splits polygons that span the object preserving the orientation") {
       val spanning = Polygon(Seq(Vertex(0, 0, 0.5), Vertex(0, 1, 0.5), Vertex(1, 1, 0.5)))
 
       bsp.clipPolygons(Seq(spanning)).head.normal shouldBe spanning.normal
       bsp.clipPolygons(Seq(spanning.flip)).head.normal shouldBe spanning.flip.normal
     }
 
-    it("the inverted bsp splits facets that span the object") {
+    it("the inverted bsp splits polygons that span the object") {
       val spanning = Polygon(Seq(Vertex(0, 0, 0.5), Vertex(0, 1, 0.5), Vertex(1, 1, 0.5)))
       val result = bsp.inverted.clipPolygons(Seq(spanning))
       result.length shouldBe 1
@@ -77,7 +77,7 @@ class BSPTreeSpec extends FunSpec with Matchers {
   }
 
   describe("clip") {
-    val bsp = BSPTree.fromFacets(obj)
+    val bsp = BSPTree(obj)
 
     it("returns itself when clipped with itself") {
       bsp.clip(bsp) shouldBe bsp
@@ -102,7 +102,7 @@ class BSPTreeSpec extends FunSpec with Matchers {
     }
 
     it("does nothing when performed twice") {
-      val bsp = BSPTree.fromFacets(obj)
+      val bsp = BSPTree(obj)
       bsp.inverted.inverted shouldBe bsp
     }
   }
