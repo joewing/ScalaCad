@@ -1,6 +1,6 @@
 package net.joewing.scalacad.io
 
-import java.io.{InputStream, InputStreamReader}
+import java.io.{FileInputStream, InputStream, InputStreamReader}
 
 import net.joewing.scalacad._
 import net.joewing.scalacad.primitives.ImportedPart
@@ -13,11 +13,9 @@ class StlAsciiFileReader(is: InputStream) {
 
   private object StlParser extends JavaTokenParsers {
 
-    val solidName: Parser[String] = regex(".*".r)
+    val startSolid: Parser[String] = "solid .*".r
 
-    val startSolid: Parser[String] = "solid " ~> solidName
-
-    val endSolid: Parser[String] = "endsolid " ~> solidName
+    val endSolid: Parser[String] = "endsolid .*".r
 
     val vertex: Parser[Vertex] = floatingPointNumber ~ floatingPointNumber ~ floatingPointNumber ^^ {
       case x1 ~ x2 ~ x3 => Vertex(x1.toDouble, x2.toDouble, x3.toDouble)
@@ -63,4 +61,5 @@ class StlAsciiFileReader(is: InputStream) {
 
 object StlAsciiFileReader {
   def read(is: InputStream): ImportedPart = new StlAsciiFileReader(is).read
+  def read(fileName: String): ImportedPart = read(new FileInputStream(fileName))
 }
