@@ -7,26 +7,27 @@ import java.awt.{Color, Graphics2D}
 import javax.swing.{ImageIcon, JFrame, JLabel, WindowConstants}
 import net.joewing.csg._
 import net.joewing.csg.primitives.{Primitive, ThreeDimensional}
-import net.joewing.csg.projection.{OrthographicProjection, Projection}
 
 class AwtRenderer(
   title: String,
   bsp: BSPTree,
-  imageWidth: Int,
-  imageHeight: Int,
+  initialImageWidth: Int,
+  initialImageHeight: Int,
   showVertices: Boolean,
   showBackfaces: Boolean
 ) {
 
   private lazy val polygons: Seq[Polygon] = bsp.allPolygons
-  private val minBound: Vertex = polygons.flatMap(_.vertices).reduceLeft { (m, v) =>
+
+  private lazy val minBound: Vertex = polygons.flatMap(_.vertices).reduceLeft { (m, v) =>
     m.copy(
       x1 = math.min(m.x1, v.x1),
       x2 = math.min(m.x2, v.x2),
       x3 = math.min(m.x3, v.x3)
     )
   }
-  private val maxBound: Vertex = polygons.flatMap(_.vertices).reduceLeft { (m, v) =>
+
+  private lazy val maxBound: Vertex = polygons.flatMap(_.vertices).reduceLeft { (m, v) =>
     m.copy(
       x1 = math.max(m.x1, v.x1),
       x2 = math.max(m.x2, v.x2),
@@ -34,14 +35,18 @@ class AwtRenderer(
     )
   }
 
-  private val (initialScale, initialX, initialY): (Double, Double, Double) = {
-    val buffer = (imageWidth * 0.05).toInt
+  private lazy val (initialScale, initialX, initialY): (Double, Double, Double) = {
+    val buffer = (initialImageWidth * 0.05).toInt
     val (minx, miny) = (minBound.x1, minBound.x2)
     val (maxx, maxy) = (maxBound.x1, maxBound.x2)
-    val scalex = (imageWidth - buffer) / (maxx - minx)
-    val scaley = (imageHeight - buffer) / (maxy - miny)
+    val scalex = (initialImageWidth - buffer) / (maxx - minx)
+    val scaley = (initialImageHeight - buffer) / (maxy - miny)
     val s = math.min(scalex, scaley)
-    (s, (imageWidth - (maxx + minx) * s) / 2, (imageHeight - (maxy + miny) * s) / 2)
+    (s, (initialImageWidth - (maxx + minx) * s) / 2, (initialImageHeight - (maxy + miny) * s) / 2)
+  }
+
+  private def createImage(width: Int, height: Int): BufferedImage = {
+    new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB)
   }
 
   private var scale: Double = initialScale
@@ -51,7 +56,7 @@ class AwtRenderer(
   private var positionY: Double = initialY
 
   private val frame = new JFrame(title)
-  private val image = new BufferedImage(imageWidth, imageHeight, BufferedImage.TYPE_INT_RGB)
+  private var image = createImage(initialImageWidth, initialImageHeight)
   private val label = new JLabel(new ImageIcon(image))
 
   private def paint(bsp: BSPTree, p: Vertex)(f: Polygon => Unit): Unit = {
@@ -169,11 +174,22 @@ class AwtRenderer(
     }
   }
 
+  private object ResizeListener extends ComponentAdapter {
+    override def componentResized(e: ComponentEvent): Unit = {
+      val newWidth = e.getComponent.getWidth
+      val newHeight = e.getComponent.getHeight
+      image = createImage(newWidth, newHeight)
+      label.setIcon(new ImageIcon(image))
+      render()
+    }
+  }
+
   def show(): Unit = {
     frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE)
     frame.add(label)
     frame.addMouseMotionListener(MotionListener)
     frame.addMouseWheelListener(WheelListener)
+    frame.addComponentListener(ResizeListener)
     frame.pack()
     frame.setVisible(true)
     render()
@@ -196,8 +212,8 @@ object AwtRenderer {
     val renderer = new AwtRenderer(
       title = title,
       bsp = r.render,
-      imageWidth = imageWidth,
-      imageHeight = imageHeight,
+      initialImageWidth = imageWidth,
+      initialImageHeight = imageHeight,
       showVertices = showVertices,
       showBackfaces = showBackfaces
     )
