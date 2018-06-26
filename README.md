@@ -1,5 +1,7 @@
 # ScalaCad
 
+![Build Status](https://travis-ci.org/joewing/ScalaCad.svg?branch=master)
+
 ## Overview
 
 ScalaCad is a Constructive Solid Geometry library/DSL for Scala
