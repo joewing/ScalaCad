@@ -20,17 +20,17 @@ package object primitives {
   trait RichPrimitive[D <: Dim] {
     val left: Primitive[D]
 
-    def |(right: Primitive[D]): Union[D] = Union(left, right)
-    def &(right: Primitive[D]): Intersection[D] = Intersection(left, right)
-    def -(right: Primitive[D]): Difference[D] = Difference(left, right)
-    def unary_-(): Invert[D] = Invert(left)
+    def |(right: Primitive[D]): Primitive[D] = Union(left, right)
+    def &(right: Primitive[D]): Primitive[D] = Intersection(left, right)
+    def -(right: Primitive[D]): Primitive[D] = Difference(left, right)
+    def unary_-(): Primitive[D] = Invert(left)
 
-    def translate(x: Double = 0, y: Double = 0, z: Double = 0): Translate[D] = Translate(left, x, y, z)
-    def translate(v: Vertex): Translate[D] = translate(v.x1, v.x2, v.x3)
-    def rotate(x: Double = 0, y: Double = 0, z: Double = 0): Rotate[D] = Rotate(left, x, y, z)
-    def scale(x: Double = 1, y: Double = 1, z: Double = 1): Scale[D] = Scale(left, x, z, y)
+    def translate(x: Double = 0, y: Double = 0, z: Double = 0): Primitive[D] = Translate(left, x, y, z)
+    def translate(v: Vertex): Primitive[D] = translate(v.x1, v.x2, v.x3)
+    def rotate(x: Double = 0, y: Double = 0, z: Double = 0): Primitive[D] = Rotate(left, x, y, z)
+    def scale(x: Double = 1, y: Double = 1, z: Double = 1): Primitive[D] = Scale(left, x, z, y)
 
-    def centered: Translate[D] = translate((left.maxBound + left.minBound) / -2)
+    def centered: Primitive[D] = translate((left.maxBound + left.minBound) / -2)
 
     def above(other: Primitive[D], overlap: Double = 0.0): Primitive[D] = {
       Union(translate(z = other.extent.x3 - overlap), other)
