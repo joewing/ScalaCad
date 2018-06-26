@@ -19,7 +19,7 @@ class BSPTreeSpec extends FunSpec with Matchers {
       val bsp = BSPTree.fromFacets(Seq(facet))
 
       bsp.plane shouldBe Plane(Vertex(0, 0, -1), 0.0)
-      bsp.toFacets shouldBe Seq(facet)
+      bsp.facets shouldBe Seq(facet)
     }
   }
 
@@ -27,7 +27,7 @@ class BSPTreeSpec extends FunSpec with Matchers {
     it("returns all facets in the tree") {
       val facet = Facet(Vertex(1, 0, 0), Vertex(0, 1, 0), Vertex(1, 1, 0))
       val bsp = BSPTree.fromFacets(Seq(facet))
-      bsp.toFacets shouldBe Seq(facet)
+      bsp.facets shouldBe Seq(facet)
     }
   }
 

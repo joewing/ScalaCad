@@ -65,7 +65,7 @@ final case class BSPTree(
 
   def merge(other: BSPTree): BSPTree = insert(other.allPolygons)
 
-  def toFacets: Seq[Facet] = allPolygons.flatMap(_.facets)
+  def facets: Seq[Facet] = allPolygons.flatMap(_.facets)
 }
 
 object BSPTree {
