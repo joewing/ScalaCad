@@ -184,12 +184,22 @@ class AwtRenderer(
     }
   }
 
+  private object KeyListener extends KeyAdapter {
+    override def keyPressed(e: KeyEvent): Unit = {
+      e.getKeyChar match {
+        case 'q' | 'Q' => frame.dispose()
+        case _         => ()
+      }
+    }
+  }
+
   def show(): Unit = {
     frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE)
     frame.add(label)
     frame.addMouseMotionListener(MotionListener)
     frame.addMouseWheelListener(WheelListener)
     frame.addComponentListener(ResizeListener)
+    frame.addKeyListener(KeyListener)
     frame.pack()
     frame.setVisible(true)
     render()
