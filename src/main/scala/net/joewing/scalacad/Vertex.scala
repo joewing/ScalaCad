@@ -54,14 +54,33 @@ case class Vertex(x1: Double, x2: Double, x3: Double) {
 
   def length: Double = math.sqrt(dot(this))
 
-  def unit: Vertex = this / length
+  def unit: Vertex = if (length > 0) this / length else this
 
   def interpolate(other: Vertex, d: Double): Vertex = this + (other - this) * d
 
   def negated: Vertex = Vertex(-x1, -x2, -x3)
 
-  def approxEqual(other: Vertex, epsilon: Double = 1e-5): Boolean = {
+  def approxEqual(other: Vertex, epsilon: Double = Vertex.epsilon): Boolean = {
     math.abs(x1 - other.x1) < epsilon && math.abs(x2 - other.x2) < epsilon && math.abs(x3 - other.x3) < epsilon
   }
+
+  def min(right: Vertex): Vertex = Vertex(math.min(x1, right.x1), math.min(x2, right.x2), math.min(x3, right.x3))
+
+  def max(right: Vertex): Vertex = Vertex(math.max(x1, right.x1), math.max(x2, right.x2), math.max(x3, right.x3))
 }
 
+object Vertex {
+
+  val epsilon: Double = 1e-5
+
+  implicit object VertexOrdering extends Ordering[Vertex] {
+    def compare(x: Vertex, y: Vertex): Int = {
+      if (math.abs(x.x1 - y.x1) < epsilon) {
+        if (math.abs(x.x2 - y.x2) < epsilon) {
+          if (math.abs(x.x3 - y.x3) < epsilon) 0
+          else if (x.x3 < y.x3) -1 else 1
+        } else if (x.x2 < y.x2) -1 else 1
+      } else if (x.x1 < y.x1) -1 else 1
+    }
+  }
+}

@@ -4,6 +4,9 @@ case class Polygon(vertices: Seq[Vertex]) {
 
   lazy val normal: Vertex = (vertices(1) - vertices.head).cross(vertices(2) - vertices.head).unit
 
+  def minBound: Vertex = vertices.tail.foldLeft(vertices.head)(_ min _)
+  def maxBound: Vertex = vertices.tail.foldLeft(vertices.head)(_ max _)
+
   def flip: Polygon = Polygon(vertices.reverse)
 
   def scaled(x: Double = 1, y: Double = 1, z: Double = 1): Polygon = Polygon(vertices.map(_.scaled(x, y, z)))
