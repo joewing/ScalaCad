@@ -64,15 +64,20 @@ final case class BSPTree(
   }
 
   def merge(other: BSPTree): BSPTree = insert(other.allPolygons)
+
+  def depth: Int = {
+    val frontDepth = front.map(_.depth).getOrElse(0)
+    val backDepth = back.map(_.depth).getOrElse(0)
+    math.max(frontDepth, backDepth) + 1
+  }
 }
 
 object BSPTree {
   def apply(polygons: Seq[Polygon]): BSPTree = {
-    val midpoint = polygons.size >> 1
-    val plane = Plane(polygons(midpoint))
-    val result = plane.split(polygons)
+    val plane = Plane(polygons.head)
+    val result = plane.split(polygons.tail)
     val f = if (result.front.nonEmpty) Some(apply(result.front)) else None
     val b = if (result.back.nonEmpty) Some(apply(result.back)) else None
-    BSPTree(plane, result.coFront ++ result.coBack, f, b)
+    BSPTree(plane, polygons.head +: (result.coFront ++ result.coBack), f, b)
   }
 }

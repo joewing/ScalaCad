@@ -12,7 +12,7 @@ class StlAsciiFileWriter(os: OutputStream) {
   private def vertexString(v: Vertex): String = s"${fmt(v.x1)} ${fmt(v.x2)} ${fmt(v.x3)}"
 
   private def writeFacet(ps: PrintStream, facet: Facet): Unit = {
-    ps.println(s"  facet normal 0 0 0")
+    ps.println(s"  facet normal ${vertexString(facet.normal)}")
     ps.println(s"    outer loop")
     facet.vertices.foreach { v =>
       ps.println(s"      vertex ${vertexString(v)}")

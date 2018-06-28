@@ -38,6 +38,8 @@ case class Vertex(x1: Double, x2: Double, x3: Double) {
 
   def dot(other: Vertex): Double = x1 * other.x1 + x2 * other.x2 + x3 * other.x3
 
+  def dotSelf: Double = dot(this)
+
   def cross(other: Vertex): Vertex = Vertex(
     x2 * other.x3 - x3 * other.x2,
     x3 * other.x1 - x1 * other.x3,
@@ -52,7 +54,7 @@ case class Vertex(x1: Double, x2: Double, x3: Double) {
 
   def /(s: Double): Vertex = Vertex(x1 / s, x2 / s, x3 / s)
 
-  def length: Double = math.sqrt(dot(this))
+  def length: Double = math.sqrt(dotSelf)
 
   def unit: Vertex = if (length > 0) this / length else this
 
@@ -67,20 +69,25 @@ case class Vertex(x1: Double, x2: Double, x3: Double) {
   def min(right: Vertex): Vertex = Vertex(math.min(x1, right.x1), math.min(x2, right.x2), math.min(x3, right.x3))
 
   def max(right: Vertex): Vertex = Vertex(math.max(x1, right.x1), math.max(x2, right.x2), math.max(x3, right.x3))
+
+  def collinear(a: Vertex, b: Vertex): Boolean = (b - a).cross(this - a).dotSelf < Vertex.epsilon
+
+  // Find 't' such that 'a + t(b - a) = this'.
+  // If this returns t in (0, 1), then this is between a and b.
+  def solve(a: Vertex, b: Vertex): Double = {
+    if (math.abs(a.x1 - b.x1) > Vertex.epsilon) (x1 - a.x1) / (b.x1 - a.x1)
+    else if (math.abs(a.x2 - b.x2) > Vertex.epsilon) (x2 - a.x2) / (b.x2 - a.x2)
+    else if (math.abs(a.x3 - b.x3) > Vertex.epsilon) (x3 - a.x3) / (b.x3 - a.x3)
+    else 0.0
+  }
+
+  // Returns true if this is strictly between a and b.
+  def between(a: Vertex, b: Vertex): Boolean = {
+    val t = solve(a, b)
+    t > 0 && t < 1
+  }
 }
 
 object Vertex {
-
-  val epsilon: Double = 1e-5
-
-  implicit object VertexOrdering extends Ordering[Vertex] {
-    def compare(x: Vertex, y: Vertex): Int = {
-      if (math.abs(x.x1 - y.x1) < epsilon) {
-        if (math.abs(x.x2 - y.x2) < epsilon) {
-          if (math.abs(x.x3 - y.x3) < epsilon) 0
-          else if (x.x3 < y.x3) -1 else 1
-        } else if (x.x2 < y.x2) -1 else 1
-      } else if (x.x1 < y.x1) -1 else 1
-    }
-  }
+  val epsilon: Double = 1e-9
 }
