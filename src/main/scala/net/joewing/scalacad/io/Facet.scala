@@ -14,58 +14,7 @@ final case class Facet(v1: Vertex, v2: Vertex, v3: Vertex) {
 
 object Facet {
 
-  private val epsilon = Vertex.epsilon
-
-  def onEdge(p: Vertex, a: Vertex, b: Vertex, c: Vertex): Boolean = {
-    (p.collinear(a, b) && p.between(a, b)) ||
-      (p.collinear(b, c) && p.between(b, c)) ||
-      (p.collinear(c, a) && p.between(c, a))
-  }
-
-  /** Convert a polyon into triangles. */
-  def fromPolygon(polygon: Polygon): Seq[Facet] = {
-    // Use the edge clipping algorithm to get triangles.
-    // This is a simplified version that only considers multiple vertices on an edge.
-    val result = scala.collection.mutable.ArrayBuffer[Facet]()
-    val vertices = scala.collection.mutable.ListBuffer[Vertex](polygon.vertices: _*)
-    while (vertices.length > 2) {
-      val count = vertices.length
-      (0 until count).find { a =>
-        val b = (a + 1) % count
-        val c = (b + 1) % count
-        val (va, vb, vc) = (vertices(a), vertices(b), vertices(c))
-        !va.collinear(vb, vc) && !(1 until count - 2).exists { p =>
-          val vp = vertices((p + c) % count)
-          onEdge(vp, va, vb, vc)
-        }
-      } match {
-        case Some(index) =>
-          val a = index
-          val b = (index + 1) % count
-          val c = (index + 2) % count
-          val f = Facet(vertices(a), vertices(b), vertices(c))
-          /*
-          require(f.normal.dot(polygon.normal) >= 0, s"Invalid normal created for $polygon: $f")
-          require(f.normal.length > 0)
-          */
-          result += f
-          vertices.remove(b)
-        case None =>
-          vertices.remove(0)
-      }
-    }
-    result
-  }
-
-  private def uniq(vs: Seq[Vertex]): Seq[Vertex] = {
-    val result = scala.collection.mutable.ArrayBuffer[Vertex]()
-    vs.foreach { v =>
-      if (result.isEmpty || (!v.approxEqual(result.last, epsilon) && !v.approxEqual(result.head, epsilon))) {
-        result += v
-      }
-    }
-    result
-  }
+  private val epsilon = 1e-6
 
   /* Get all vertices from polygons such that they are collinear with a and b and between a and b. */
   def containedVertices(a: Vertex, b: Vertex, others: Seq[Vertex]): Seq[Vertex] = {
@@ -76,6 +25,27 @@ object Facet {
 
   private def fix(d: Double): Double = math.round(d / epsilon) * epsilon
 
+  private def insertVertices12(facet: Facet, others: Seq[Vertex]): Seq[Facet] = {
+    val contained = containedVertices(facet.v1, facet.v2, others) :+ facet.v2
+    contained.foldLeft((facet.v1, Vector.empty[Facet])) { case ((lastVertex, facets), nextVertex) =>
+      (nextVertex, facets :+ Facet(lastVertex, nextVertex, facet.v3))
+    }._2
+  }
+
+  private def insertVertices23(facet: Facet, others: Seq[Vertex]): Seq[Facet] = {
+    val contained = containedVertices(facet.v2, facet.v3, others) :+ facet.v3
+    contained.foldLeft((facet.v2, Vector.empty[Facet])) { case ((lastVertex, facets), nextVertex) =>
+      (nextVertex, facets :+ Facet(facet.v1, lastVertex, nextVertex))
+    }._2
+  }
+
+  private def insertVertices31(facet: Facet, others: Seq[Vertex]): Vector[Facet] = {
+    val contained = containedVertices(facet.v3, facet.v1, others) :+ facet.v1
+    contained.foldLeft((facet.v3, Vector.empty[Facet])) { case ((lastVertex, facets), nextVertex) =>
+      (nextVertex, facets :+ Facet(nextVertex, facet.v2, lastVertex))
+    }._2
+  }
+
   /** Convert polygons to triangular faces. */
   def fromPolygons(polygons: Seq[Polygon]): Seq[Facet] = {
     // First add extra vertices to the polygon so that there is no
@@ -85,12 +55,13 @@ object Facet {
       Polygon(p.vertices.map(v => Vertex(fix(v.x1), fix(v.x2), fix(v.x3))))
     }.seq
     val tree = Octree(fixed.flatMap(_.vertices))
-    fixed.par.map { polygon =>
+    fixed.par.flatMap { polygon =>
       val others = tree.contained(polygon.minBound, polygon.maxBound)
-      val newVertices = (polygon.vertices :+ polygon.vertices.head).sliding(2).flatMap { case Seq(a, b) =>
-        a +: containedVertices(a, b, others)
-      }.toSeq
-      Polygon(uniq(newVertices))
-    }.flatMap(fromPolygon).seq
+      polygon.vertices.tail.sliding(2).flatMap { case Seq(a, b) =>
+        val with23 = insertVertices23(Facet(polygon.vertices.head, a, b), others)
+        val with12 = insertVertices12(with23.head, others) ++ with23.tail
+        with12.init ++ insertVertices31(with12.last, others)
+      }
+    }.seq
   }
 }

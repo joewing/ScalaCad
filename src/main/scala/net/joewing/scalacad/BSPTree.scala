@@ -73,11 +73,16 @@ final case class BSPTree(
 }
 
 object BSPTree {
-  def apply(polygons: Seq[Polygon]): BSPTree = {
-    val plane = Plane(polygons.head)
-    val result = plane.split(polygons.tail)
+  def helper(i: Int, polygons: Seq[Polygon]): BSPTree = {
+    val (before, after) = polygons.splitAt(i)
+    val others = before ++ after.tail
+    val current = after.head
+    val plane = Plane(current)
+    val result = plane.split(others)
     val f = if (result.front.nonEmpty) Some(apply(result.front)) else None
     val b = if (result.back.nonEmpty) Some(apply(result.back)) else None
-    BSPTree(plane, polygons.head +: (result.coFront ++ result.coBack), f, b)
+    new BSPTree(plane, current +: (result.coFront ++ result.coBack), f, b)
   }
+
+  def apply(polygons: Seq[Polygon]): BSPTree = helper(polygons.size / 2, polygons)
 }

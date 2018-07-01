@@ -86,46 +86,47 @@ class FacetSpec extends FunSpec with Matchers {
     }
   }
 
-  describe("inTriangle") {
-    it("returns true if a point is inside the triangle") {
-      Facet.onEdge(Vertex(0.5, 0.5, 0), Vertex(-1, -1, 0), Vertex(-1, 1, 0), Vertex(1, 1, 0)) shouldBe true
-    }
-
-    it("returns true if a point is on an edge of the triangle") {
-      Facet.onEdge(Vertex(0.5, 0, 0), Vertex(0, 0, 0), Vertex(1, 0, 0), Vertex(1, 1, 0)) shouldBe true
-    }
-
-    it("returns false if a point is outside the triangle") {
-      Facet.onEdge(Vertex(-1, 0, 0), Vertex(0, 0, 0), Vertex(1, 0, 0), Vertex(1, 1, 0)) shouldBe false
-      Facet.onEdge(Vertex(0, 1, 1), Vertex(0, 0, 1), Vertex(1, 0, 1), Vertex(1, 1, 1)) shouldBe false
-    }
-
-
-    it("returns false if a point is on the wrong plane") {
-      Facet.onEdge(Vertex(0.5, 0, 1), Vertex(0, 0, 0), Vertex(1, 0, 0), Vertex(1, 1, 0)) shouldBe false
-    }
-  }
-
-  describe("fromPolygon") {
+  describe("fromPolygons") {
     it("creates a facet from a triangle") {
       val p = Polygon(Seq(Vertex(1, 2, 1), Vertex(4, 5, 6), Vertex(7, 8, 9)))
       val expected = Seq(Facet(Vertex(1, 2, 1), Vertex(4, 5, 6), Vertex(7, 8, 9)))
-      Facet.fromPolygon(p) shouldBe expected
+      Facet.fromPolygons(Seq(p)) shouldBe expected
     }
 
     it("creates a facet from a triangle (reversed normal)") {
       val p = Polygon(Seq(Vertex(7, 8, 9), Vertex(4, 5, 6), Vertex(1, 2, 1)))
       val expected = Seq(Facet(Vertex(7, 8, 9), Vertex(4, 5, 6), Vertex(1, 2, 1)))
-      Facet.fromPolygon(p) shouldBe expected
+      Facet.fromPolygons(Seq(p)) shouldBe expected
     }
 
-    it("creates a facet from a square") {
+    it("creates facets from a square") {
       val p = Polygon(Seq(Vertex(0, 0, 1), Vertex(1, 0, 1), Vertex(1, 1, 1), Vertex(0, 1, 1)))
       val expected = Seq(
         Facet(Vertex(0, 0, 1), Vertex(1, 0, 1), Vertex(1, 1, 1)),
         Facet(Vertex(0, 0, 1), Vertex(1, 1, 1), Vertex(0, 1, 1))
       )
-      Facet.fromPolygon(p) shouldBe expected
+      Facet.fromPolygons(Seq(p)) shouldBe expected
+    }
+
+    it("creates two facets from two triangles") {
+      val t1 = Polygon(Seq(Vertex(0, 0, 1), Vertex(1, 0, 1), Vertex(1, 1, 1)))
+      val t2 = Polygon(Seq(Vertex(0, 0, 1), Vertex(1, 1, 1), Vertex(0, 1, 1)))
+      val expected = Seq(
+        Facet(Vertex(0, 0, 1), Vertex(1, 0, 1), Vertex(1, 1, 1)),
+        Facet(Vertex(0, 0, 1), Vertex(1, 1, 1), Vertex(0, 1, 1))
+      )
+      Facet.fromPolygons(Seq(t1, t2)) shouldBe expected
+    }
+
+    it("inserts extra facets for vertices on side v1-v2") {
+      val t1 = Polygon(Seq(Vertex(0, 0, 1), Vertex(2, 0, 1), Vertex(2, 2, 1)))
+      val t2 = Polygon(Seq(Vertex(0, 0, 1), Vertex(1, 1, 1), Vertex(0, 1, 1)))
+      val expected = Seq(
+        Facet(Vertex(1, 1, 1), Vertex(2, 0, 1), Vertex(2, 2, 1)),
+        Facet(Vertex(0, 0, 1), Vertex(2, 0, 1), Vertex(1, 1, 1)),
+        Facet(Vertex(0, 0, 1), Vertex(1, 1, 1), Vertex(0, 1, 1))
+      )
+      Facet.fromPolygons(Seq(t1, t2)) shouldBe expected
     }
   }
 }
