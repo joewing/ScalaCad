@@ -3,7 +3,8 @@ package net.joewing.scalacad
 final case class Plane(normal: Vertex, w: Double) {
   def flip: Plane = Plane(normal.negated, -w)
 
-  private val epsilon: Double = Vertex.epsilon
+  // This determines how "thick" the plane is.
+  private val epsilon: Double = 1e-5
 
   def classify(v: Vertex): Int = {
     val t = normal.dot(v) - w

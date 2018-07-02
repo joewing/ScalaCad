@@ -44,26 +44,7 @@ final case class BSPTree(
     back = front.map(_.inverted)
   )
 
-  def insert(ps: Seq[Polygon]): BSPTree = {
-    if (ps.isEmpty) {
-      this
-    } else {
-      val result = plane.split(ps)
-      val f: Option[BSPTree] = front match {
-        case Some(x)                       => Some(x.insert(result.front))
-        case None if result.front.nonEmpty => Some(BSPTree.apply(result.front))
-        case None                          => None
-      }
-      val b: Option[BSPTree] = back match {
-        case Some(x)                       => Some(x.insert(result.back))
-        case None if result.back.nonEmpty  => Some(BSPTree.apply(result.back))
-        case None                          => None
-      }
-      BSPTree(plane, polygons ++ result.coFront ++ result.coBack, f, b)
-    }
-  }
-
-  def merge(other: BSPTree): BSPTree = insert(other.allPolygons)
+  def merge(other: BSPTree): BSPTree = BSPTree(allPolygons ++ other.allPolygons)
 
   def depth: Int = {
     val frontDepth = front.map(_.depth).getOrElse(0)

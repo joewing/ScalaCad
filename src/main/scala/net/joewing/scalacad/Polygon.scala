@@ -3,14 +3,10 @@ package net.joewing.scalacad
 case class Polygon(vertices: Seq[Vertex]) {
 
   lazy val normal: Vertex = {
-    // Search for a continuous set of three points that are not collinear.
-    val count = vertices.size
-    (0 until count).view.map { i =>
-      val a = vertices(i)
-      val b = vertices((i + 1) % count)
-      val c = vertices((i + 2) % count)
-      (b - a).cross(c - a).unit
-    }.find(_.length > 0).getOrElse(Vertex(0, 0, 0))
+    val a = vertices.head
+    val b = vertices(1)
+    val c = vertices(2)
+    (b - a).cross(c - a).unit
   }
 
   def minBound: Vertex = vertices.tail.foldLeft(vertices.head)(_ min _)
