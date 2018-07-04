@@ -221,7 +221,7 @@ object AwtRenderer {
   ): Unit = {
     val renderer = new AwtRenderer(
       title = title,
-      bsp = r.render,
+      bsp = BSPTree(r.render),
       initialImageWidth = imageWidth,
       initialImageHeight = imageHeight,
       showVertices = showVertices,

@@ -1,6 +1,6 @@
 package net.joewing.scalacad.primitives
 
-import net.joewing.scalacad.{BSPTree, Polygon, Vertex}
+import net.joewing.scalacad.{Polygon, Vertex}
 
 case class LinearExtrude(
   obj: Primitive[TwoDimensional],
@@ -23,8 +23,8 @@ case class LinearExtrude(
     pairs.filter(includeSide(base))
   }
 
-  def render: BSPTree = {
-    val base = obj.render.allPolygons
+  def render: Seq[Polygon] = {
+    val base = obj.render
 
     def positionVertex(i: Int, v: Vertex): Vertex = {
       val angle = i * rotation
@@ -55,6 +55,6 @@ case class LinearExtrude(
     val top = base.map { polygon =>
       Polygon(polygon.vertices.map(v => positionVertex(slices, v)).reverse)
     }
-    BSPTree(base ++ polygons ++ top)
+    base ++ polygons ++ top
   }
 }

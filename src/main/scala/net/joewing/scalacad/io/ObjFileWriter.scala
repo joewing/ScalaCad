@@ -37,7 +37,7 @@ class ObjFileWriter(os: OutputStream) {
 
 object ObjFileWriter {
   def write(r: Primitive[ThreeDimensional], os: OutputStream): Unit = {
-    new ObjFileWriter(os).write(r.render.allPolygons)
+    new ObjFileWriter(os).write(r.render)
   }
   def write(r: Primitive[ThreeDimensional], fileName: String): Unit = {
     write(r, new FileOutputStream(fileName))

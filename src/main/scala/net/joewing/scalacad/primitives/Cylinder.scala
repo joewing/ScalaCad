@@ -1,6 +1,6 @@
 package net.joewing.scalacad.primitives
 
-import net.joewing.scalacad.{BSPTree, Polygon, Vertex}
+import net.joewing.scalacad.{Polygon, Vertex}
 
 case class Cylinder(length: Double, r1: Double, r2: Double, sides: Int) extends Primitive[ThreeDimensional] {
   require(sides > 2, s"Cylinder must have at least 3 sides, got $sides")
@@ -20,7 +20,7 @@ case class Cylinder(length: Double, r1: Double, r2: Double, sides: Int) extends 
     }
   }
 
-  def render: BSPTree = {
+  def render: Seq[Polygon] = {
     val top = renderEnd(r1, 0).map(_.flip)
     val bottom = renderEnd(r2, length)
 
@@ -48,7 +48,6 @@ case class Cylinder(length: Double, r1: Double, r2: Double, sides: Int) extends 
         Polygon(Seq(v3, v4, v2, v1))
       }
     }
-
-    BSPTree(top ++ shaft ++ bottom)
+    top ++ shaft ++ bottom
   }
 }
