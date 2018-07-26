@@ -72,6 +72,14 @@ object Utils {
     }
   }
 
+  def distinctPoints(vs: Seq[Vertex]): Seq[Vertex] = {
+    val result = scala.collection.mutable.ArrayBuffer[Vertex]()
+    vs.foreach { v =>
+      if (!result.exists(_.approxEqual(v))) result += v
+    }
+    result
+  }
+
   // Get the intersecting segments formed between two facets (if any exist).
   def intersection(a: Facet, b: Facet): Seq[Edge] = {
     if (a.coplanar(b, Vertex.epsilon)) {
@@ -87,7 +95,7 @@ object Utils {
       val p1 = skewIntersection(a.v1 -> a.v2, b)
       val p2 = skewIntersection(a.v2 -> a.v3, b)
       val p3 = skewIntersection(a.v3 -> a.v1, b)
-      val abPoints = Seq(p1, p2, p3).flatten.distinct
+      val abPoints = distinctPoints(Seq(p1, p2, p3).flatten)
       if (abPoints.size > 1) {
         require(abPoints.size == 2)
         Seq(abPoints.head -> abPoints.last)
@@ -95,7 +103,7 @@ object Utils {
         val p4 = skewIntersection(b.v1 -> b.v2, a)
         val p5 = skewIntersection(b.v2 -> b.v3, a)
         val p6 = skewIntersection(b.v3 -> b.v1, a)
-        val baPoints = Seq(p4, p5, p6).flatten.distinct
+        val baPoints = distinctPoints(Seq(p4, p5, p6).flatten)
         if (baPoints.size > 1) {
           require(baPoints.size == 2, baPoints)
           Seq(baPoints.head -> baPoints.last)
@@ -172,26 +180,17 @@ object Utils {
     } else if (inOrder(a, y, b, x) || y.between(a, b) && b.approxEqual(x)) {
       Seq(Facet(a, y, c), Facet(y, b, c))
     } else {
-      require(!x.between(a, b) && !y.between(a, b))
       Seq(Facet(a, b, c))
     }
   }
 
-  def fixNormal(facet: Facet, n: Facet): Facet = {
-    if (n.normal.dot(facet.normal) < 0) n.flip else n
-  }
-
-  def fixNormals(facet: Facet, facets: Seq[Facet]): Seq[Facet] = {
-    facets.map { f => fixNormal(facet, f) }
-  }
-
   def divide(facet: Facet, edge: Edge): Seq[Facet] = {
     if (facet.v1.collinear(edge._1, edge._2) && facet.v2.collinear(edge._1, edge._2)) {
-      fixNormals(facet, divideCollinear(facet.v1, edge._1, edge._2, facet.v2, facet.v3))
+      divideCollinear(facet.v1, edge._1, edge._2, facet.v2, facet.v3)
     } else if (facet.v1.collinear(edge._1, edge._2) && facet.v3.collinear(edge._1, edge._2)) {
-      fixNormals(facet, divideCollinear(facet.v3, edge._1, edge._2, facet.v1, facet.v2))
+      divideCollinear(facet.v3, edge._1, edge._2, facet.v1, facet.v2)
     } else if (facet.v2.collinear(edge._1, edge._2) && facet.v3.collinear(edge._1, edge._2)) {
-      fixNormals(facet, divideCollinear(facet.v2, edge._1, edge._2, facet.v3, facet.v1))
+      divideCollinear(facet.v2, edge._1, edge._2, facet.v3, facet.v1)
     } else {
       facet.edges.map(fe => edgeIntersection(fe, edge)) match {
         case Seq(Some(a), Some(b), Some(c)) if a.approxEqual(b)  && a.approxEqual(c) =>
@@ -239,7 +238,6 @@ object Utils {
           // No intersection
           Seq(facet)
         case _ =>
-          require(false, s"invalid facet-edge intersection: $facet, $edge")
           Seq(facet)
       }
     }
@@ -271,14 +269,8 @@ object Utils {
     }
 
     val points = uniqueEdges.flatMap(e => Seq(e._1, e._2)).filter(facet.contains(_))
-
-    // Split this facet.
-    if (points.nonEmpty) {
-      val initialTriangulation = split(facet, points.toSet)
-      flipFacets(initialTriangulation, uniqueEdges)
-    } else {
-      Seq(facet)
-    }
+    val initialTriangulation = split(facet, points.toSet)
+    flipFacets(initialTriangulation, uniqueEdges)
   }
 
   // Determine if p is on the boundary of any facets.
@@ -296,8 +288,8 @@ object Utils {
     lazy val edge2 = p -> minBound
 
     // Count the number of facets this edge intersects.
-    val count1 = facets.flatMap(facet => skewIntersection(edge1, facet)).distinct.size
-    lazy val count2 = facets.flatMap(facet => skewIntersection(edge2, facet)).distinct.size
+    val count1 = distinctPoints(facets.flatMap(facet => skewIntersection(edge1, facet))).size
+    lazy val count2 = distinctPoints(facets.flatMap(facet => skewIntersection(edge2, facet))).size
 
     // The point is contained if it intersects the object an odd number of times.
     count1 % 2 == 1 || count2 % 2 == 1

@@ -21,19 +21,6 @@ case class Intersection[D <: Dim](a: Primitive[D], b: Primitive[D]) extends Prim
     }
 
     leftFiltered ++ rightFiltered
-
-    /*
-    val merged = leftFilled ++ rightFilled
-    merged.filter { facet =>
-      val centroid = facet.centroid
-      val containedLeft = Utils.isContained(left, centroid)
-      val containedRight = Utils.isContained(right, centroid)
-      val boundaryLeft = Utils.onBoundary(left, centroid)
-      val boundaryRight = Utils.onBoundary(right, centroid)
-
-      (containedLeft && containedRight && boundaryRight) || (containedLeft && containedRight && boundaryLeft)
-    }
-    */
   }
 }
 
