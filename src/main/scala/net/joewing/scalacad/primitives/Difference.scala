@@ -20,9 +20,7 @@ case class Difference[D <: Dim](base: Primitive[D], minus: Primitive[D]) extends
       val containedRight = Utils.isContained(right, centroid)
       val boundaryLeft = Utils.onBoundary(left, centroid)
       val boundaryRight = Utils.onBoundary(right, centroid)
-      (containedLeft && !containedRight) ||
-        (boundaryLeft && !boundaryRight) ||
-        (containedLeft && boundaryRight && !boundaryLeft)
+        (boundaryLeft && !containedRight && !boundaryRight) || (containedLeft && boundaryRight && !boundaryLeft)
     }
   }
 }
