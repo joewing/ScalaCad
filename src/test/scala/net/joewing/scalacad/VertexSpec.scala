@@ -48,4 +48,36 @@ class VertexSpec extends FunSpec with Matchers {
       Vertex(1, -1, 2).negated shouldBe Vertex(-1, 1, -2)
     }
   }
+
+  describe("between") {
+    it("correctly identifies a point between two others") {
+      Vertex(2, 4, 6).between(Vertex(1, 2, 3), Vertex(4, 8, 12)) shouldBe true
+    }
+
+    it("correctly identifies a point beyond the second") {
+      Vertex(4, 8, 12).between(Vertex(1, 2, 3), Vertex(4, 4, 6)) shouldBe false
+    }
+
+    it("correctly identifies a point before the first") {
+      Vertex(0.5, 1, 1.5).between(Vertex(1, 2, 3), Vertex(4, 4, 6)) shouldBe false
+    }
+
+    it("correctly identifies a duplicate first point") {
+      Vertex(1, 2, 3).between(Vertex(1, 2, 3), Vertex(4, 4, 6)) shouldBe false
+    }
+
+    it("correctly identifies a duplicate last point") {
+      Vertex(4, 4, 6).between(Vertex(1, 2, 3), Vertex(4, 4, 6)) shouldBe false
+    }
+  }
+
+  describe("collinear") {
+    it("identifies points that are collinear") {
+      Vertex(2, 4, 6).collinear(Vertex(1, 2, 3), Vertex(4, 8, 12)) shouldBe true
+    }
+
+    it("identifies points that are not collinear") {
+      Vertex(2, 4, 5).collinear(Vertex(1, 2, 3), Vertex(4, 8, 12)) shouldBe false
+    }
+  }
 }

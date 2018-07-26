@@ -21,11 +21,11 @@ class StlAsciiFileWriter(os: OutputStream) {
     ps.println(s"  endfacet")
   }
 
-  def write(name: String, polygons: Seq[Polygon]): Unit = {
+  def write(name: String, facets: Seq[Facet]): Unit = {
     val ps = new PrintStream(os)
     try {
       ps.println(s"solid $name")
-      Facet.fromPolygons(polygons).foreach { facet =>
+      facets.foreach { facet =>
         writeFacet(ps, facet)
       }
       ps.println(s"endsolid $name")

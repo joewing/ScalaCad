@@ -1,6 +1,6 @@
 package net.joewing.scalacad.examples
 
-import net.joewing.scalacad.io.{AwtRenderer, StlAsciiFileWriter}
+import net.joewing.scalacad.io.{AwtRenderer, StlAsciiFileReader, StlAsciiFileWriter}
 import net.joewing.scalacad.primitives._
 
 object ScrewExample extends App {

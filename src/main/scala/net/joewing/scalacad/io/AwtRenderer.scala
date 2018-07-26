@@ -126,7 +126,7 @@ class AwtRenderer(
       }
       val v = polygon.normal.dot(lightSource)
       val brightness = math.max(0.1, math.min(1.0, v)).toFloat
-      val color = new Color(0.0f, 0.0f, brightness)
+      val color = if (v < 0) Color.RED else new Color(0.0f, 0.0f, brightness)
       renderFacet(xs, ys, color, graphics)
     }
 
@@ -221,7 +221,7 @@ object AwtRenderer {
   ): Unit = {
     val renderer = new AwtRenderer(
       title = title,
-      bsp = BSPTree(r.render),
+      bsp = BSPTree(Facet.toPolygons(r.render)),
       initialImageWidth = imageWidth,
       initialImageHeight = imageHeight,
       showVertices = showVertices,

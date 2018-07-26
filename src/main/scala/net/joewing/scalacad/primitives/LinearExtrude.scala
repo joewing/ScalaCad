@@ -1,6 +1,6 @@
 package net.joewing.scalacad.primitives
 
-import net.joewing.scalacad.{Polygon, Vertex}
+import net.joewing.scalacad.{Facet, Vertex}
 
 case class LinearExtrude(
   obj: Primitive[TwoDimensional],
@@ -9,7 +9,7 @@ case class LinearExtrude(
   slices: Int = 1
 ) extends Primitive[ThreeDimensional] {
 
-  private def includeSide(base: Seq[Polygon])(side: (Vertex, Vertex)): Boolean = {
+  private def includeSide(base: Seq[Facet])(side: (Vertex, Vertex)): Boolean = {
     val (a, b) = side
     val count = base.flatMap(_.edges).count { case (othera, otherb) =>
       (othera.approxEqual(a) && otherb.approxEqual(b)) || (othera.approxEqual(b) && otherb.approxEqual(a))
@@ -17,13 +17,13 @@ case class LinearExtrude(
     count == 1
   }
 
-  private def segments(base: Seq[Polygon]): Seq[(Vertex, Vertex)] = {
+  private def segments(base: Seq[Facet]): Seq[(Vertex, Vertex)] = {
     val vertices = base.flatMap(_.vertices)
     val pairs = vertices.zip(vertices.last +: vertices)
     pairs.filter(includeSide(base))
   }
 
-  def render: Seq[Polygon] = {
+  def render: Seq[Facet] = {
     val base = obj.render
 
     def positionVertex(i: Int, v: Vertex): Vertex = {
@@ -36,25 +36,25 @@ case class LinearExtrude(
     }
 
     val perimeter = segments(base)
-    val polygons = Vector.range(0, slices).foldLeft(Seq.empty[Polygon]) { (prev, i) =>
+    val sides = Vector.range(0, slices).foldLeft(Seq.empty[Facet]) { (prev, i) =>
       prev ++ perimeter.flatMap { case (base1, base2) =>
         val b1 = positionVertex(i, base1)
         val b2 = positionVertex(i, base2)
         val t1 = positionVertex(i + 1, base1)
         val t2 = positionVertex(i + 1, base2)
         if (rotation == 0.0) {
-          Seq(Polygon(Seq(b1, b2, t2, t1)))
+          Facet.fromVertices(Seq(b1, b2, t2, t1))
         } else {
           Seq(
-            Polygon(Seq(b1, b2, t1)),
-            Polygon(Seq(b2, t2, t1))
+            Facet(b1, b2, t1),
+            Facet(b2, t2, t1)
           )
         }
       }
     }
-    val top = base.map { polygon =>
-      Polygon(polygon.vertices.map(v => positionVertex(slices, v)).reverse)
+    val top = base.map { facet =>
+      Facet(positionVertex(slices, facet.v3), positionVertex(slices, facet.v2), positionVertex(slices, facet.v1))
     }
-    base ++ polygons ++ top
+    base ++ sides ++ top
   }
 }

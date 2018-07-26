@@ -83,12 +83,28 @@ case class Vertex(x1: Double, x2: Double, x3: Double) {
   }
 
   // Returns true if this is strictly between a and b.
-  def between(a: Vertex, b: Vertex): Boolean = {
+  def between(a: Vertex, b: Vertex, epsilon: Double = Vertex.epsilon): Boolean = {
     val t = solve(a, b)
-    t > 0 && t < 1
+    t > epsilon && t < 1 - epsilon
   }
 }
 
 object Vertex {
-  val epsilon: Double = 1e-9
+  val epsilon: Double = 1e-12
+
+  implicit object VertexOrdering extends Ordering[Vertex] {
+    def compare(x: Vertex, y: Vertex): Int = {
+      if (x.x1 < y.x1) -1
+      else if (x.x1 > y.x1) 1
+      else {
+        if (x.x2 < y.x2) -1
+        else if (x.x2 > y.x2) 1
+        else {
+          if (x.x3 < y.x3) -1
+          else if (x.x3 > y.x3) 1
+          else 0
+        }
+      }
+    }
+  }
 }

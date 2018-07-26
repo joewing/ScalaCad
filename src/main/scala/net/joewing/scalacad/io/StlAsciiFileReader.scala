@@ -52,7 +52,7 @@ class StlAsciiFileReader(is: InputStream) {
 
   def read: ImportedPart = {
     StlParser.parse(is) match {
-      case StlParser.Success(stl,_ ) => ImportedPart(stl.facets.map(f => Polygon(f.vertices)))
+      case StlParser.Success(stl,_ ) => ImportedPart(stl.facets)
       case StlParser.Error(msg, _)   => throw new IllegalArgumentException(s"parse error: $msg")
       case StlParser.Failure(msg, _) => throw new IllegalArgumentException(s"parse failure: $msg")
     }

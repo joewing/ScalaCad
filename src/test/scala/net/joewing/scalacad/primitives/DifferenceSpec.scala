@@ -9,9 +9,5 @@ class DifferenceSpec extends FunSpec with Matchers {
     it("should return nothing when subtracted from itself") {
       Difference(obj, obj).render shouldBe Seq.empty
     }
-
-    it("should return itself when subtracted from its inverse") {
-      Difference(obj, Invert(obj)).render shouldBe obj.render
-    }
   }
 }

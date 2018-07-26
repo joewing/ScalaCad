@@ -23,7 +23,6 @@ package object primitives {
     def |(right: Primitive[D]): Primitive[D] = Union(left, right)
     def &(right: Primitive[D]): Primitive[D] = Intersection(left, right)
     def -(right: Primitive[D]): Primitive[D] = Difference(left, right)
-    def unary_-(): Primitive[D] = Invert(left)
 
     def translate(x: Double = 0, y: Double = 0, z: Double = 0): Primitive[D] = Translate(left, x, y, z)
     def translate(v: Vertex): Primitive[D] = translate(v.x1, v.x2, v.x3)

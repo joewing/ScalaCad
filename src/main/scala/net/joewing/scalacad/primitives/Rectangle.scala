@@ -1,9 +1,9 @@
 package net.joewing.scalacad.primitives
 
-import net.joewing.scalacad.{Polygon, Vertex}
+import net.joewing.scalacad.{Facet, Vertex}
 
 case class Rectangle(width: Double, height: Double) extends Primitive[TwoDimensional] {
-  def render: Seq[Polygon] = Seq(
-    Polygon(Seq(Vertex(0, 0, 0), Vertex(0, height, 0), Vertex(width, height, 0), Vertex(width, 0, 0)))
+  def render: Seq[Facet] = Facet.fromVertices(
+    Seq(Vertex(0, 0, 0), Vertex(0, height, 0), Vertex(width, height, 0), Vertex(width, 0, 0))
   )
 }

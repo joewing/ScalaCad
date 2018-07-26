@@ -1,7 +1,7 @@
 package net.joewing.scalacad.primitives
 
-import net.joewing.scalacad.{BSPTree, Polygon}
+import net.joewing.scalacad.Facet
 
-case class ImportedPart(polygons: Seq[Polygon]) extends Primitive[ThreeDimensional] {
-  def render: Seq[Polygon] = polygons
+case class ImportedPart(facets: Seq[Facet]) extends Primitive[ThreeDimensional] {
+  def render: Seq[Facet] = facets
 }

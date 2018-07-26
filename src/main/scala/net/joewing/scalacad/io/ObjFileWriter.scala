@@ -2,17 +2,16 @@ package net.joewing.scalacad.io
 
 import java.io.{FileOutputStream, OutputStream, PrintWriter}
 
-import net.joewing.scalacad.{Polygon, Vertex}
+import net.joewing.scalacad.{Facet, Vertex}
 import net.joewing.scalacad.primitives.{Primitive, ThreeDimensional}
 
 class ObjFileWriter(os: OutputStream) {
 
   private def fmt(d: Double): String = f"$d%.6f"
 
-  def write(polygons: Seq[Polygon]): Unit = {
+  def write(facets: Seq[Facet]): Unit = {
     val pw = new PrintWriter(os)
     try {
-      val facets = Facet.fromPolygons(polygons)
       val vertices = facets.flatMap(_.vertices).foldLeft(Map.empty[Vertex, Int]) { (vs, v) =>
         if (vs.contains(v)) vs else vs.updated(v, vs.size + 1)
       }
