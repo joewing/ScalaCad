@@ -90,7 +90,7 @@ case class Vertex(x1: Double, x2: Double, x3: Double) {
 }
 
 object Vertex {
-  val epsilon: Double = 1e-12
+  val epsilon: Double = 1e-9
 
   implicit object VertexOrdering extends Ordering[Vertex] {
     def compare(x: Vertex, y: Vertex): Int = {
