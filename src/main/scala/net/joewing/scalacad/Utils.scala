@@ -273,8 +273,11 @@ object Utils {
     flipFacets(initialTriangulation, uniqueEdges)
   }
 
+  // Find the facet containing p.
+  def findFacet(facets: Seq[Facet], p: Vertex): Option[Facet] = facets.find(_.contains(p))
+
   // Determine if p is on the boundary of any facets.
-  def onBoundary(facets: Seq[Facet], p: Vertex): Boolean = facets.exists(facet => facet.contains(p))
+  def onBoundary(facets: Seq[Facet], p: Vertex): Boolean = findFacet(facets, p).isDefined
 
   // Determine if p is contained in facets.
   def isContained(facets: Seq[Facet], p: Vertex): Boolean = {
