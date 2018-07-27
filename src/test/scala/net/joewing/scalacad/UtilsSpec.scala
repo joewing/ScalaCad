@@ -156,25 +156,6 @@ class UtilsSpec extends FunSpec with Matchers {
     }
   }
 
-  describe("flip") {
-    val v1 = Vertex(0, 0, 0)
-    val v2 = Vertex(0, 1, 0)
-    val v3 = Vertex(1, 0, 0)
-    val v4 = Vertex(1, 1, 0)
-
-    it("should flip facets to get the required edge") {
-      val f1 = Facet(v1, v2, v4)
-      val f2 = Facet(v1, v4, v3)
-      Utils.flip(f1, f2, v2 -> v3) shouldBe (Facet(v1, v2, v3), Facet(v4, v3, v2))
-    }
-
-    it("should flip facets to get the required edge (reversed)") {
-      val f1 = Facet(v1, v4, v2)
-      val f2 = Facet(v1, v3, v4)
-      Utils.flip(f1, f2, v2 -> v3) shouldBe (Facet(v1, v3, v2), Facet(v4, v2, v3))
-    }
-  }
-
   describe("isContained") {
     val obj = Cube(4, 4, 4).centered.render
 

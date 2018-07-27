@@ -147,23 +147,6 @@ object Utils {
     }
   }
 
-  // Flip two facets to insert the required edge.
-  // Facet a is assumed to have the first point and facet b is assumed to have the second.
-  def flip(facet1: Facet, facet2: Facet, required: Edge): (Facet, Facet) = {
-
-    // Two of the vertices of each facet are shared with the other facet and one is part of the required edge.
-    // When we flip the facets, each required edge will be part of the new facets.
-    // The two shared vertices will no longer be shared.
-    val shared = facet1.vertices.filter { v => facet2.vertices.exists(_.approxEqual(v)) }
-    val newa = Facet(shared.head, required._1, required._2)
-    val newb = Facet(shared.last, required._1, required._2)
-
-    (
-      if (newa.normal.dot(facet1.normal) < 0) newa.flip else newa,
-      if (newb.normal.dot(facet2.normal) < 0) newb.flip else newb
-    )
-  }
-
   def inOrder(a: Vertex, b: Vertex, c: Vertex, d: Vertex): Boolean = b.between(a, c) && c.between(b, d)
 
   def divideCollinear(a: Vertex, x: Vertex, y: Vertex, b: Vertex, c: Vertex): Seq[Facet] = {
@@ -234,10 +217,8 @@ object Utils {
         case Seq(None, None, Some(c)) =>
           // Single point of intersection through v3 -> v1
           Seq(Facet(facet.v1, facet.v2, c), Facet(facet.v2, facet.v3, c))
-        case Seq(None, None, None) =>
-          // No intersection
-          Seq(facet)
         case _ =>
+          // No intersection
           Seq(facet)
       }
     }
