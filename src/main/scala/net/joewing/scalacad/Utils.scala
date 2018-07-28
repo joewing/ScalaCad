@@ -272,16 +272,10 @@ object Utils {
   }
 
   def insertIntersections(left: Seq[Facet], right: Seq[Facet]): (Seq[Facet], Seq[Facet]) = {
-    if (false) {
-      val left1 = left.flatMap(f => insertIntersections(f, right))
-      val right1 = right.flatMap(f => insertIntersections(f, left))
-      left1 -> right1
-    } else {
       val left1 = left.flatMap(f => insertIntersections(f, right))
       val right1 = right.flatMap(f => insertIntersections(f, left1))
       val left2 = left1.flatMap(f => insertIntersections(f, right1))
       left2 -> right1
-    }
   }
 
   // Find the facet containing p.
@@ -294,8 +288,8 @@ object Utils {
   def isContained(facets: Seq[Facet], p: Vertex): Boolean = {
 
     // Determine the max bound box for facets.
-    val maxBound = facets.tail.foldLeft(facets.head.maxBound)(_ max _.maxBound) + Vertex(1, 1, 1)
-    lazy val minBound = facets.tail.foldLeft(facets.head.minBound)(_ min _.minBound) - Vertex(1, 1, 1)
+    val maxBound = facets.tail.foldLeft(facets.head.maxBound)(_ max _.maxBound) + Vertex(1, 2, 3)
+    lazy val minBound = facets.tail.foldLeft(facets.head.minBound)(_ min _.minBound) - Vertex(1, 2, 3)
 
     // Create a line segment through p that extends past our bounding box.
     val edge1 = p -> maxBound
