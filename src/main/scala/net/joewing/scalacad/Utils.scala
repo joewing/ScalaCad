@@ -29,15 +29,15 @@ object Utils {
     val sOpt = values1.flatMap(solve).headOption
     val tOpt = values2.flatMap(solve).headOption
     (sOpt, tOpt) match {
-      case (Some(s), Some(t)) if s >= -Vertex.epsilon && s <= 1 + Vertex.epsilon &&
-        t >= -Vertex.epsilon && t <= 1 + Vertex.epsilon =>
+      case (Some(s), Some(t)) if s > -Vertex.epsilon && s < 1 + Vertex.epsilon &&
+        t > -Vertex.epsilon && t < 1 + Vertex.epsilon =>
         Some(a + (b - a) * s)
       case _ => None
     }
   }
 
   // Get intersection point(s) for an edge and a facet if they are co-planar.
-  def coplanarIntersectionEdges(edge: Edge, facet: Facet, strict: Boolean = false): Option[Edge] = {
+  def coplanarIntersectionEdges(edge: Edge, facet: Facet): Option[Edge] = {
     val contains1 = facet.contains(edge._1)
     val contains2 = facet.contains(edge._2)
     if (contains1 && contains2) {
@@ -65,7 +65,7 @@ object Utils {
     if (math.abs(bot) > Vertex.epsilon) {
       val t = n.dot(facet.v1 - a) / bot
       val p = a + (b - a) * t
-      if (t >= 0 && t <= 1 && facet.contains(p)) Some(p) else None
+      if (t > -Vertex.epsilon && t < 1 + Vertex.epsilon && facet.contains(p)) Some(p) else None
     } else {
       // Parallel.
       None
@@ -95,43 +95,59 @@ object Utils {
       val p1 = skewIntersection(a.v1 -> a.v2, b)
       val p2 = skewIntersection(a.v2 -> a.v3, b)
       val p3 = skewIntersection(a.v3 -> a.v1, b)
+      val p4 = skewIntersection(b.v1 -> b.v2, a)
+      val p5 = skewIntersection(b.v2 -> b.v3, a)
+      val p6 = skewIntersection(b.v3 -> b.v1, a)
       val abPoints = distinctPoints(Seq(p1, p2, p3).flatten)
-      if (abPoints.size > 1) {
-        require(abPoints.size == 2)
-        Seq(abPoints.head -> abPoints.last)
-      } else {
-        val p4 = skewIntersection(b.v1 -> b.v2, a)
-        val p5 = skewIntersection(b.v2 -> b.v3, a)
-        val p6 = skewIntersection(b.v3 -> b.v1, a)
-        val baPoints = distinctPoints(Seq(p4, p5, p6).flatten)
-        if (baPoints.size > 1) {
-          require(baPoints.size == 2, baPoints)
-          Seq(baPoints.head -> baPoints.last)
-        } else if (abPoints.nonEmpty && baPoints.nonEmpty) {
-          require(abPoints.size == 1 && baPoints.size == 1)
-          Seq(abPoints.head -> baPoints.head)
-        } else {
-          Seq.empty
-        }
+      val baPoints = distinctPoints(Seq(p4, p5, p6).flatten)
+
+      val type1 = abPoints match {
+        case Seq(x, y) => Seq(x -> y)
+        case _         => Seq.empty
       }
+      val type2 = baPoints match {
+        case Seq(x, y) => Seq(x -> y)
+        case _         => Seq.empty
+      }
+      val type3 = abPoints ++ baPoints match {
+        case Seq(x, y) => Seq(x -> y)
+        case Seq(x)    => Seq(x -> x)
+        case _         => Seq.empty
+      }
+      type1 ++ type2 ++ type3
     }
   }
 
-  def split(facet: Facet, points: Set[Vertex]): Seq[Facet] = {
+  def insertPoint(v1: Vertex, v2: Vertex, v3: Vertex, points: Seq[Vertex]): Seq[Facet] = {
+    val p = points.head
+    val remaining = points.tail
+    val f = Facet(v1, v2, v3)
+    insertPoints(f, remaining.filter(p => f.contains(p)))
+  }
+
+  def insertPoints(facet: Facet, points: Seq[Vertex]): Seq[Facet] = {
     if (points.nonEmpty) {
-
       val p = points.head
-      val remaining = points.tail
-
-      def create(v1: Vertex, v2: Vertex, v3: Vertex): Seq[Facet] = {
-        val f = Facet(v1, v2, v3)
-        split(f, remaining.filter(p => f.contains(p)))
+      if (p.approxEqual(facet.v1) || p.approxEqual(facet.v2) || p.approxEqual(facet.v3)) {
+        insertPoints(facet, points.tail)
+      } else if (p.collinear(facet.v1, facet.v2)) {
+        val new2 = insertPoint(facet.v1, p, facet.v3, points)
+        val new3 = insertPoint(p, facet.v2, facet.v3, points)
+        new2 ++ new3
+      } else if (p.collinear(facet.v2, facet.v3)) {
+        val new1 = insertPoint(facet.v1, facet.v2, p, points)
+        val new3 = insertPoint(p, facet.v3, facet.v1, points)
+        new1 ++ new3
+      } else if (p.collinear(facet.v3, facet.v1)) {
+        val new1 = insertPoint(facet.v1, facet.v2, p, points)
+        val new2 = insertPoint(facet.v2, facet.v3, p, points)
+        new1 ++ new2
+      } else {
+        val new1 = insertPoint(facet.v1, facet.v2, p, points)
+        val new2 = insertPoint(facet.v2, facet.v3, p, points)
+        val new3 = insertPoint(p, facet.v3, facet.v1, points)
+        new1 ++ new2 ++ new3
       }
-
-      val new1 = if (p.collinear(facet.v1, facet.v2)) Seq.empty else create(facet.v1, facet.v2, p)
-      val new2 = if (p.collinear(facet.v2, facet.v3)) Seq.empty else create(facet.v2, facet.v3, p)
-      val new3 = if (p.collinear(facet.v3, facet.v1)) Seq.empty else create(p, facet.v3, facet.v1)
-      new1 ++ new2 ++ new3
     } else {
       Seq(facet)
     }
@@ -163,11 +179,12 @@ object Utils {
     } else if (inOrder(a, y, b, x) || y.between(a, b) && b.approxEqual(x)) {
       Seq(Facet(a, y, c), Facet(y, b, c))
     } else {
+      require(!x.between(a, b) && !y.between(a, b))
       Seq(Facet(a, b, c))
     }
   }
 
-  def divide(facet: Facet, edge: Edge): Seq[Facet] = {
+  def insertEdge(facet: Facet, edge: Edge): Seq[Facet] = {
     if (facet.v1.collinear(edge._1, edge._2) && facet.v2.collinear(edge._1, edge._2)) {
       divideCollinear(facet.v1, edge._1, edge._2, facet.v2, facet.v3)
     } else if (facet.v1.collinear(edge._1, edge._2) && facet.v3.collinear(edge._1, edge._2)) {
@@ -225,9 +242,9 @@ object Utils {
   }
 
   // Flip facets necessary to restore missing edges.
-  def flipFacets(facets: Seq[Facet], required: Seq[Edge]): Seq[Facet] = {
+  def insertEdges(facets: Seq[Facet], required: Seq[Edge]): Seq[Facet] = {
     missingEdges(required, facets).foldLeft(facets) { (oldFacets, edge) =>
-      oldFacets.flatMap { facet => divide(facet, edge) }
+      oldFacets.flatMap { facet => insertEdge(facet, edge) }
     }
   }
 
@@ -236,7 +253,7 @@ object Utils {
     // Get other points that intersect this facet.
     val edges: Seq[Edge] = others.flatMap { other =>
       intersection(other, facet)
-    }.filter(e => !e._1.approxEqual(e._2)).map { case (v1, v2) =>
+    }.map { case (v1, v2) =>
       // Arrange edges so the smallest comes first.
       if (Vertex.VertexOrdering.compare(v1, v2) < 0) (v1, v2) else (v2, v1)
     }.sortBy(_._2).sortBy(_._1)
@@ -249,9 +266,22 @@ object Utils {
       }
     }
 
-    val points = uniqueEdges.flatMap(e => Seq(e._1, e._2)).filter(facet.contains(_))
-    val initialTriangulation = split(facet, points.toSet)
-    flipFacets(initialTriangulation, uniqueEdges)
+    val points = distinctPoints(uniqueEdges.flatMap(e => Seq(e._1, e._2)))
+    val initialTriangulation = insertPoints(facet, points)
+    insertEdges(initialTriangulation, uniqueEdges.filter(e => !e._1.approxEqual(e._2)))
+  }
+
+  def insertIntersections(left: Seq[Facet], right: Seq[Facet]): (Seq[Facet], Seq[Facet]) = {
+    if (false) {
+      val left1 = left.flatMap(f => insertIntersections(f, right))
+      val right1 = right.flatMap(f => insertIntersections(f, left))
+      left1 -> right1
+    } else {
+      val left1 = left.flatMap(f => insertIntersections(f, right))
+      val right1 = right.flatMap(f => insertIntersections(f, left1))
+      val left2 = left1.flatMap(f => insertIntersections(f, right1))
+      left2 -> right1
+    }
   }
 
   // Find the facet containing p.
@@ -277,6 +307,29 @@ object Utils {
 
     // The point is contained if it intersects the object an odd number of times.
     count1 % 2 == 1 || count2 % 2 == 1
+  }
+
+  // Get all unmatched edges.
+  def unmatchedEdges(facets: Seq[Facet]): Seq[Edge] = {
+    val unmatched = scala.collection.mutable.ArrayBuffer[Edge]()
+    facets.foreach { facet =>
+      facet.edges.foreach { edge =>
+        val i = unmatched.indexWhere(other => other._1.approxEqual(edge._2) && other._2.approxEqual(edge._1))
+        if (i >= 0) {
+          unmatched.remove(i)
+        } else {
+          unmatched += edge
+        }
+      }
+    }
+    unmatched
+  }
+
+  // Make sure all edges are matched.
+  def validateEdges(facets: Seq[Facet]): Seq[Facet] = {
+    val unmatched = unmatchedEdges(facets)
+    require(unmatched.isEmpty, s"unmatched edges: $unmatched")
+    facets
   }
 
 }

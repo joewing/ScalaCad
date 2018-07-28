@@ -10,8 +10,7 @@ final case class Union[D <: Dim](a: Primitive[D], b: Primitive[D]) extends Primi
     val right = b.render
 
     // Insert vertices from intersections with other facets into each side.
-    val leftFilled = left.flatMap(f => Utils.insertIntersections(f, right))
-    val rightFilled = right.flatMap(f => Utils.insertIntersections(f, left))
+    val (leftFilled, rightFilled) = Utils.insertIntersections(left, right)
 
     // Remove facets that are contained or on the boundary of the right side from the left side.
     // We will pick up any necessary facets that are contained on both from the right side.
@@ -20,13 +19,15 @@ final case class Union[D <: Dim](a: Primitive[D], b: Primitive[D]) extends Primi
     // Remove facets that are contained on the left side from the right side.
     // Here we keep boundary facets if the normals both point in the same direction.
     val rightFiltered = rightFilled.filter { facet =>
-      val keepBoundary = Utils.findFacet(left, facet.centroid).map { other =>
+      val keepBoundary = Utils.findFacet(left, facet.centroid).exists { other =>
         other.normal.dot(facet.normal) > 0
-      }.getOrElse(false)
+      }
       !Utils.isContained(left, facet.centroid) || keepBoundary
     }
 
-    leftFiltered ++ rightFiltered
+    val x = leftFiltered ++ rightFiltered
+//    Utils.validateEdges(x)
+    x
   }
 }
 

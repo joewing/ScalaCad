@@ -2,7 +2,6 @@ package net.joewing.scalacad
 
 final case class Facet(v1: Vertex, v2: Vertex, v3: Vertex) {
 
-
   // Outward normal according to the right-hand rule.
   lazy val normal: Vertex = (v2 - v1).cross(v3 - v1).unit
 
@@ -39,7 +38,9 @@ final case class Facet(v1: Vertex, v2: Vertex, v3: Vertex) {
     val beta = (v3 - p).cross(v1 - p).length / (area * 2.0)
     val gamma = (v1 - p).cross(v2 - p).length / (area * 2.0)
     val residual = 1 - alpha - beta - gamma
-    alpha >= 0 && alpha <= 1 && beta >= 0 && beta <= 1 && gamma >= 0 && gamma <= 1 && math.abs(residual) < epsilon
+    val ep1 = epsilon + 1
+    val me = -epsilon
+    alpha > me && alpha < ep1 && beta > me && beta < ep1 && gamma > me && gamma < ep1 && math.abs(residual) < epsilon
   }
 
   def onEdge(p: Vertex, epsilon: Double = Vertex.epsilon): Boolean = {
