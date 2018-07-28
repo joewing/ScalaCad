@@ -95,26 +95,22 @@ object Utils {
       val p1 = skewIntersection(a.v1 -> a.v2, b)
       val p2 = skewIntersection(a.v2 -> a.v3, b)
       val p3 = skewIntersection(a.v3 -> a.v1, b)
-      val p4 = skewIntersection(b.v1 -> b.v2, a)
-      val p5 = skewIntersection(b.v2 -> b.v3, a)
-      val p6 = skewIntersection(b.v3 -> b.v1, a)
       val abPoints = distinctPoints(Seq(p1, p2, p3).flatten)
-      val baPoints = distinctPoints(Seq(p4, p5, p6).flatten)
-
-      val type1 = abPoints match {
-        case Seq(x, y) => Seq(x -> y)
-        case _         => Seq.empty
+      if (abPoints.size == 2) {
+        Seq(abPoints.head -> abPoints.last)
+      } else {
+        val p4 = skewIntersection(b.v1 -> b.v2, a)
+        val p5 = skewIntersection(b.v2 -> b.v3, a)
+        val p6 = skewIntersection(b.v3 -> b.v1, a)
+        val baPoints = distinctPoints(Seq(p4, p5, p6).flatten)
+        if (baPoints.size == 2) {
+          Seq(baPoints.head -> baPoints.last)
+        } else if (abPoints.nonEmpty && baPoints.nonEmpty) {
+          Seq(abPoints.head -> baPoints.last)
+        } else {
+          Seq.empty
+        }
       }
-      val type2 = baPoints match {
-        case Seq(x, y) => Seq(x -> y)
-        case _         => Seq.empty
-      }
-      val type3 = abPoints ++ baPoints match {
-        case Seq(x, y) => Seq(x -> y)
-        case Seq(x)    => Seq(x -> x)
-        case _         => Seq.empty
-      }
-      type1 ++ type2 ++ type3
     }
   }
 
@@ -289,7 +285,7 @@ object Utils {
 
     // Determine the max bound box for facets.
     val maxBound = facets.tail.foldLeft(facets.head.maxBound)(_ max _.maxBound) + Vertex(1, 2, 3)
-    lazy val minBound = facets.tail.foldLeft(facets.head.minBound)(_ min _.minBound) - Vertex(1, 2, 3)
+    lazy val minBound = facets.tail.foldLeft(facets.head.minBound)(_ min _.minBound) - Vertex(1, 0, 1)
 
     // Create a line segment through p that extends past our bounding box.
     val edge1 = p -> maxBound

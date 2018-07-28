@@ -10,8 +10,7 @@ case class Intersection[D <: Dim](a: Primitive[D], b: Primitive[D]) extends Prim
     val right = b.render
 
     // Insert vertices from intersections with other facets into each side.
-    val leftFilled = left.flatMap(f => Utils.insertIntersections(f, right))
-    val rightFilled = right.flatMap(f => Utils.insertIntersections(f, left))
+    val (leftFilled, rightFilled) = Utils.insertIntersections(left, right)
 
     val leftFiltered = leftFilled.filter { facet =>
       Utils.isContained(right, facet.centroid)

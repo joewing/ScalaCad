@@ -25,9 +25,7 @@ final case class Union[D <: Dim](a: Primitive[D], b: Primitive[D]) extends Primi
       !Utils.isContained(left, facet.centroid) || keepBoundary
     }
 
-    val x = leftFiltered ++ rightFiltered
-//    Utils.validateEdges(x)
-    x
+    leftFiltered ++ rightFiltered
   }
 }
 

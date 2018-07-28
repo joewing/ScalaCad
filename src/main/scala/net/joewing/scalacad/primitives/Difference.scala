@@ -10,10 +10,9 @@ case class Difference[D <: Dim](base: Primitive[D], minus: Primitive[D]) extends
     val right = minus.render
 
     // Insert vertices from intersections with the other facets.
-    val leftFilled = left.flatMap(f => Utils.insertIntersections(f, right))
-    val rightFilled = right.flatMap(f => Utils.insertIntersections(f, left)).map(_.flip)
+    val (leftFilled, rightFilled) = Utils.insertIntersections(left, right)
 
-    val merged = leftFilled ++ rightFilled
+    val merged = leftFilled ++ rightFilled.map(_.flip)
     merged.filter { facet =>
       val centroid = facet.centroid
       val containedLeft = Utils.isContained(left, centroid)
