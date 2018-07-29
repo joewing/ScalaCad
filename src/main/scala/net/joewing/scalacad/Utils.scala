@@ -249,8 +249,9 @@ object Utils {
   def isContained(facets: Seq[Facet], p: Vertex): Boolean = {
 
     // Determine the max bound box for facets.
-    val maxBound = facets.tail.foldLeft(facets.head.maxBound)(_ max _.maxBound) + Vertex(1, 2, 3)
-    lazy val minBound = facets.tail.foldLeft(facets.head.minBound)(_ min _.minBound) - Vertex(1, 0, 1)
+    val delta = Vertex(1 + Vertex.epsilon, 1 + Vertex.epsilon, 1 + Vertex.epsilon)
+    val maxBound = facets.tail.foldLeft(facets.head.maxBound)(_ max _.maxBound) + delta
+    lazy val minBound = facets.tail.foldLeft(facets.head.minBound)(_ min _.minBound) - delta
 
     // Create a line segment through p that extends past our bounding box.
     val edge1 = p -> maxBound

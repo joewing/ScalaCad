@@ -181,7 +181,6 @@ object Delaunay {
         }
       }
     }
-
     facets
   }
 
