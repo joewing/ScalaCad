@@ -248,21 +248,21 @@ object Utils {
   // Determine if p is contained in facets.
   def isContained(facets: Seq[Facet], p: Vertex): Boolean = {
 
-    // Determine the max bound box for facets.
-    val delta = Vertex(1 + Vertex.epsilon, 1 + Vertex.epsilon, 1 + Vertex.epsilon)
+    val delta = Vertex(1, 1, 1)
     val maxBound = facets.tail.foldLeft(facets.head.maxBound)(_ max _.maxBound) + delta
-    lazy val minBound = facets.tail.foldLeft(facets.head.minBound)(_ min _.minBound) - delta
+    val edge = p -> maxBound
 
-    // Create a line segment through p that extends past our bounding box.
-    val edge1 = p -> maxBound
-    lazy val edge2 = p -> minBound
+    val intersections = facets.flatMap { f =>
+      skewIntersection(edge, f).map(v => f -> v)
+    }
 
-    // Count the number of facets this edge intersects.
-    val count1 = distinctPoints(facets.flatMap(facet => skewIntersection(edge1, facet))).size
-    lazy val count2 = distinctPoints(facets.flatMap(facet => skewIntersection(edge2, facet))).size
-
-    // The point is contained if it intersects the object an odd number of times.
-    count1 % 2 == 1 || count2 % 2 == 1
+    if (intersections.nonEmpty) {
+      val facet = intersections.minBy { case (_, v) => (v - p).dotSelf }._1
+      facet.normal.dot(facet.centroid - p) >= 0
+    } else {
+      // No intersections -> not contained.
+      false
+    }
   }
 
   // Get all unmatched edges.
