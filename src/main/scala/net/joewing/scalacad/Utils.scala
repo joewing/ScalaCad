@@ -114,41 +114,6 @@ object Utils {
     }
   }
 
-  def insertPoint(v1: Vertex, v2: Vertex, v3: Vertex, points: Seq[Vertex]): Seq[Facet] = {
-    val p = points.head
-    val remaining = points.tail
-    val f = Facet(v1, v2, v3)
-    insertPoints(f, remaining.filter(p => f.contains(p)))
-  }
-
-  def insertPoints(facet: Facet, points: Seq[Vertex]): Seq[Facet] = {
-    if (points.nonEmpty) {
-      val p = points.head
-      if (p.approxEqual(facet.v1) || p.approxEqual(facet.v2) || p.approxEqual(facet.v3)) {
-        insertPoints(facet, points.tail)
-      } else if (p.collinear(facet.v1, facet.v2)) {
-        val new2 = insertPoint(facet.v1, p, facet.v3, points)
-        val new3 = insertPoint(p, facet.v2, facet.v3, points)
-        new2 ++ new3
-      } else if (p.collinear(facet.v2, facet.v3)) {
-        val new1 = insertPoint(facet.v1, facet.v2, p, points)
-        val new3 = insertPoint(p, facet.v3, facet.v1, points)
-        new1 ++ new3
-      } else if (p.collinear(facet.v3, facet.v1)) {
-        val new1 = insertPoint(facet.v1, facet.v2, p, points)
-        val new2 = insertPoint(facet.v2, facet.v3, p, points)
-        new1 ++ new2
-      } else {
-        val new1 = insertPoint(facet.v1, facet.v2, p, points)
-        val new2 = insertPoint(facet.v2, facet.v3, p, points)
-        val new3 = insertPoint(p, facet.v3, facet.v1, points)
-        new1 ++ new2 ++ new3
-      }
-    } else {
-      Seq(facet)
-    }
-  }
-
   // Get edges that are missing, but required.
   def missingEdges(required: Seq[Edge], facets: Seq[Facet]): Seq[Edge] = {
     val allEdges = facets.flatMap(_.edges)
@@ -263,7 +228,7 @@ object Utils {
     }
 
     val points = distinctPoints(uniqueEdges.flatMap(e => Seq(e._1, e._2)))
-    val initialTriangulation = insertPoints(facet, points)
+    val initialTriangulation = Delaunay.triangulate(facet, points)
     insertEdges(initialTriangulation, uniqueEdges.filter(e => !e._1.approxEqual(e._2)))
   }
 
