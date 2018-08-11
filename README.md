@@ -73,14 +73,29 @@ from the `net.joewing.scalacad.io` package.
 
 ## An example
 
-Here's a simple example to create a model, save it to disk as an STL
-file, and visualize it.
+Here's a simple example that can run from the command line as a script.
+See the [SBT Documentation](https://www.scala-sbt.org/1.0/docs/Scripts.html)
+for instructions on installing the `scalas` script required to run this.
+Once `scalas` is available in your path, simply save this file as
+`Hole.scala`, make it executable (`chmod +x Hole.scala`), and run it
+(`./Hole.scala`).
 
 ```scala
-object HoleExample extends App {
-  val obj = (cube(10, 10, 10).centered - cylinder(10, 3, 3, 16).centered) & sphere(6)
-  io.StlAsciiFileWriter.write(obj, "hole.stl")
-  io.AwtRenderer.show(obj)
-}
+#!/usr/bin/env scalas
+
+// A simple ScalaCad example as a Scala script.
+// See https://www.scala-sbt.org/1.0/docs/Scripts.html
+
+/***
+resolvers += Resolver.bintrayRepo("joewing", "maven")
+libraryDependencies += "net.joewing" %% "scalacad" % "0.2"
+*/
+
+import net.joewing.scalacad._
+import net.joewing.scalacad.primitives._
+
+val obj = cube(10, 10, 10).centered - cylinder(10, 3, 3, 16).centered
+io.StlAsciiFileWriter.write(obj, "hole.stl")
+
 ```
 
