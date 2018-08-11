@@ -1,6 +1,6 @@
 # ScalaCad
 
-[![Build Status](https://travis-ci.org/joewing/ScalaCad.svg?branch=master)]
+![Build Status](https://travis-ci.org/joewing/ScalaCad.svg?branch=master)
 [![Download](https://api.bintray.com/packages/joewing/maven/scalacad/images/download.svg)](https://bintray.com/joewing/maven/scalacad/_latestVersion)
 
 ## Overview
