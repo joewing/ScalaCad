@@ -62,14 +62,14 @@ final case class OctreeNode(
 final case class OctreeLeaf(vertices: Set[Vertex]) extends Octree {
   lazy val lowerBound: Vertex = {
     if (vertices.isEmpty) {
-      Vertex(Double.MaxValue, Double.MaxValue, Double.MaxValue)
+      Vertex.max
     } else {
       vertices.tail.foldLeft(vertices.head)(_ min _)
     }
   }
   lazy val upperBound: Vertex = {
     if (vertices.isEmpty) {
-      Vertex(Double.MinValue, Double.MinValue, Double.MinValue)
+      Vertex.min
     } else {
       vertices.tail.foldLeft(vertices.head)(_ max _)
     }

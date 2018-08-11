@@ -19,7 +19,7 @@ class AwtRenderer(
 
   private lazy val polygons: Seq[Polygon] = bsp.allPolygons
 
-  private lazy val minBound: Vertex = polygons.flatMap(_.vertices).reduceLeft { (m, v) =>
+  private lazy val minBound: Vertex = polygons.flatMap(_.vertices).foldLeft(Vertex.max) { (m, v) =>
     Vertex(
       x1 = math.min(m.x1, v.x1),
       x2 = math.min(m.x2, v.x2),
@@ -27,7 +27,7 @@ class AwtRenderer(
     )
   }
 
-  private lazy val maxBound: Vertex = polygons.flatMap(_.vertices).reduceLeft { (m, v) =>
+  private lazy val maxBound: Vertex = polygons.flatMap(_.vertices).foldLeft(Vertex.min) { (m, v) =>
     Vertex(
       x1 = math.max(m.x1, v.x1),
       x2 = math.max(m.x2, v.x2),

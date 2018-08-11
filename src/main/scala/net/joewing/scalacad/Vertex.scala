@@ -91,4 +91,7 @@ case class Vertex(x1: Double, x2: Double, x3: Double) {
 
 object Vertex {
   val epsilon: Double = 1e-9
+
+  val max: Vertex = Vertex(Double.MaxValue, Double.MaxValue, Double.MaxValue)
+  val min: Vertex = Vertex(Double.MinValue, Double.MinValue, Double.MinValue)
 }
