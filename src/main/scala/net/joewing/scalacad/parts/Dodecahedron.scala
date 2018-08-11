@@ -8,5 +8,5 @@ case class Dodecahedron(size: Double) extends Primitive[ThreeDimensional] {
     a & cube(2, 2, 1).centered.rotate(x = math.toRadians(116.565)).rotate(z = math.toRadians(72 * i))
   }
 
-  def render: Surface = obj.render
+  def render: Surface = obj.scale(size, size, size).render
 }
