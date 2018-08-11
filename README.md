@@ -10,6 +10,13 @@ with support for creating, visualizing, and exporting 3D models.
 Models created with ScalaCad can be exported to the STL file format
 for 3D printing.
 
+## ScalaCad Dependency
+To use ScalaCad, add the following to your build:
+```scala
+resolvers += Resolver.bintrayRepo("joewing", "maven")
+libraryDependencies += "net.joewing" %% "scalacad" % "<version>"
+```
+
 ## Creating a 3D Model.
 
 A simple embedded domain-specific language (DSL) for creating models
