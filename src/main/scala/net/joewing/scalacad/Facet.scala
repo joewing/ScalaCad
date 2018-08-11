@@ -60,10 +60,10 @@ final case class Facet(v1: Vertex, v2: Vertex, v3: Vertex) {
 }
 
 object Facet {
-  def fromVertices(vertices: Seq[Vertex]): Seq[Facet] = {
+  def fromVertices(vertices: Seq[Vertex]): Vector[Facet] = {
     vertices.tail.sliding(2).map { case Seq(a, b) =>
-        Facet(vertices.head, a, b)
-    }.toSeq
+      Facet(vertices.head, a, b)
+    }.toVector
   }
 
   def toPolygons(facets: Seq[Facet]): Seq[Polygon] = facets.map(f => Polygon(f.vertices))

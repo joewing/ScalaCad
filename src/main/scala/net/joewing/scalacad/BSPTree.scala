@@ -65,5 +65,11 @@ object BSPTree {
     new BSPTree(plane, current +: (result.coFront ++ result.coBack), f, b)
   }
 
-  def apply(polygons: Seq[Polygon]): BSPTree = helper(polygons.size / 2, polygons)
+  def apply(polygons: Seq[Polygon]): BSPTree = {
+    if (polygons.isEmpty) {
+      BSPTree(Plane(Vertex(0, 0, 0), 0), Seq.empty, None, None)
+    } else {
+      helper(polygons.size / 2, polygons)
+    }
+  }
 }

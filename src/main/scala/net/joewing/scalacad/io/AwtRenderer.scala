@@ -221,7 +221,7 @@ object AwtRenderer {
   ): Unit = {
     val renderer = new AwtRenderer(
       title = title,
-      bsp = BSPTree(Facet.toPolygons(r.render)),
+      bsp = r.render.bspSurface.tree,
       initialImageWidth = imageWidth,
       initialImageHeight = imageHeight,
       showVertices = showVertices,

@@ -7,7 +7,7 @@ class IntersectionSpec extends FunSpec with Matchers {
     val obj = Cube(1, 1, 1)
 
     it("should return itself when intersected with itself") {
-      Intersection(obj, obj).render.size shouldBe obj.render.size
+      Intersection(obj, obj).render.facets.size shouldBe obj.render.facets.size
     }
   }
 }

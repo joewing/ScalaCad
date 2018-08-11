@@ -7,7 +7,7 @@ class DifferenceSpec extends FunSpec with Matchers {
     val obj = Cylinder(10, 2, 2, 3)
 
     it("should return nothing when subtracted from itself") {
-      Difference(obj, obj).render shouldBe Seq.empty
+      Difference(obj, obj).render.facets shouldBe Seq.empty
     }
   }
 }

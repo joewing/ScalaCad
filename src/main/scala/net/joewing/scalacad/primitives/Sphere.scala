@@ -1,6 +1,6 @@
 package net.joewing.scalacad.primitives
 
-import net.joewing.scalacad.{Facet, Vertex}
+import net.joewing.scalacad.{Surface, Facet, Vertex}
 
 case class Sphere(r: Double = 1, slices: Int = 8, stacks: Int = 8) extends Primitive[ThreeDimensional] {
   require(slices >= 3, s"Need at least 3 slices, got $slices")
@@ -16,7 +16,7 @@ case class Sphere(r: Double = 1, slices: Int = 8, stacks: Int = 8) extends Primi
     )
   }
 
-  def render: Seq[Facet] = {
+  def render: Surface = Surface.fromFacets {
     Vector.tabulate(slices, stacks) { (x, y) =>
       val v1 = vertex(x, y)
       val v2 = vertex(x + 1, y)

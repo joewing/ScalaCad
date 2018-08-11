@@ -4,14 +4,13 @@ sealed trait Octree {
   def vertices: Set[Vertex]
   def lowerBound: Vertex
   def upperBound: Vertex
-
-  final lazy val midPoint: Vertex = (lowerBound + upperBound) / 2
+  def midPoint: Vertex
 
   final def vertexIndex(v: Vertex): Int = {
     val xoffset = if (v.x1 < midPoint.x1) 0 else 1
     val yoffset = if (v.x2 < midPoint.x2) 0 else 2
     val zoffset = if (v.x3 < midPoint.x3) 0 else 4
-    xoffset + yoffset + zoffset
+    xoffset | yoffset | zoffset
   }
 
   /** Insert a vertex into this octree. */
@@ -21,22 +20,30 @@ sealed trait Octree {
   def contained(lower: Vertex, upper: Vertex): Seq[Vertex]
 }
 
-final case class OctreeNode(children: Seq[Octree]) extends Octree {
-  lazy val lowerBound: Vertex = children.head.lowerBound
-  lazy val upperBound: Vertex = children.last.upperBound
+final case class OctreeNode(
+  children: Vector[Octree],
+  lowerBound: Vertex,
+  upperBound: Vertex,
+  midPoint: Vertex
+) extends Octree {
   def vertices: Set[Vertex] = children.flatMap(_.vertices).toSet
 
   def insert(v: Vertex): Octree = {
     val i = vertexIndex(v)
-    OctreeNode(children.updated(i, children(i).insert(v)))
+    OctreeNode(
+      children.updated(i, children(i).insert(v)),
+      lowerBound.min(v),
+      upperBound.max(v),
+      midPoint
+    )
   }
 
   def contained(lower: Vertex, upper: Vertex): Seq[Vertex] = {
-    val checkXLower = lower.x1 <= midPoint.x1 && upper.x1 >= lowerBound.x1
+    val checkXLower = lower.x1 < midPoint.x1 && upper.x1 >= lowerBound.x1
     val checkXUpper = lower.x1 <= upperBound.x1 && upper.x1 >= midPoint.x1
-    val checkYLower = lower.x2 <= midPoint.x2 && upper.x2 >= lowerBound.x2
+    val checkYLower = lower.x2 < midPoint.x2 && upper.x2 >= lowerBound.x2
     val checkYUpper = lower.x2 <= upperBound.x2 && upper.x2 >= midPoint.x2
-    val checkZLower = lower.x3 <= midPoint.x3 && upper.x3 >= lowerBound.x3
+    val checkZLower = lower.x3 < midPoint.x3 && upper.x3 >= lowerBound.x3
     val checkZUpper = lower.x3 <= upperBound.x3 && upper.x3 >= midPoint.x3
 
     (0 until 8).flatMap { i =>
@@ -67,19 +74,21 @@ final case class OctreeLeaf(vertices: Set[Vertex]) extends Octree {
       vertices.tail.foldLeft(vertices.head)(_ max _)
     }
   }
+  lazy val midPoint: Vertex = (lowerBound + upperBound) / 2
 
-  def insert(v: Vertex): Octree = {
-    if (vertices.size == Octree.maxLeafSize) {
-      // Split this leaf into 8 parts.
+  def split: Octree = {
+    if (vertices.size > Octree.maxLeafSize) {
+      val partition = vertices.groupBy(vertexIndex)
       val newLeaves = Vector.range(0, 8).map { i =>
-        OctreeLeaf(vertices.filter(v => vertexIndex(v) == i))
+        OctreeLeaf(partition.getOrElse(i, Set.empty))
       }
-      OctreeNode(newLeaves)
+      OctreeNode(newLeaves, lowerBound, upperBound, midPoint)
     } else {
-      // Insert here.
-      OctreeLeaf(vertices = vertices + v)
+      this
     }
   }
+
+  def insert(v: Vertex): Octree = OctreeLeaf(vertices = vertices + v).split
 
   def contained(lower: Vertex, upper: Vertex): Seq[Vertex] = {
     vertices.filter { v =>
@@ -93,8 +102,10 @@ object Octree {
 
   def maxLeafSize: Int = 64
 
+  val empty: Octree = OctreeLeaf(Set.empty)
+
   def apply(vertices: Seq[Vertex]): Octree = {
-    vertices.foldLeft(OctreeLeaf(Set.empty): Octree) { (t, v) => t.insert(v) }
+    vertices.foldLeft(empty) { (t, v) => t.insert(v) }
   }
 }
 

@@ -38,7 +38,7 @@ class StlAsciiFileWriter(os: OutputStream) {
 
 object StlAsciiFileWriter {
   def write(r: Primitive[ThreeDimensional], os: OutputStream): Unit = {
-    new StlAsciiFileWriter(os).write("", r.render)
+    new StlAsciiFileWriter(os).write("", r.render.facetSurface.facets)
   }
   def write(r: Primitive[ThreeDimensional], fileName: String): Unit = write(r, new FileOutputStream(fileName))
 }

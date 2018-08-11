@@ -2,6 +2,41 @@ package net.joewing.scalacad
 
 object Delaunay {
 
+  class FacetTree(val facet: Facet, rootOpt: Option[FacetTree]) {
+    var children: Seq[FacetTree] = Seq.empty
+
+    def root: FacetTree = rootOpt.getOrElse(this)
+
+    def replace(facets: Facet*): Unit = {
+      require(children.isEmpty)
+      children = facets.map(f => new FacetTree(f, Some(this)))
+    }
+
+    def find(p: Vertex): Option[FacetTree] = {
+      if (facet.contains(p)) {
+        if (children.nonEmpty) {
+          Some(children.flatMap(c => c.find(p)).head)
+        } else Some(this)
+      } else None
+    }
+
+    def incident(pi: Vertex, pj: Vertex): Option[FacetTree] = {
+      if (children.nonEmpty) {
+        children.flatMap(_.incident(pi, pj)).headOption
+      } else if (facet.edges.exists(e => e._1.approxEqual(pi) && e._2.approxEqual(pj))) {
+        Some(this)
+      } else None
+    }
+
+    def resultTrees: Seq[FacetTree] = {
+      if (children.nonEmpty) {
+        children.flatMap(_.resultTrees).distinct
+      } else Seq(this)
+    }
+
+    def results: Seq[Facet] = resultTrees.map(_.facet)
+  }
+
   def angle(a: Vertex, b: Vertex, x: Vertex): Double = {
     val ax = a - x
     val bx = b - x
@@ -38,25 +73,20 @@ object Delaunay {
     }
   }
 
-  def isLegal(a: Vertex, b: Vertex, facets: Seq[Facet]): Boolean = {
+  def isLegal(node: FacetTree): Boolean = {
+    val (pi, pj) = (node.facet.v2, node.facet.v3)
 
     // Find the two facets sharing this edge.
-    // TODO: this is likely way too slow.
-    val leftOpt = facets.find { f =>
-      f.edges.exists(e => e._1.approxEqual(a) && e._2.approxEqual(b))
-    }
-    val rightOpt = facets.find { f =>
-      f.edges.exists(e => e._1.approxEqual(b) && e._2.approxEqual(a))
-    }
+    val left = node
+    val rightOpt = node.root.incident(pj, pi)
 
-    (leftOpt, rightOpt) match {
-      case (Some(left), Some(right)) =>
-
+    rightOpt match {
+      case Some(right) =>
         // Get the smallest angle of the existing edge.
-        val angleExisting = smallestAngle(left, right)
+        val angleExisting = smallestAngle(left.facet, right.facet)
 
         // Get the smallest angle if we were to flip the edge.
-        val (flippedLeft, flippedRight) = flip(left, right, a, b)
+        val (flippedLeft, flippedRight) = flip(left.facet, right.facet, pi, pj)
         val angleFlipped = smallestAngle(flippedLeft, flippedRight)
 
         // The edge is legal if the smallest angle of the flipped set <= the smallest angle of the existing set
@@ -66,53 +96,29 @@ object Delaunay {
     }
   }
 
-  def insertFacet(pr: Vertex, pi: Vertex, pj: Vertex, base: Facet, facets: scala.collection.mutable.ArrayBuffer[Facet]): Unit = {
-    val f = Facet(pr, pi, pj)
-    if (base.normal.dot(f.normal) < 0) {
-      facets += f.flip
-    } else {
-      facets += f
-    }
-  }
-
-  def legalizeEdge(pr: Vertex, pi: Vertex, pj: Vertex, base: Facet, facets: scala.collection.mutable.ArrayBuffer[Facet]): Unit = {
-    if (!isLegal(pi, pj, facets)) {
+  def legalizeEdge(node: FacetTree): Unit = {
+    if (!isLegal(node)) {
       // Illegal; flip the edge and legalize the new edges.
-      val index1 = facets.indexWhere { f =>
-        f.vertices.exists(_.approxEqual(pr)) &&
-        f.vertices.exists(_.approxEqual(pi)) &&
-        f.vertices.exists(_.approxEqual(pj))
-      }
-      val olda = facets(index1)
-      facets.remove(index1)
 
-      val index2 = facets.indexWhere { f =>
-        f.vertices.exists(_.approxEqual(pi)) && f.vertices.exists(_.approxEqual(pj))
-      }
-      val oldb = facets(index2)
-      facets.remove(index2)
+      val (pr, pi, pj) = (node.facet.v1, node.facet.v2, node.facet.v3)
+      val left = node
+      val right = node.root.incident(pj, pi).get
 
-      val pk = oldb.vertices.find(v => !v.approxEqual(pi) && !v.approxEqual(pj)).get
+      val pk = right.facet.vertices.find(v => !v.approxEqual(pi) && !v.approxEqual(pj)).get
 
-      // Replace pi -> pj with pr -> pk.
-      legalizeEdge(pr, pi, pk, base, facets)
-      legalizeEdge(pr, pk, pj, base, facets)
-      insertFacet(pr, pi, pk, base, facets)
-      insertFacet(pr, pk, pj, base, facets)
+      val t1 = Facet(pr, pk, pj)
+      val f1 = if (t1.normal.dot(node.facet.normal) < 0) t1.flip else t1
+      val n1 = new FacetTree(f1, Some(node.root))
+
+      val t2 = Facet(pr, pk, pj)
+      val f2 = if (t2.normal.dot(node.facet.normal) < 0) t2.flip else t2
+      val n2 = new FacetTree(f2, Some(node.root))
+
+      left.children = Seq(n1, n2)
+      right.children = Seq(n1, n2)
+      legalizeEdge(n1)
+      legalizeEdge(n2)
     }
-  }
-
-  def removeFacet(v1: Vertex, v2: Vertex, facets: scala.collection.mutable.ArrayBuffer[Facet]): Option[Facet] = {
-    val i = facets.indexWhere { f =>
-      f.edges.exists { e =>
-        e._1.approxEqual(v1) && e._2.approxEqual(v2) || e._1.approxEqual(v2) && e._2.approxEqual(v1)
-      }
-    }
-    if (i >= 0) {
-      val facet = facets(i)
-      facets.remove(i)
-      Some(facet)
-    } else None
   }
 
   def addCollinear(
@@ -120,68 +126,54 @@ object Delaunay {
     pi: Vertex,
     pj: Vertex,
     pk: Vertex,
-    base: Facet,
-    facets: scala.collection.mutable.ArrayBuffer[Facet]
+    node: FacetTree
   ): Unit = {
-    removeFacet(pi, pj, facets) match {
+    node.root.incident(pj, pi) match {
       case Some(other) =>
-        val pl = other.vertices.find(v => !v.approxEqual(pi) && !v.approxEqual(pj)).get
-        insertFacet(pr, pi, pl, base, facets)
-        insertFacet(pr, pl, pj, base, facets)
-        insertFacet(pr, pj, pk, base, facets)
-        insertFacet(pr, pk, pi, base, facets)
-        legalizeEdge(pr, pi, pl, base, facets)
-        legalizeEdge(pr, pl, pj, base, facets)
-        legalizeEdge(pr, pj, pk, base, facets)
-        legalizeEdge(pr, pk, pi, base, facets)
+        val pl = other.facet.vertices.find(v => !v.approxEqual(pi) && !v.approxEqual(pj)).get
+        node.replace(Facet(pr, pj, pk), Facet(pr, pk, pi))
+        other.replace(Facet(pr, pi, pl), Facet(pr, pl, pj))
+        legalizeEdge(node.children(0))
+        legalizeEdge(node.children(1))
+        legalizeEdge(other.children(0))
+        legalizeEdge(other.children(1))
       case None =>
-        insertFacet(pr, pj, pk, base, facets)
-        insertFacet(pr, pk, pi, base, facets)
-        legalizeEdge(pr, pj, pk, base, facets)
-        legalizeEdge(pr, pk, pi, base, facets)
+        node.replace(Facet(pr, pj, pk), Facet(pr, pk, pi))
+        legalizeEdge(node.children(0))
+        legalizeEdge(node.children(1))
     }
   }
 
   def triangulate(base: Facet, points: Seq[Vertex]): Seq[Facet] = {
 
-    val facets = scala.collection.mutable.ArrayBuffer[Facet]()
-    facets += base
+    val root = new FacetTree(base, None)
 
     // Insert each point.
     points.foreach { p =>
-
-      // Find a triangle containing p and remove it from the set.
-      val i = facets.indexWhere(_.contains(p))
-      if (i >= 0) {
-        val facet = facets(i)
-        facets.remove(i)
-
-        // Add p
+      root.find(p).foreach { node =>
+        val facet = node.facet
         if (p.approxEqual(facet.v1) || p.approxEqual(facet.v2) || p.approxEqual(facet.v3)) {
-          // p already exists as an edge; nothing to do.
-          facets += facet
+          // This point is already contained; skip it.
         } else if (p.collinear(facet.v1, facet.v2)) {
           // p along [v1, v2]
-          addCollinear(p, facet.v1, facet.v2, facet.v3, base, facets)
+          addCollinear(p, facet.v1, facet.v2, facet.v3, node)
         } else if (p.collinear(facet.v2, facet.v3)) {
           // p along [v2, v3]
-          addCollinear(p, facet.v2, facet.v3, facet.v1, base, facets)
+          addCollinear(p, facet.v2, facet.v3, facet.v1, node)
         } else if (p.collinear(facet.v3, facet.v1)) {
           // p along [v3, v1]
-          addCollinear(p, facet.v3, facet.v1, facet.v2, base, facets)
+          addCollinear(p, facet.v3, facet.v1, facet.v2, node)
         } else {
           // pr inside t; add edges from pr to the 3 vertices.
           val (pi, pj, pk) = (facet.v1, facet.v2, facet.v3)
-          insertFacet(p, pi, pj, base, facets)
-          insertFacet(p, pj, pk, base, facets)
-          insertFacet(p, pk, pi, base, facets)
-          legalizeEdge(p, pi, pj, facet, facets)
-          legalizeEdge(p, pj, pk, base, facets)
-          legalizeEdge(p, pk, pi, base, facets)
+          node.replace(Facet(p, pi, pj), Facet(p, pj, pk), Facet(p, pk, pi))
+          legalizeEdge(node.children(0))
+          legalizeEdge(node.children(1))
+          legalizeEdge(node.children(2))
         }
       }
     }
-    facets
+    root.results
   }
 
 }

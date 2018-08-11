@@ -1,6 +1,6 @@
 package net.joewing.scalacad.primitives
 
-import net.joewing.scalacad.{Facet, Vertex}
+import net.joewing.scalacad.{Surface, Facet, Vertex}
 
 case class LinearExtrude(
   obj: Primitive[TwoDimensional],
@@ -23,8 +23,8 @@ case class LinearExtrude(
     pairs.filter(includeSide(base))
   }
 
-  def render: Seq[Facet] = {
-    val base = obj.render
+  def render: Surface = Surface.fromFacets {
+    val base = obj.render.facets
 
     def positionVertex(i: Int, v: Vertex): Vertex = {
       val angle = i * rotation
