@@ -2,6 +2,8 @@ package net.joewing.scalacad
 
 package object primitives {
 
+  type Operator[D <: Dim] = (Primitive[D], Primitive[D]) => Primitive[D]
+
   def triangle(base: Double, height: Double): Triangle = Triangle(base, height)
 
   def rectangle(width: Double, height: Double): Rectangle = Rectangle(width, height)
@@ -31,17 +33,17 @@ package object primitives {
 
     def centered: Primitive[D] = translate((left.maxBound + left.minBound) / -2)
 
-    def above(other: Primitive[D], overlap: Double = 0.0): Primitive[D] = {
-      Union(translate(z = other.extent.x3 - overlap), other)
+    def above(other: Primitive[D], overlap: Double = 0.0, op: Operator[D] = Union.apply): Primitive[D] = {
+      op(other, translate(z = other.extent.x3 - overlap))
     }
-    def below(other: Primitive[D], overlap: Double = 0.0): Primitive[D] = {
-      Union(translate(z = -left.extent.x3 - overlap), other)
+    def below(other: Primitive[D], overlap: Double = 0.0, op: Operator[D] = Union.apply): Primitive[D] = {
+      op(other, translate(z = -left.extent.x3 - overlap))
     }
-    def beside(right: Primitive[D], overlap: Double = 0.0): Primitive[D] = {
-      Union(translate(x = right.extent.x1 - overlap), right)
+    def beside(other: Primitive[D], overlap: Double = 0.0, op: Operator[D] = Union.apply): Primitive[D] = {
+      op(other, translate(x = other.extent.x1 - overlap))
     }
-    def behind(other: Primitive[D], overlap: Double = 0.0): Primitive[D] = {
-      Union(translate(y = other.extent.x2 - overlap), other)
+    def behind(other: Primitive[D], overlap: Double = 0.0, op: Operator[D] = Union.apply): Primitive[D] = {
+      op(other, translate(y = other.extent.x2 - overlap))
     }
   }
 
