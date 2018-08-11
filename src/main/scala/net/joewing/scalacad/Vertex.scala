@@ -91,15 +91,4 @@ case class Vertex(x1: Double, x2: Double, x3: Double) {
 
 object Vertex {
   val epsilon: Double = 1e-9
-
-  implicit object VertexOrdering extends Ordering[Vertex] {
-    def compare(x: Vertex, y: Vertex): Int = {
-      if (math.abs(x.x1 - y.x1) < epsilon) {
-        if (math.abs(x.x2 - y.x2) < epsilon) {
-          if (math.abs(x.x3 - y.x3) < epsilon) 0
-          else if (x.x3 < y.x3) -1 else 1
-        } else if (x.x2 < y.x2) -1 else 1
-      } else if (x.x1 < y.x1) -1 else 1
-    }
-  }
 }
