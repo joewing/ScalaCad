@@ -1,6 +1,7 @@
 # ScalaCad
 
 ![Build Status](https://travis-ci.org/joewing/ScalaCad.svg?branch=master)
+[![Download](https://api.bintray.com/packages/joewing/maven/scalacad/images/download.svg)](https://bintray.com/joewing/maven/scalacad/_latestVersion)
 
 ## Overview
 
@@ -8,6 +9,13 @@ ScalaCad is a Constructive Solid Geometry library/DSL for Scala
 with support for creating, visualizing, and exporting 3D models.
 Models created with ScalaCad can be exported to the STL file format
 for 3D printing.
+
+## ScalaCad Dependency
+To use ScalaCad, add the following to your build:
+```scala
+resolvers += Resolver.bintrayRepo("joewing", "maven")
+libraryDependencies += "net.joewing" %% "scalacad" % "<version>"
+```
 
 ## Creating a 3D Model.
 
