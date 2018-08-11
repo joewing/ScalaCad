@@ -1,3 +1,5 @@
+import sbtrelease.ReleasePlugin.autoImport.ReleaseTransformations._
+
 organization := "net.joewing"
 name := "scalacad"
 
@@ -12,6 +14,19 @@ libraryDependencies ++= Seq(
   "org.scala-lang.modules" %% "scala-parser-combinators" % "1.0.6",
   "org.scalanlp"           %% "breeze"                   % "0.13.1",
   "org.scalatest"          %% "scalatest"                % "3.0.0" % "test"
+)
+
+releaseIgnoreUntrackedFiles := true
+releaseProcess := Seq[ReleaseStep](
+   inquireVersions,
+   runTest,
+   setReleaseVersion,
+   commitReleaseVersion,
+   tagRelease,
+   publishArtifacts,
+   setNextVersion,
+   commitNextVersion,
+   pushChanges
 )
 
 bintrayOrganization := Some("joewing")
