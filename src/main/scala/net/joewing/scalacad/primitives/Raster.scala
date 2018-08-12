@@ -1,5 +1,8 @@
 package net.joewing.scalacad.primitives
 
+import java.awt.{Color, Font}
+import java.awt.font.FontRenderContext
+import java.awt.geom.AffineTransform
 import java.awt.image.BufferedImage
 import java.io.{FileInputStream, InputStream}
 
@@ -19,7 +22,7 @@ case class Raster(grid: Vector[Vector[Boolean]], resolution: Double) extends Pri
     Surface.fromFacets {
       (0 until height).flatMap { y =>
         (0 until width).flatMap { x =>
-          if (grid(y)(x)) pixel(x, y) else Vector.empty
+          if (grid(height - y - 1)(x)) pixel(x, y) else Vector.empty
         }
       }
     }
@@ -63,5 +66,27 @@ object Raster {
     invert: Boolean = false
   ): Raster = {
     fromStream(new FileInputStream(fileName), resolution, threshold, invert)
+  }
+
+  def fromText(
+    text: String,
+    size: Double = 12.0,
+    font: String = Font.DIALOG,
+    resolution: Double = 0.2
+  ): Raster = {
+    val transform = new AffineTransform()
+    val frc = new FontRenderContext(transform, true, true)
+    val f = Font.decode(font).deriveFont(size.toFloat)
+    val bounds = f.getStringBounds(text, frc)
+    val width = bounds.getWidth.toInt
+    val height = bounds.getHeight.toInt
+    val image = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB)
+    val gc = image.getGraphics
+    gc.setFont(f)
+    gc.setColor(Color.BLACK)
+    gc.fillRect(0, 0, width, height)
+    gc.setColor(Color.WHITE)
+    gc.drawString(text, 0, -bounds.getY.toInt)
+    fromImage(image, resolution)
   }
 }
