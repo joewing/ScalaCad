@@ -11,7 +11,7 @@ object StlFileReader {
     is.mark(5)
     is.read(buffer)
     is.reset()
-    buffer.toString == "solid"
+    new String(buffer) == "solid"
   }
 
   def read(is: InputStream): ImportedPart = {
