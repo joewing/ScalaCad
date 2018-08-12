@@ -88,7 +88,7 @@ Once `scalas` is available in your path, simply save this file as
 
 /***
 resolvers += Resolver.bintrayRepo("joewing", "maven")
-libraryDependencies += "net.joewing" %% "scalacad" % "0.2"
+libraryDependencies += "net.joewing" %% "scalacad" % "0.3"
 */
 
 import net.joewing.scalacad._
