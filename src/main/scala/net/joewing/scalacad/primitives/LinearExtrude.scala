@@ -9,18 +9,16 @@ case class LinearExtrude(
   slices: Int = 1
 ) extends Primitive[ThreeDimensional] {
 
-  private def includeSide(base: Seq[Facet])(side: (Vertex, Vertex)): Boolean = {
-    val (a, b) = side
-    val count = base.flatMap(_.edges).count { case (othera, otherb) =>
-      (othera.approxEqual(a) && otherb.approxEqual(b)) || (othera.approxEqual(b) && otherb.approxEqual(a))
+  private def includeEdge(allEdges: Seq[(Vertex, Vertex)])(edge: (Vertex, Vertex)): Boolean = {
+    val (a, b) = edge
+    !allEdges.exists { case (othera, otherb) =>
+      othera.approxEqual(b) && otherb.approxEqual(a)
     }
-    count == 1
   }
 
   private def segments(base: Seq[Facet]): Seq[(Vertex, Vertex)] = {
-    val vertices = base.flatMap(_.vertices)
-    val pairs = vertices.zip(vertices.last +: vertices)
-    pairs.filter(includeSide(base))
+    val allEdges = base.flatMap(_.edges)
+    allEdges.filter(includeEdge(allEdges))
   }
 
   def render: Surface = Surface.fromFacets {
@@ -36,20 +34,16 @@ case class LinearExtrude(
     }
 
     val perimeter = segments(base)
-    val sides = Vector.range(0, slices).foldLeft(Seq.empty[Facet]) { (prev, i) =>
+    val sides = Vector.range(0, slices).foldLeft(Vector.empty[Facet]) { (prev, i) =>
       prev ++ perimeter.flatMap { case (base1, base2) =>
         val b1 = positionVertex(i, base1)
         val b2 = positionVertex(i, base2)
         val t1 = positionVertex(i + 1, base1)
         val t2 = positionVertex(i + 1, base2)
-        if (rotation == 0.0) {
-          Facet.fromVertices(Seq(b1, b2, t2, t1))
-        } else {
-          Seq(
-            Facet(b1, b2, t1),
-            Facet(b2, t2, t1)
-          )
-        }
+        Vector(
+          Facet(b1, t1, b2),
+          Facet(b2, t1, t2)
+        )
       }
     }
     val top = base.map { facet =>
