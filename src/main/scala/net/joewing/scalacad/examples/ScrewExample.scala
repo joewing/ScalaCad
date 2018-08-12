@@ -1,6 +1,6 @@
 package net.joewing.scalacad.examples
 
-import net.joewing.scalacad.io.{AwtRenderer, StlAsciiFileReader, StlAsciiFileWriter}
+import net.joewing.scalacad.io.{AwtRenderer, StlFileWriter}
 import net.joewing.scalacad.parts.Threads
 import net.joewing.scalacad.primitives._
 
@@ -29,6 +29,6 @@ object ScrewExample extends App {
   def nut: Primitive[ThreeDimensional] = cap - nutThreads
 
   val obj = screw.beside(nut, overlap = -nutRadius)
-  StlAsciiFileWriter.write(obj, "screw.stl")
+  StlFileWriter.write(obj, "screw.stl")
   AwtRenderer.show(obj)
 }

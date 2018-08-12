@@ -63,12 +63,12 @@ Models can be visualized using `AwtRenderer.show` from the`net.joewing.scalacad.
 
 ## Saving a 3D Model
 
-Models can be saved to STL files using the `StlAsciiFileWriter.write` method
+Models can be saved to STL files using the `StlFileWriter.write` method
 from the `net.joewing.scalacad.io` package.
 
 ## Reading a 3D Model
 
-Models can be loaded from STL files using the `StlAsciiFileReader.read` method
+Models can be loaded from STL files using the `StlFileReader.read` method
 from the `net.joewing.scalacad.io` package.
 
 ## An example
@@ -88,14 +88,12 @@ Once `scalas` is available in your path, simply save this file as
 
 /***
 resolvers += Resolver.bintrayRepo("joewing", "maven")
-libraryDependencies += "net.joewing" %% "scalacad" % "0.2"
+libraryDependencies += "net.joewing" %% "scalacad" % "0.3"
 */
 
 import net.joewing.scalacad._
 import net.joewing.scalacad.primitives._
 
 val obj = cube(10, 10, 10).centered - cylinder(10, 3, 3, 16).centered
-io.StlAsciiFileWriter.write(obj, "hole.stl")
-
+io.StlFileWriter.write(obj, "hole.stl")
 ```
-
