@@ -6,7 +6,7 @@ import java.awt.{Color, Graphics2D}
 
 import javax.swing.{ImageIcon, JFrame, JLabel, WindowConstants}
 import net.joewing.scalacad._
-import net.joewing.scalacad.primitives.{Primitive, Dim}
+import net.joewing.scalacad.primitives._
 
 class AwtRenderer(
   title: String,
@@ -93,13 +93,15 @@ class AwtRenderer(
     val start = System.currentTimeMillis
 
     val graphics = image.createGraphics
+    graphics.scale(1, -1)
+    graphics.translate(0, -image.getHeight)
     graphics.setColor(Color.BLACK)
     graphics.fillRect(0, 0, image.getWidth, image.getHeight)
 
     val r = math.max(math.max(maxBound.x1, maxBound.x2), maxBound.x3) * 2
 
-    val rx = -rotationX + math.Pi
-    val ry = -rotationY + math.Pi
+    val rx = rotationX + math.Pi
+    val ry = rotationY + math.Pi
     val p = Vertex(
       r * math.sin(rx) * math.cos(ry),
       r * math.sin(ry),
@@ -152,11 +154,11 @@ class AwtRenderer(
       lastx = e.getX
       lasty = e.getY
       if ((e.getModifiersEx & (InputEvent.BUTTON3_DOWN_MASK | InputEvent.CTRL_DOWN_MASK)) == 0) {
-        rotationX += math.Pi * dx / 180.0
+        rotationX -= math.Pi * dx / 180.0
         rotationY -= math.Pi * dy / 180.0
       } else {
         positionX += dx
-        positionY += dy
+        positionY -= dy
       }
       render()
     }
@@ -219,9 +221,11 @@ object AwtRenderer {
     showBackfaces: Boolean = false,
     showVertices: Boolean = false
   ): Unit = {
+    val offset = (r.maxBound + r.minBound) / -2
+    val centered = Translate(r, offset.x1, offset.x2, offset.x3)
     val renderer = new AwtRenderer(
       title = title,
-      bsp = r.render.bspSurface.tree,
+      bsp = centered.render.bspSurface.tree,
       initialImageWidth = imageWidth,
       initialImageHeight = imageHeight,
       showVertices = showVertices,
