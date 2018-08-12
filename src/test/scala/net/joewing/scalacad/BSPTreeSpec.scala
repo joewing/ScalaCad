@@ -16,7 +16,7 @@ class BSPTreeSpec extends FunSpec with Matchers {
   describe("apply") {
     it("creates a BSP from a single polygon") {
       val polygon = Polygon(Seq(Vertex(1, 0, 0), Vertex(0, 1, 0), Vertex(1, 1, 0)))
-      val bsp = BSPTree(Seq(polygon))
+      val bsp = BSPTree(Seq(polygon)).asInstanceOf[BSPTreeNode]
 
       bsp.plane shouldBe Plane(Vertex(0, 0, -1), 0.0)
       bsp.allPolygons shouldBe Seq(polygon)
@@ -95,7 +95,7 @@ class BSPTreeSpec extends FunSpec with Matchers {
   describe("inverted") {
     it("inverts the space") {
       val polygon = Polygon(Seq(Vertex(1, 0, 0), Vertex(0, 1, 0), Vertex(1, 1, 0)))
-      val bsp = BSPTree(Seq(polygon)).inverted
+      val bsp = BSPTree(Seq(polygon)).inverted.asInstanceOf[BSPTreeNode]
 
       bsp.plane shouldBe Plane(Vertex(0, 0, 1), 0.0)
       bsp.polygons shouldBe Seq(polygon.flip)

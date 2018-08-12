@@ -59,21 +59,6 @@ class AwtRenderer(
   private var image = createImage(initialImageWidth, initialImageHeight)
   private val label = new JLabel(new ImageIcon(image))
 
-  private def paint(bsp: BSPTree, p: Vertex)(f: Polygon => Unit): Unit = {
-    val dp = p.dot(bsp.plane.normal)
-    if (dp > 0) {
-      bsp.back.foreach { x => paint(x, p)(f) }
-      bsp.polygons.foreach(f)
-      bsp.front.foreach { x => paint(x, p)(f) }
-    } else {
-      bsp.front.foreach { x => paint(x, p)(f) }
-      if (showBackfaces) {
-        bsp.polygons.foreach(f)
-      }
-      bsp.back.foreach { x => paint(x, p)(f) }
-    }
-  }
-
   private def renderFacet(
     xpoints: Array[Int],
     ypoints: Array[Int],
@@ -113,7 +98,7 @@ class AwtRenderer(
     val sy = math.sin(rotationY)
     val sycx = sy * cx
     val sysx = sy * sx
-    paint(bsp, p) { polygon =>
+    bsp.paint(p, showBackfaces) { polygon =>
       val sz = polygon.vertices.size
       val xs = Array.fill[Int](sz)(0)
       val ys = Array.fill[Int](sz)(0)
