@@ -6,7 +6,7 @@ import java.awt.{Color, Graphics2D}
 
 import javax.swing.{ImageIcon, JFrame, JLabel, WindowConstants}
 import net.joewing.scalacad._
-import net.joewing.scalacad.primitives.{Primitive, ThreeDimensional}
+import net.joewing.scalacad.primitives.{Primitive, Dim}
 
 class AwtRenderer(
   title: String,
@@ -212,8 +212,8 @@ object AwtRenderer {
   val defaultWidth: Int = 800
   val defaultHeight: Int = 600
 
-  def show(
-    r: Primitive[ThreeDimensional],
+  def show[D <: Dim](
+    r: Primitive[D],
     imageWidth: Int = defaultWidth,
     imageHeight: Int = defaultHeight,
     showBackfaces: Boolean = false,
