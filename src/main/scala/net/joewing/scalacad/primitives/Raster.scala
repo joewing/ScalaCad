@@ -9,14 +9,14 @@ import java.io.{FileInputStream, InputStream}
 import javax.imageio.ImageIO
 import net.joewing.scalacad.{Facet, Surface}
 
-case class Raster(grid: Vector[Vector[Boolean]], resolution: Double) extends Primitive[TwoDimensional] {
+final case class Raster(grid: Vector[Vector[Boolean]], resolution: Double) extends Primitive[TwoDimensional] {
 
   def pixel(x: Int, y: Int): Seq[Facet] = {
     val rect = Rectangle(resolution, resolution).render.facets
     rect.map(_.moved(x * resolution, y * resolution))
   }
 
-  def render: Surface = {
+  lazy val render: Surface = {
     val width = grid.head.length
     val height = grid.length
     Surface.fromFacets {

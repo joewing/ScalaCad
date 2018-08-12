@@ -16,7 +16,7 @@ case class Sphere(r: Double = 1, slices: Int = 8, stacks: Int = 8) extends Primi
     )
   }
 
-  def render: Surface = Surface.fromFacets {
+  lazy val render: Surface = Surface.fromFacets {
     Vector.tabulate(slices, stacks) { (x, y) =>
       val v1 = vertex(x, y)
       val v2 = vertex(x + 1, y)

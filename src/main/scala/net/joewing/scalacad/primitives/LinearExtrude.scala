@@ -21,7 +21,7 @@ case class LinearExtrude(
     allEdges.filter(includeEdge(allEdges))
   }
 
-  def render: Surface = Surface.fromFacets {
+  lazy val render: Surface = Surface.fromFacets {
     val base = obj.render.facets
 
     def positionVertex(i: Int, v: Vertex): Vertex = {
