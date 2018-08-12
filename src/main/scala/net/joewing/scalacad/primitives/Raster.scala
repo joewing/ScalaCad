@@ -27,24 +27,41 @@ case class Raster(grid: Vector[Vector[Boolean]], resolution: Double) extends Pri
 }
 
 object Raster {
-  def fromImage(image: BufferedImage, resolution: Double = 0.2): Raster = {
+  def fromImage(
+    image: BufferedImage,
+    resolution: Double = 0.2,
+    threshold: Double = 0.5,
+    invert: Boolean = false
+  ): Raster = {
     val width = image.getWidth
     val height = image.getHeight
+    val thresholdSum = 3 * 255 * threshold
     val grid = Vector.tabulate[Boolean](height, width) { (y, x) =>
       val rgb = image.getRGB(x, y)
       val red = (rgb >> 16) & 0xFF
       val green = (rgb >> 8) & 0xFF
       val blue = rgb & 0xFF
-      (red + green + blue) / 3.0 >= 250
+      val total = red + green + blue
+      if (invert) total < thresholdSum else total >= thresholdSum
     }
     Raster(grid, resolution)
   }
 
-  def fromStream(is: InputStream, resolution: Double = 0.2): Raster = {
-    fromImage(ImageIO.read(is), resolution)
+  def fromStream(
+    is: InputStream,
+    resolution: Double = 0.2,
+    threshold: Double = 0.5,
+    invert: Boolean = false
+  ): Raster = {
+    fromImage(ImageIO.read(is), resolution, threshold, invert)
   }
 
-  def fromFile(fileName: String, resolution: Double = 0.2): Raster = {
-    fromStream(new FileInputStream(fileName), resolution)
+  def fromFile(
+    fileName: String,
+    resolution: Double = 0.2,
+    threshold: Double = 0.5,
+    invert: Boolean = false
+  ): Raster = {
+    fromStream(new FileInputStream(fileName), resolution, threshold, invert)
   }
 }
