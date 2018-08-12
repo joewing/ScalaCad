@@ -49,12 +49,14 @@ final case class BSPTreeNode(
   }
 
   // Return this BSPTree clipped to the other BSPTree.
-  def clip(other: BSPTree): BSPTree = BSPTreeNode(
-    plane = plane,
-    polygons = other.clipPolygons(polygons),
-    front = front.clip(other),
-    back = back.clip(other)
-  )
+  def clip(other: BSPTree): BSPTree = {
+    BSPTreeNode(
+      plane = plane,
+      polygons = other.clipPolygons(polygons),
+      front = front.clip(other),
+      back = back.clip(other)
+    )
+  }
 
   def inverted: BSPTree = BSPTreeNode(
     plane = plane.flip,
@@ -65,7 +67,6 @@ final case class BSPTreeNode(
 
   def translated(v: Vertex): BSPTree = {
     copy(
-      plane = Plane(polygons.head.moved(v.x1, v.x2, v.x3)),
       polygons = polygons.map(_.moved(v.x1, v.x2, v.x3)),
       front = front.translated(v),
       back = back.translated(v)
@@ -109,7 +110,7 @@ object BSPTree {
 
   def apply(polygons: Seq[Polygon]): BSPTree = {
     if (polygons.isEmpty) {
-      BSPTreeIn
+      BSPTreeOut
     } else {
       helper(polygons.size / 2, polygons)
     }
