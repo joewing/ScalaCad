@@ -11,6 +11,10 @@ sealed trait Surface {
 
   def invert: Surface
 
+  def translate(v: Vertex): Surface
+
+  def scale(x: Double = 1, y: Double = 1, z: Double = 1): Surface
+
   def map(f: Facet => Facet): FacetSurface = Surface.fromFacets(facets.map(f))
 
   def filter(f: Facet => Boolean): FacetSurface = Surface.fromFacets(facets.filter(f))
@@ -28,6 +32,12 @@ final case class FacetSurface(facets: Seq[Facet]) extends Surface {
 
   def invert: Surface = FacetSurface(facets.map(_.flip))
 
+  def translate(v: Vertex): Surface = FacetSurface(facets.map(_.moved(v.x1, v.x2, v.x3)))
+
+  def scale(x: Double = 1, y: Double = 1, z: Double = 1): Surface = FacetSurface(
+    facets.map(_.scaled(x, y, z))
+  )
+
   def facetSurface: FacetSurface = this
   def bspSurface: BSPTreeSurface = BSPTreeSurface(BSPTree(Facet.toPolygons(facets)))
 }
@@ -38,6 +48,10 @@ final case class BSPTreeSurface(tree: BSPTree) extends Surface {
   def facets: Seq[Facet] = facetSurface.facets
 
   def invert: Surface = BSPTreeSurface(tree.inverted)
+
+  def translate(v: Vertex): Surface = BSPTreeSurface(tree.translated(v))
+
+  def scale(x: Double = 1, y: Double = 1, z: Double = 1): Surface = facetSurface.scale(x, y, z)
 
   def facetSurface: FacetSurface = Surface.treeToFacets(tree)
   def bspSurface: BSPTreeSurface = this

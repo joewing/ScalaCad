@@ -6,7 +6,7 @@ import java.awt.{Color, Graphics2D}
 
 import javax.swing.{ImageIcon, JFrame, JLabel, WindowConstants}
 import net.joewing.scalacad._
-import net.joewing.scalacad.primitives._
+import net.joewing.scalacad.primitives.{Primitive, Dim}
 
 class AwtRenderer(
   title: String,
@@ -93,15 +93,13 @@ class AwtRenderer(
     val start = System.currentTimeMillis
 
     val graphics = image.createGraphics
-    graphics.scale(1, -1)
-    graphics.translate(0, -image.getHeight)
     graphics.setColor(Color.BLACK)
     graphics.fillRect(0, 0, image.getWidth, image.getHeight)
 
     val r = math.max(math.max(maxBound.x1, maxBound.x2), maxBound.x3) * 2
 
-    val rx = rotationX + math.Pi
-    val ry = rotationY + math.Pi
+    val rx = -rotationX + math.Pi
+    val ry = -rotationY + math.Pi
     val p = Vertex(
       r * math.sin(rx) * math.cos(ry),
       r * math.sin(ry),
@@ -124,7 +122,7 @@ class AwtRenderer(
         val x = v.x1 * cx + v.x3 * sx
         val y = v.x1 * sysx + v.x2 * cy - v.x3 * sycx
         xs(i) = (x * scale + positionX).toInt
-        ys(i) = (y * scale + positionY).toInt
+        ys(i) = image.getHeight - (y * scale + positionY).toInt
       }
       val v = polygon.normal.dot(lightSource)
       val brightness = math.max(0.1, math.min(1.0, v)).toFloat
@@ -154,8 +152,8 @@ class AwtRenderer(
       lastx = e.getX
       lasty = e.getY
       if ((e.getModifiersEx & (InputEvent.BUTTON3_DOWN_MASK | InputEvent.CTRL_DOWN_MASK)) == 0) {
-        rotationX -= math.Pi * dx / 180.0
-        rotationY -= math.Pi * dy / 180.0
+        rotationX += math.Pi * dx / 180.0
+        rotationY += math.Pi * dy / 180.0
       } else {
         positionX += dx
         positionY -= dy
@@ -222,10 +220,10 @@ object AwtRenderer {
     showVertices: Boolean = false
   ): Unit = {
     val offset = (r.maxBound + r.minBound) / -2
-    val centered = Translate(r, offset.x1, offset.x2, offset.x3)
+    val centered = r.render.translate(offset)
     val renderer = new AwtRenderer(
       title = title,
-      bsp = centered.render.bspSurface.tree,
+      bsp = centered.bspSurface.tree,
       initialImageWidth = imageWidth,
       initialImageHeight = imageHeight,
       showVertices = showVertices,

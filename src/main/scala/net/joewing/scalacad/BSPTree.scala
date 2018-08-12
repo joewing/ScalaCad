@@ -44,6 +44,15 @@ final case class BSPTree(
     back = front.map(_.inverted)
   )
 
+  def translated(v: Vertex): BSPTree = {
+    copy(
+      plane = Plane(polygons.head.moved(v.x1, v.x2, v.x3)),
+      polygons = polygons.map(_.moved(v.x1, v.x2, v.x3)),
+      front = front.map(_.translated(v)),
+      back = back.map(_.translated(v))
+    )
+  }
+
   def merge(other: BSPTree): BSPTree = BSPTree(allPolygons ++ other.allPolygons)
 
   def depth: Int = {
