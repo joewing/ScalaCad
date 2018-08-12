@@ -38,6 +38,7 @@ enables one to create objects such as screw threads.
 The following 3D objects are available:
 
  - `Circle`
+ - `Raster`
  - `Rectangle`
  - `Triangle`
 
