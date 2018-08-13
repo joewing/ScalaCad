@@ -67,7 +67,7 @@ final case class BSPTreeNode(
 
   def translated(v: Vertex): BSPTree = {
     copy(
-      polygons = polygons.map(_.moved(v.x1, v.x2, v.x3)),
+      polygons = polygons.map(_.moved(v.x, v.y, v.z)),
       front = front.translated(v),
       back = back.translated(v)
     )

@@ -21,24 +21,24 @@ class AwtRenderer(
 
   private lazy val minBound: Vertex = polygons.flatMap(_.vertices).foldLeft(Vertex.max) { (m, v) =>
     Vertex(
-      x1 = math.min(m.x1, v.x1),
-      x2 = math.min(m.x2, v.x2),
-      x3 = math.min(m.x3, v.x3)
+      x = math.min(m.x, v.x),
+      y = math.min(m.y, v.y),
+      z = math.min(m.z, v.z)
     )
   }
 
   private lazy val maxBound: Vertex = polygons.flatMap(_.vertices).foldLeft(Vertex.min) { (m, v) =>
     Vertex(
-      x1 = math.max(m.x1, v.x1),
-      x2 = math.max(m.x2, v.x2),
-      x3 = math.max(m.x3, v.x3)
+      x = math.max(m.x, v.x),
+      y = math.max(m.y, v.y),
+      z = math.max(m.z, v.z)
     )
   }
 
   private lazy val (initialScale, initialX, initialY): (Double, Double, Double) = {
     val buffer = (initialImageWidth * 0.05).toInt
-    val (minx, miny) = (minBound.x1, minBound.x2)
-    val (maxx, maxy) = (maxBound.x1, maxBound.x2)
+    val (minx, miny) = (minBound.x, minBound.y)
+    val (maxx, maxy) = (maxBound.x, maxBound.y)
     val scalex = (initialImageWidth - buffer) / (maxx - minx)
     val scaley = (initialImageHeight - buffer) / (maxy - miny)
     val s = math.min(scalex, scaley)
@@ -81,7 +81,7 @@ class AwtRenderer(
     graphics.setColor(Color.BLACK)
     graphics.fillRect(0, 0, image.getWidth, image.getHeight)
 
-    val r = math.max(math.max(maxBound.x1, maxBound.x2), maxBound.x3) * 2
+    val r = math.max(math.max(maxBound.x, maxBound.y), maxBound.z) * 2
 
     val rx = -rotationX + math.Pi
     val ry = -rotationY + math.Pi
@@ -104,8 +104,8 @@ class AwtRenderer(
       val ys = Array.fill[Int](sz)(0)
       polygon.vertices.indices.foreach { i =>
         val v = polygon.vertices(i)
-        val x = v.x1 * cx + v.x3 * sx
-        val y = v.x1 * sysx + v.x2 * cy - v.x3 * sycx
+        val x = v.x * cx + v.z * sx
+        val y = v.x * sysx + v.y * cy - v.z * sycx
         xs(i) = (x * scale + positionX).toInt
         ys(i) = image.getHeight - (y * scale + positionY).toInt
       }

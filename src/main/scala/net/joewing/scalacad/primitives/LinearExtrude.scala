@@ -27,8 +27,8 @@ case class LinearExtrude(
     def positionVertex(i: Int, v: Vertex): Vertex = {
       val angle = i * rotation
       Vertex(
-        v.x1 * math.cos(angle) - v.x2 * math.sin(angle),
-        v.x1 * math.sin(angle) + v.x2 * math.cos(angle),
+        v.x * math.cos(angle) - v.y * math.sin(angle),
+        v.x * math.sin(angle) + v.y * math.cos(angle),
         i * length / slices
       )
     }

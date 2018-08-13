@@ -18,7 +18,7 @@ class ObjFileWriter(os: OutputStream) {
 
       // Write vertices.
       vertices.toSeq.sortBy(_._2).foreach { case (v, _) =>
-        pw.println(s"v ${fmt(v.x1)} ${fmt(v.x2)} ${fmt(v.x3)}")
+        pw.println(s"v ${fmt(v.x)} ${fmt(v.y)} ${fmt(v.z)}")
       }
 
       // Write faces.

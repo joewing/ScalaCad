@@ -13,7 +13,7 @@ trait Primitive[T <: Dim] {
   private def reduceVertices(op: (Double, Double) => Double): Vertex = {
     val vertices = render.vertices
     vertices.tail.foldLeft(vertices.head) { (b, v) =>
-      Vertex(op(b.x1, v.x1), op(b.x2, v.x2), op(b.x3, v.x3))
+      Vertex(op(b.x, v.x), op(b.y, v.y), op(b.z, v.z))
     }
   }
 

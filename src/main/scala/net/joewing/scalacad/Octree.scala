@@ -7,9 +7,9 @@ sealed trait Octree {
   def midPoint: Vertex
 
   final def vertexIndex(v: Vertex): Int = {
-    val xoffset = if (v.x1 < midPoint.x1) 0 else 1
-    val yoffset = if (v.x2 < midPoint.x2) 0 else 2
-    val zoffset = if (v.x3 < midPoint.x3) 0 else 4
+    val xoffset = if (v.x < midPoint.x) 0 else 1
+    val yoffset = if (v.y < midPoint.y) 0 else 2
+    val zoffset = if (v.z < midPoint.z) 0 else 4
     xoffset | yoffset | zoffset
   }
 
@@ -39,12 +39,12 @@ final case class OctreeNode(
   }
 
   def contained(lower: Vertex, upper: Vertex): Seq[Vertex] = {
-    val checkXLower = lower.x1 < midPoint.x1 && upper.x1 >= lowerBound.x1
-    val checkXUpper = lower.x1 <= upperBound.x1 && upper.x1 >= midPoint.x1
-    val checkYLower = lower.x2 < midPoint.x2 && upper.x2 >= lowerBound.x2
-    val checkYUpper = lower.x2 <= upperBound.x2 && upper.x2 >= midPoint.x2
-    val checkZLower = lower.x3 < midPoint.x3 && upper.x3 >= lowerBound.x3
-    val checkZUpper = lower.x3 <= upperBound.x3 && upper.x3 >= midPoint.x3
+    val checkXLower = lower.x < midPoint.x && upper.x >= lowerBound.x
+    val checkXUpper = lower.x <= upperBound.x && upper.x >= midPoint.x
+    val checkYLower = lower.y < midPoint.y && upper.y >= lowerBound.y
+    val checkYUpper = lower.y <= upperBound.y && upper.y >= midPoint.y
+    val checkZLower = lower.z < midPoint.z && upper.z >= lowerBound.z
+    val checkZUpper = lower.z <= upperBound.z && upper.z >= midPoint.z
 
     (0 until 8).flatMap { i =>
       val checkx = if ((i & 1) == 0) checkXLower else checkXUpper
@@ -92,8 +92,8 @@ final case class OctreeLeaf(vertices: Set[Vertex]) extends Octree {
 
   def contained(lower: Vertex, upper: Vertex): Seq[Vertex] = {
     vertices.filter { v =>
-      v.x1 >= lower.x1 && v.x2 >= lower.x2 && v.x3 >= lower.x3 &&
-      v.x1 <= upper.x1 && v.x2 <= upper.x2 && v.x3 <= upper.x3
+      v.x >= lower.x && v.y >= lower.y && v.z >= lower.z &&
+      v.x <= upper.x && v.y <= upper.y && v.z <= upper.z
     }.toSeq
   }
 }

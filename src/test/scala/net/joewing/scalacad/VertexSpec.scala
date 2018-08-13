@@ -19,21 +19,21 @@ class VertexSpec extends FunSpec with Matchers {
 
   describe("rotated") {
     it("rotates about x") {
-      Vertex(1, 1, 1).rotated(x = math.Pi).x1 shouldBe 1.0 +- 1e-6
-      Vertex(1, 1, 1).rotated(x = math.Pi).x2 shouldBe -1.0 +- 1e-6
-      Vertex(1, 1, 1).rotated(x = math.Pi).x3 shouldBe -1.0 +- 1e-6
+      Vertex(1, 1, 1).rotated(x = math.Pi).x shouldBe 1.0 +- 1e-6
+      Vertex(1, 1, 1).rotated(x = math.Pi).y shouldBe -1.0 +- 1e-6
+      Vertex(1, 1, 1).rotated(x = math.Pi).z shouldBe -1.0 +- 1e-6
     }
 
     it("rotates about y") {
-      Vertex(1, 1, 1).rotated(y = math.Pi).x1 shouldBe -1.0 +- 1e-6
-      Vertex(1, 1, 1).rotated(y = math.Pi).x2 shouldBe 1.0 +- 1e-6
-      Vertex(1, 1, 1).rotated(y = math.Pi).x3 shouldBe -1.0 +- 1e-6
+      Vertex(1, 1, 1).rotated(y = math.Pi).x shouldBe -1.0 +- 1e-6
+      Vertex(1, 1, 1).rotated(y = math.Pi).y shouldBe 1.0 +- 1e-6
+      Vertex(1, 1, 1).rotated(y = math.Pi).z shouldBe -1.0 +- 1e-6
     }
 
     it("rotates about z") {
-      Vertex(1, 1, 1).rotated(z = math.Pi).x1 shouldBe -1.0 +- 1e-6
-      Vertex(1, 1, 1).rotated(z = math.Pi).x2 shouldBe -1.0 +- 1e-6
-      Vertex(1, 1, 1).rotated(z = math.Pi).x3 shouldBe 1.0 +- 1e-6
+      Vertex(1, 1, 1).rotated(z = math.Pi).x shouldBe -1.0 +- 1e-6
+      Vertex(1, 1, 1).rotated(z = math.Pi).y shouldBe -1.0 +- 1e-6
+      Vertex(1, 1, 1).rotated(z = math.Pi).z shouldBe 1.0 +- 1e-6
     }
   }
 

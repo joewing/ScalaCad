@@ -9,9 +9,9 @@ import net.joewing.scalacad.primitives.{Primitive, ThreeDimensional}
 class StlBinaryFileWriter(os: OutputStream) {
 
   def writeVertex(buffer: ByteBuffer, vertex: Vertex): Unit = {
-    buffer.putFloat(vertex.x1.toFloat)
-    buffer.putFloat(vertex.x2.toFloat)
-    buffer.putFloat(vertex.x3.toFloat)
+    buffer.putFloat(vertex.x.toFloat)
+    buffer.putFloat(vertex.y.toFloat)
+    buffer.putFloat(vertex.z.toFloat)
   }
 
   def write(name: String, facets: Seq[Facet]): Unit = {

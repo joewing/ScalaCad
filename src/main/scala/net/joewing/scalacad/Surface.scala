@@ -32,7 +32,7 @@ final case class FacetSurface(facets: Seq[Facet]) extends Surface {
 
   def invert: Surface = FacetSurface(facets.map(_.flip))
 
-  def translate(v: Vertex): Surface = FacetSurface(facets.map(_.moved(v.x1, v.x2, v.x3)))
+  def translate(v: Vertex): Surface = FacetSurface(facets.map(_.moved(v.x, v.y, v.z)))
 
   def scale(x: Double = 1, y: Double = 1, z: Double = 1): Surface = FacetSurface(
     facets.map(_.scaled(x, y, z))
