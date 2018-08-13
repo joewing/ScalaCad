@@ -98,7 +98,7 @@ class AwtRenderer(
     val sy = math.sin(rotationY)
     val sycx = sy * cx
     val sysx = sy * sx
-    bsp.paint(p, showBackfaces) { polygon =>
+    bsp.paint(lightSource, showBackfaces) { polygon =>
       val sz = polygon.vertices.size
       val xs = Array.fill[Int](sz)(0)
       val ys = Array.fill[Int](sz)(0)

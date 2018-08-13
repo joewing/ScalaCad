@@ -44,10 +44,14 @@ package object primitives {
       op(other, translate(z = deltaZ))
     }
     def beside(other: Primitive[D], overlap: Double = 0.0, op: Operator[D] = Union.apply): Primitive[D] = {
-      op(other, translate(x = other.extent.x1 - overlap))
+      val newX = other.maxBound.x1 - overlap
+      val deltaX = newX - left.minBound.x1
+      op(other, translate(x = deltaX))
     }
     def behind(other: Primitive[D], overlap: Double = 0.0, op: Operator[D] = Union.apply): Primitive[D] = {
-      op(other, translate(y = other.extent.x2 - overlap))
+      val newY = other.maxBound.x2 - overlap
+      val deltaY = newY - left.minBound.x2
+      op(other, translate(y = deltaY))
     }
   }
 
