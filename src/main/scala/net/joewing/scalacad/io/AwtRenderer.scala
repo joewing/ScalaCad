@@ -6,7 +6,7 @@ import java.awt.{Color, Graphics2D}
 
 import javax.swing.{ImageIcon, JFrame, JLabel, WindowConstants}
 import net.joewing.scalacad._
-import net.joewing.scalacad.primitives.{Primitive, ThreeDimensional}
+import net.joewing.scalacad.primitives.{Primitive, Dim}
 
 class AwtRenderer(
   title: String,
@@ -59,21 +59,6 @@ class AwtRenderer(
   private var image = createImage(initialImageWidth, initialImageHeight)
   private val label = new JLabel(new ImageIcon(image))
 
-  private def paint(bsp: BSPTree, p: Vertex)(f: Polygon => Unit): Unit = {
-    val dp = p.dot(bsp.plane.normal)
-    if (dp > 0) {
-      bsp.back.foreach { x => paint(x, p)(f) }
-      bsp.polygons.foreach(f)
-      bsp.front.foreach { x => paint(x, p)(f) }
-    } else {
-      bsp.front.foreach { x => paint(x, p)(f) }
-      if (showBackfaces) {
-        bsp.polygons.foreach(f)
-      }
-      bsp.back.foreach { x => paint(x, p)(f) }
-    }
-  }
-
   private def renderFacet(
     xpoints: Array[Int],
     ypoints: Array[Int],
@@ -113,7 +98,7 @@ class AwtRenderer(
     val sy = math.sin(rotationY)
     val sycx = sy * cx
     val sysx = sy * sx
-    paint(bsp, p) { polygon =>
+    bsp.paint(lightSource, showBackfaces) { polygon =>
       val sz = polygon.vertices.size
       val xs = Array.fill[Int](sz)(0)
       val ys = Array.fill[Int](sz)(0)
@@ -122,7 +107,7 @@ class AwtRenderer(
         val x = v.x1 * cx + v.x3 * sx
         val y = v.x1 * sysx + v.x2 * cy - v.x3 * sycx
         xs(i) = (x * scale + positionX).toInt
-        ys(i) = (y * scale + positionY).toInt
+        ys(i) = image.getHeight - (y * scale + positionY).toInt
       }
       val v = polygon.normal.dot(lightSource)
       val brightness = math.max(0.1, math.min(1.0, v)).toFloat
@@ -153,10 +138,10 @@ class AwtRenderer(
       lasty = e.getY
       if ((e.getModifiersEx & (InputEvent.BUTTON3_DOWN_MASK | InputEvent.CTRL_DOWN_MASK)) == 0) {
         rotationX += math.Pi * dx / 180.0
-        rotationY -= math.Pi * dy / 180.0
+        rotationY += math.Pi * dy / 180.0
       } else {
         positionX += dx
-        positionY += dy
+        positionY -= dy
       }
       render()
     }
@@ -212,16 +197,18 @@ object AwtRenderer {
   val defaultWidth: Int = 800
   val defaultHeight: Int = 600
 
-  def show(
-    r: Primitive[ThreeDimensional],
+  def show[D <: Dim](
+    r: Primitive[D],
     imageWidth: Int = defaultWidth,
     imageHeight: Int = defaultHeight,
     showBackfaces: Boolean = false,
     showVertices: Boolean = false
   ): Unit = {
+    val offset = (r.maxBound + r.minBound) / -2
+    val centered = r.render.translate(offset)
     val renderer = new AwtRenderer(
       title = title,
-      bsp = r.render.bspSurface.tree,
+      bsp = centered.bspSurface.tree,
       initialImageWidth = imageWidth,
       initialImageHeight = imageHeight,
       showVertices = showVertices,

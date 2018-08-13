@@ -9,5 +9,9 @@ class DifferenceSpec extends FunSpec with Matchers {
     it("should return nothing when subtracted from itself") {
       Difference(obj, obj).render.facets shouldBe Seq.empty
     }
+
+    it("should return the original object when subtracted from a non-overlapping part") {
+      Difference(obj, Translate(obj, 20)).render.facets.size shouldBe obj.render.facets.size
+    }
   }
 }

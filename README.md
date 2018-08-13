@@ -38,6 +38,7 @@ enables one to create objects such as screw threads.
 The following 3D objects are available:
 
  - `Circle`
+ - `Raster`
  - `Rectangle`
  - `Triangle`
 
@@ -88,7 +89,7 @@ Once `scalas` is available in your path, simply save this file as
 
 /***
 resolvers += Resolver.bintrayRepo("joewing", "maven")
-libraryDependencies += "net.joewing" %% "scalacad" % "0.3"
+libraryDependencies += "net.joewing" %% "scalacad" % "0.4"
 */
 
 import net.joewing.scalacad._

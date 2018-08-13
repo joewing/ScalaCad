@@ -34,16 +34,24 @@ package object primitives {
     def centered: Primitive[D] = translate((left.maxBound + left.minBound) / -2)
 
     def above(other: Primitive[D], overlap: Double = 0.0, op: Operator[D] = Union.apply): Primitive[D] = {
-      op(other, translate(z = other.extent.x3 - overlap))
+      val newZ = other.maxBound.x3 - overlap
+      val deltaZ = newZ - left.minBound.x3
+      op(other, translate(z = deltaZ))
     }
     def below(other: Primitive[D], overlap: Double = 0.0, op: Operator[D] = Union.apply): Primitive[D] = {
-      op(other, translate(z = -left.extent.x3 - overlap))
+      val newZ = other.minBound.x3 - left.extent.x3 + overlap
+      val deltaZ = newZ - left.minBound.x3
+      op(other, translate(z = deltaZ))
     }
     def beside(other: Primitive[D], overlap: Double = 0.0, op: Operator[D] = Union.apply): Primitive[D] = {
-      op(other, translate(x = other.extent.x1 - overlap))
+      val newX = other.maxBound.x1 - overlap
+      val deltaX = newX - left.minBound.x1
+      op(other, translate(x = deltaX))
     }
     def behind(other: Primitive[D], overlap: Double = 0.0, op: Operator[D] = Union.apply): Primitive[D] = {
-      op(other, translate(y = other.extent.x2 - overlap))
+      val newY = other.maxBound.x2 - overlap
+      val deltaY = newY - left.minBound.x2
+      op(other, translate(y = deltaY))
     }
   }
 

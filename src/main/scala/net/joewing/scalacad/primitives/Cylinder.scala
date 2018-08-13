@@ -20,12 +20,12 @@ case class Cylinder(length: Double, r1: Double, r2: Double, sides: Int) extends 
     }
   }
 
-  def render: Surface = {
+  lazy val render: Surface = {
     val top = renderEnd(r1, 0).map(_.flip)
     val bottom = renderEnd(r2, length)
 
     // 1 square per side.
-    val shaft = Range(0, sides).map { i =>
+    val shaft = Vector.tabulate[Seq[Vertex]](sides) { i =>
       val theta1 = angle * i
       val theta2 = angle * (i + 1)
       val x1a = r1 * math.cos(theta1)
