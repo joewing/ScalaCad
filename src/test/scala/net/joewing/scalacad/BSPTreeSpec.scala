@@ -49,13 +49,13 @@ class BSPTreeSpec extends FunSpec with Matchers {
       result.head.normal shouldBe spanning.normal
       result.head.vertices(0) shouldBe Vertex(0, 0, 0.5)
 
-      result.head.vertices(1).x1 shouldBe 0.0
-      result.head.vertices(1).x2 shouldBe 0.3 +- 0.1
-      result.head.vertices(1).x3 shouldBe 0.5
+      result.head.vertices(1).x shouldBe 0.0
+      result.head.vertices(1).y shouldBe 0.3 +- 0.1
+      result.head.vertices(1).z shouldBe 0.5
 
-      result.head.vertices(2).x1 shouldBe 0.2 +- 0.1
-      result.head.vertices(2).x2 shouldBe 0.2 +- 0.1
-      result.head.vertices(2).x3 shouldBe 0.5
+      result.head.vertices(2).x shouldBe 0.2 +- 0.1
+      result.head.vertices(2).y shouldBe 0.2 +- 0.1
+      result.head.vertices(2).z shouldBe 0.5
     }
 
     it("splits polygons that span the object preserving the orientation") {

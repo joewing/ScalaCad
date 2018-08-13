@@ -10,8 +10,8 @@ object TextExample extends App {
   val textObj = Raster.fromText(text, 64).extrude(textDepth).centered
 
   val padding = 16
-  val boxWidth = textObj.extent.x1 + padding
-  val boxHeight = textObj.extent.x2 + padding
+  val boxWidth = textObj.extent.x + padding
+  val boxHeight = textObj.extent.y + padding
   val boxDepth = boxHeight
   val box = Cube(boxWidth, boxHeight, boxDepth).centered
 

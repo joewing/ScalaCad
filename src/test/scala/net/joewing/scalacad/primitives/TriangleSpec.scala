@@ -9,7 +9,7 @@ class TriangleSpec extends FunSpec with Matchers {
     }
 
     it("should have a downward normal") {
-      Triangle(4, 5).render.facets.head.normal.x3 should be < 0.0
+      Triangle(4, 5).render.facets.head.normal.z should be < 0.0
     }
   }
 }

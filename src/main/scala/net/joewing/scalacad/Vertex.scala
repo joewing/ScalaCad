@@ -2,9 +2,9 @@ package net.joewing.scalacad
 
 import breeze.linalg.{DenseMatrix, DenseVector}
 
-case class Vertex(x1: Double, x2: Double, x3: Double) {
+case class Vertex(x: Double, y: Double, z: Double) {
 
-  override def toString: String = f"[$x1%.4f, $x2%.4f, $x3%.4f]"
+  override def toString: String = f"[$x%.4f, $y%.4f, $z%.4f]"
 
   private def rx(radians: Double): DenseMatrix[Double] = DenseMatrix(
     DenseVector(1.0, 0.0, 0.0),
@@ -25,34 +25,34 @@ case class Vertex(x1: Double, x2: Double, x3: Double) {
   )
 
   def scaled(x: Double = 1.0, y: Double = 1.0, z: Double = 1.0): Vertex = {
-    Vertex(x1 * x, x2 * y, x3 * z)
+    Vertex(this.x * x, this.y * y, this.z * z)
   }
 
   def rotated(x: Double = 0.0, y: Double = 0.0, z: Double = 0.0): Vertex = {
-    val v = rx(x) * ry(y) * rz(z) * DenseVector(x1, x2, x3)
+    val v = rx(x) * ry(y) * rz(z) * DenseVector(this.x, this.y, this.z)
     Vertex(v(0), v(1), v(2))
   }
 
   def moved(x: Double = 0.0, y: Double = 0.0, z: Double = 0.0): Vertex =
-    Vertex(x1 + x, x2 + y, x3 + z)
+    Vertex(this.x + x, this.y + y, this.z + z)
 
-  def dot(other: Vertex): Double = x1 * other.x1 + x2 * other.x2 + x3 * other.x3
+  def dot(other: Vertex): Double = x * other.x + y * other.y + z * other.z
 
   def dotSelf: Double = dot(this)
 
   def cross(other: Vertex): Vertex = Vertex(
-    x2 * other.x3 - x3 * other.x2,
-    x3 * other.x1 - x1 * other.x3,
-    x1 * other.x2 - x2 * other.x1
+    y * other.z - z * other.y,
+    z * other.x - x * other.z,
+    x * other.y - y * other.x
   )
 
-  def +(other: Vertex): Vertex = Vertex(x1 + other.x1, x2 + other.x2, x3 + other.x3)
+  def +(other: Vertex): Vertex = Vertex(x + other.x, y + other.y, z + other.z)
 
-  def -(other: Vertex): Vertex = Vertex(x1 - other.x1, x2 - other.x2, x3 - other.x3)
+  def -(other: Vertex): Vertex = Vertex(x - other.x, y - other.y, z - other.z)
 
-  def *(s: Double): Vertex = Vertex(x1 * s, x2 * s, x3 * s)
+  def *(s: Double): Vertex = Vertex(x * s, y * s, z * s)
 
-  def /(s: Double): Vertex = Vertex(x1 / s, x2 / s, x3 / s)
+  def /(s: Double): Vertex = Vertex(x / s, y / s, z / s)
 
   def length: Double = math.sqrt(dotSelf)
 
@@ -60,15 +60,15 @@ case class Vertex(x1: Double, x2: Double, x3: Double) {
 
   def interpolate(other: Vertex, d: Double): Vertex = this + (other - this) * d
 
-  def negated: Vertex = Vertex(-x1, -x2, -x3)
+  def negated: Vertex = Vertex(-x, -y, -z)
 
   def approxEqual(other: Vertex, epsilon: Double = Vertex.epsilon): Boolean = {
-    math.abs(x1 - other.x1) < epsilon && math.abs(x2 - other.x2) < epsilon && math.abs(x3 - other.x3) < epsilon
+    math.abs(x - other.x) < epsilon && math.abs(y - other.y) < epsilon && math.abs(z - other.z) < epsilon
   }
 
-  def min(right: Vertex): Vertex = Vertex(math.min(x1, right.x1), math.min(x2, right.x2), math.min(x3, right.x3))
+  def min(right: Vertex): Vertex = Vertex(math.min(x, right.x), math.min(y, right.y), math.min(z, right.z))
 
-  def max(right: Vertex): Vertex = Vertex(math.max(x1, right.x1), math.max(x2, right.x2), math.max(x3, right.x3))
+  def max(right: Vertex): Vertex = Vertex(math.max(x, right.x), math.max(y, right.y), math.max(z, right.z))
 
   def collinear(a: Vertex, b: Vertex, epsilon: Double = Vertex.epsilon): Boolean =
     (b - a).cross(this - a).length < epsilon
@@ -76,9 +76,9 @@ case class Vertex(x1: Double, x2: Double, x3: Double) {
   // Find 't' such that 'a + t(b - a) = this'.
   // If this returns t in (0, 1), then this is between a and b.
   def solve(a: Vertex, b: Vertex): Double = {
-    if (math.abs(a.x1 - b.x1) > Vertex.epsilon) (x1 - a.x1) / (b.x1 - a.x1)
-    else if (math.abs(a.x2 - b.x2) > Vertex.epsilon) (x2 - a.x2) / (b.x2 - a.x2)
-    else if (math.abs(a.x3 - b.x3) > Vertex.epsilon) (x3 - a.x3) / (b.x3 - a.x3)
+    if (math.abs(a.x - b.x) > Vertex.epsilon) (x - a.x) / (b.x - a.x)
+    else if (math.abs(a.y - b.y) > Vertex.epsilon) (y - a.y) / (b.y - a.y)
+    else if (math.abs(a.z - b.z) > Vertex.epsilon) (z - a.z) / (b.z - a.z)
     else 0.0
   }
 
