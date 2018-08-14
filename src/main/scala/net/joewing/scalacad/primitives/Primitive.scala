@@ -12,8 +12,12 @@ trait Primitive[T <: Dim] {
 
   private def reduceVertices(op: (Double, Double) => Double): Vertex = {
     val vertices = render.vertices
-    vertices.tail.foldLeft(vertices.head) { (b, v) =>
-      Vertex(op(b.x, v.x), op(b.y, v.y), op(b.z, v.z))
+    if (vertices.nonEmpty) {
+      vertices.tail.foldLeft(vertices.head) { (b, v) =>
+        Vertex(op(b.x, v.x), op(b.y, v.y), op(b.z, v.z))
+      }
+    } else {
+      Vertex(0, 0, 0)
     }
   }
 
