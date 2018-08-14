@@ -29,6 +29,5 @@ object ScrewExample extends App {
   def nut: Primitive[ThreeDimensional] = cap - nutThreads
 
   val obj = screw.beside(nut, overlap = -nutRadius)
-  StlFileWriter.write(obj, "screw.stl")
   AwtRenderer.show(obj)
 }

@@ -1,7 +1,7 @@
 package net.joewing.scalacad.primitives
 
-import net.joewing.scalacad.Surface
+import net.joewing.scalacad.RenderedObject
 
 case class Invert[D <: Dim](obj: Primitive[D]) extends Primitive[D] {
-  lazy val render: Surface = obj.render.invert
+  lazy val render: RenderedObject = obj.render.invert
 }

@@ -1,9 +1,9 @@
 package net.joewing.scalacad.primitives
 
-import net.joewing.scalacad.{Facet, Surface, Vertex}
+import net.joewing.scalacad.{Facet, RenderedObject, Vertex}
 
 case class Triangle(base: Double, height: Double) extends Primitive[TwoDimensional] {
-  lazy val render: Surface = {
-    Surface.fromFacets(Seq(Facet(Vertex(0, 0, 0), Vertex(0, height, 0), Vertex(base, height, 0))))
+  lazy val render: RenderedObject = {
+    RenderedObject.fromFacets(Seq(Facet(Vertex(0, 0, 0), Vertex(0, height, 0), Vertex(base, height, 0))))
   }
 }

@@ -4,19 +4,23 @@ import java.awt.event._
 import java.awt.image.BufferedImage
 import java.awt.{Color, Graphics2D}
 
-import javax.swing.{ImageIcon, JFrame, JLabel, WindowConstants}
+import javax.swing._
 import net.joewing.scalacad._
-import net.joewing.scalacad.primitives.{Primitive, Dim}
+import net.joewing.scalacad.io.internal.SaveDialog
+import net.joewing.scalacad.primitives.{Primitive, ThreeDimensional}
 
 class AwtRenderer(
   title: String,
-  bsp: BSPTree,
+  obj: Primitive[ThreeDimensional],
   initialImageWidth: Int,
   initialImageHeight: Int,
   showVertices: Boolean,
   showBackfaces: Boolean
 ) {
 
+  private val offset = (obj.maxBound + obj.minBound) / -2
+  private val centered = obj.render.translate(offset)
+  private val bsp = centered.tree
   private lazy val polygons: Seq[Polygon] = bsp.allPolygons
 
   private lazy val minBound: Vertex = polygons.flatMap(_.vertices).foldLeft(Vertex.max) { (m, v) =>
@@ -121,6 +125,15 @@ class AwtRenderer(
     println(s"Render time: ${end - start} ms")
   }
 
+  private def center(): Unit = {
+    scale = initialScale
+    rotationX = 0
+    rotationY = 0
+    positionX = initialX
+    positionY = initialY
+    render()
+  }
+
   private object MotionListener extends MouseMotionListener {
 
     private var lastx: Int = 0
@@ -172,14 +185,50 @@ class AwtRenderer(
   private object KeyListener extends KeyAdapter {
     override def keyPressed(e: KeyEvent): Unit = {
       e.getKeyChar match {
+        case 'c' | 'C' => center()
         case 'q' | 'Q' => frame.dispose()
+        case 's' | 'S' => SaveDialog.show(frame, obj)
         case _         => ()
       }
     }
   }
 
+  private def fileMenu: JMenu = {
+    val menu = new JMenu("File")
+
+    val saveItem = new JMenuItem("Save (s)")
+    saveItem.addActionListener((e: ActionEvent) => SaveDialog.show(frame, obj))
+    menu.add(saveItem)
+
+    menu.add(new JSeparator())
+
+    val exitItem = new JMenuItem("Exit (q)")
+    exitItem.addActionListener((e: ActionEvent) => frame.dispose())
+    menu.add(exitItem)
+
+    menu
+  }
+
+  private def viewMenu: JMenu = {
+    val menu = new JMenu("View")
+
+    val centerItem = new JMenuItem("Center (c)")
+    centerItem.addActionListener((e: ActionEvent) => center())
+    menu.add(centerItem)
+
+    menu
+  }
+
+  private def menuBar: JMenuBar = {
+    val bar = new JMenuBar()
+    bar.add(fileMenu)
+    bar.add(viewMenu)
+    bar
+  }
+
   def show(): Unit = {
     frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE)
+    frame.setJMenuBar(menuBar)
     frame.add(label)
     frame.addMouseMotionListener(MotionListener)
     frame.addMouseWheelListener(WheelListener)
@@ -197,18 +246,16 @@ object AwtRenderer {
   val defaultWidth: Int = 800
   val defaultHeight: Int = 600
 
-  def show[D <: Dim](
-    r: Primitive[D],
+  def show(
+    r: Primitive[ThreeDimensional],
     imageWidth: Int = defaultWidth,
     imageHeight: Int = defaultHeight,
     showBackfaces: Boolean = false,
     showVertices: Boolean = false
   ): Unit = {
-    val offset = (r.maxBound + r.minBound) / -2
-    val centered = r.render.translate(offset)
     val renderer = new AwtRenderer(
       title = title,
-      bsp = centered.bspSurface.tree,
+      obj = r,
       initialImageWidth = imageWidth,
       initialImageHeight = imageHeight,
       showVertices = showVertices,

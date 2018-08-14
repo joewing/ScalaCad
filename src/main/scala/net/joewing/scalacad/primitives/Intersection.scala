@@ -1,8 +1,8 @@
 package net.joewing.scalacad.primitives
 
-import net.joewing.scalacad.Surface
+import net.joewing.scalacad.RenderedObject
 
 case class Intersection[D <: Dim](a: Primitive[D], b: Primitive[D]) extends Primitive[D] {
-  lazy val render: Surface = Invert(Union(Invert(a), Invert(b))).render
+  lazy val render: RenderedObject = Invert(Union(Invert(a), Invert(b))).render
 }
 
