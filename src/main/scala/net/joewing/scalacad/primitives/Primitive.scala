@@ -1,6 +1,6 @@
 package net.joewing.scalacad.primitives
 
-import net.joewing.scalacad.{Surface, Vertex}
+import net.joewing.scalacad.{RenderedObject, Vertex}
 
 sealed trait Dim
 
@@ -21,6 +21,6 @@ trait Primitive[T <: Dim] {
   lazy val maxBound: Vertex = reduceVertices(math.max)
   lazy val extent: Vertex = maxBound - minBound
 
-  def render: Surface
+  def render: RenderedObject
 }
 

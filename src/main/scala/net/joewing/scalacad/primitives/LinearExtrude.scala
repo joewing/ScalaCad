@@ -1,6 +1,6 @@
 package net.joewing.scalacad.primitives
 
-import net.joewing.scalacad.{Surface, Facet, Vertex}
+import net.joewing.scalacad.{RenderedObject, Facet, Vertex}
 
 case class LinearExtrude(
   obj: Primitive[TwoDimensional],
@@ -21,7 +21,7 @@ case class LinearExtrude(
     allEdges.filter(includeEdge(allEdges))
   }
 
-  lazy val render: Surface = Surface.fromFacets {
+  lazy val render: RenderedObject = RenderedObject.fromFacets {
     val base = obj.render.facets
 
     def positionVertex(i: Int, v: Vertex): Vertex = {

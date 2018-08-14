@@ -7,7 +7,7 @@ import java.awt.image.BufferedImage
 import java.io.{FileInputStream, InputStream}
 
 import javax.imageio.ImageIO
-import net.joewing.scalacad.{Facet, Surface}
+import net.joewing.scalacad.{Facet, RenderedObject}
 
 final case class Raster(grid: Vector[Vector[Boolean]], resolution: Double) extends Primitive[TwoDimensional] {
 
@@ -16,10 +16,10 @@ final case class Raster(grid: Vector[Vector[Boolean]], resolution: Double) exten
     rect.map(_.moved(x * resolution, y * resolution))
   }
 
-  lazy val render: Surface = {
+  lazy val render: RenderedObject = {
     val width = grid.head.length
     val height = grid.length
-    Surface.fromFacets {
+    RenderedObject.fromFacets {
       (0 until height).flatMap { y =>
         (0 until width).flatMap { x =>
           if (grid(height - y - 1)(x)) pixel(x, y) else Vector.empty
