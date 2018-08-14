@@ -17,6 +17,5 @@ object TextExample extends App {
 
   val obj = textObj.above(box, overlap = textDepth, Difference.apply).rotate(x = math.Pi / 4) -
     cube(boxWidth * 2, boxHeight * 2, boxDepth).centered.translate(z = -boxHeight / 2)
-  StlFileWriter.write(obj, "text.stl")
   AwtRenderer.show(obj)
 }
