@@ -20,7 +20,7 @@ class AwtRenderer(
 
   private val offset = (obj.maxBound + obj.minBound) / -2
   private val centered = obj.render.translate(offset)
-  private val bsp = centered.bspSurface.tree
+  private val bsp = centered.tree
   private lazy val polygons: Seq[Polygon] = bsp.allPolygons
 
   private lazy val minBound: Vertex = polygons.flatMap(_.vertices).foldLeft(Vertex.max) { (m, v) =>

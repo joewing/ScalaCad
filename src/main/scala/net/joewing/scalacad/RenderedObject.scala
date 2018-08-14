@@ -3,9 +3,6 @@ package net.joewing.scalacad
 sealed trait RenderedObject {
   def vertices: Seq[Vertex]
 
-  def facetSurface: FacetRenderedObject
-  def bspSurface: BSPTreeRenderedObject
-
   def facets: Seq[Facet]
   def tree: BSPTree
 
@@ -13,48 +10,31 @@ sealed trait RenderedObject {
 
   def translate(v: Vertex): RenderedObject
 
-  def scale(x: Double = 1, y: Double = 1, z: Double = 1): RenderedObject
-
   def map(f: Facet => Facet): FacetRenderedObject = RenderedObject.fromFacets(facets.map(f))
 
   def filter(f: Facet => Boolean): FacetRenderedObject = RenderedObject.fromFacets(facets.filter(f))
 
   def filterNot(f: Facet => Boolean): FacetRenderedObject = RenderedObject.fromFacets(facets.filterNot(f))
-
-  def insert(facet: Facet): RenderedObject = facetSurface.copy(facets = facet +: facets)
 }
 
 final case class FacetRenderedObject(facets: Seq[Facet]) extends RenderedObject {
-
   lazy val vertices: Seq[Vertex] = facets.flatMap(_.vertices).distinct
 
-  def tree: BSPTree = bspSurface.tree
+  def tree: BSPTree = BSPTree(Facet.toPolygons(facets))
 
   def invert: RenderedObject = FacetRenderedObject(facets.map(_.flip))
 
   def translate(v: Vertex): RenderedObject = FacetRenderedObject(facets.map(_.moved(v.x, v.y, v.z)))
-
-  def scale(x: Double = 1, y: Double = 1, z: Double = 1): RenderedObject = FacetRenderedObject(
-    facets.map(_.scaled(x, y, z))
-  )
-
-  def facetSurface: FacetRenderedObject = this
-  def bspSurface: BSPTreeRenderedObject = BSPTreeRenderedObject(BSPTree(Facet.toPolygons(facets)))
 }
 
 final case class BSPTreeRenderedObject(tree: BSPTree) extends RenderedObject {
   lazy val vertices: Seq[Vertex] = tree.allPolygons.flatMap(_.vertices)
 
-  def facets: Seq[Facet] = facetSurface.facets
+  def facets: Seq[Facet] = RenderedObject.treeToFacets(tree)
 
   def invert: RenderedObject = BSPTreeRenderedObject(tree.inverted)
 
   def translate(v: Vertex): RenderedObject = BSPTreeRenderedObject(tree.translated(v))
-
-  def scale(x: Double = 1, y: Double = 1, z: Double = 1): RenderedObject = facetSurface.scale(x, y, z)
-
-  def facetSurface: FacetRenderedObject = RenderedObject.treeToFacets(tree)
-  def bspSurface: BSPTreeRenderedObject = this
 }
 
 object RenderedObject {
@@ -92,13 +72,12 @@ object RenderedObject {
     !f.v1.approxEqual(f.v2) && !f.v1.approxEqual(f.v3) && !f.v2.approxEqual(f.v3)
   }
 
-  def treeToFacets(root: BSPTree): FacetRenderedObject = {
+  def treeToFacets(root: BSPTree): Seq[Facet] = {
     val polygons = root.allPolygons
     val vertices = polygons.flatMap(_.vertices).distinct
     val octree = Octree(vertices)
-    val facets = polygons.par.flatMap { p =>
+    polygons.par.flatMap { p =>
       Facet.fromVertices(p.vertices).flatMap(f => insertPoints(f, octree).filter(validFacet))
     }.seq
-    FacetRenderedObject(facets)
   }
 }
