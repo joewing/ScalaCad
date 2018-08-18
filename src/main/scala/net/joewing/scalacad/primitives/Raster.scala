@@ -9,7 +9,7 @@ import java.io.{FileInputStream, InputStream}
 import javax.imageio.ImageIO
 import net.joewing.scalacad.{Facet, RenderedObject}
 
-final case class Raster(grid: Vector[Vector[Boolean]], resolution: Double) extends Primitive[TwoDimensional] {
+case class Raster(grid: Vector[Vector[Boolean]], resolution: Double) extends Primitive2d {
 
   def pixel(x: Int, y: Int): Seq[Facet] = {
     val rect = Rectangle(resolution, resolution).render.facets

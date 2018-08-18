@@ -2,7 +2,7 @@ package net.joewing.scalacad.primitives
 
 import net.joewing.scalacad.{RenderedObject, Facet, Vertex}
 
-case class Sphere(r: Double = 1, slices: Int = 8, stacks: Int = 8) extends Primitive[ThreeDimensional] {
+case class Sphere(r: Double = 1, slices: Int = 8, stacks: Int = 8) extends Primitive3d {
   require(slices >= 3, s"Need at least 3 slices, got $slices")
   require(stacks >= 2, s"Need at least 2 stacks, got $stacks")
 
