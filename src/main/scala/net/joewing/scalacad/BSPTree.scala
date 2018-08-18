@@ -1,47 +1,47 @@
 package net.joewing.scalacad
 
 sealed trait BSPTree {
-  def allPolygons: Seq[Polygon]
-  def clipPolygons(ps: Seq[Polygon]): Seq[Polygon]
+  def allPolygons: Seq[Polygon3d]
+  def clipPolygons(ps: Seq[Polygon3d]): Seq[Polygon3d]
   def clip(other: BSPTree): BSPTree
   def inverted: BSPTree
   def translated(v: Vertex): BSPTree
-  def insert(others: Seq[Polygon]): BSPTree
+  def insert(others: Seq[Polygon3d]): BSPTree
   final def merge(other: BSPTree): BSPTree = insert(other.allPolygons)
-  def paint(p: Vertex, backfaces: Boolean)(f: Polygon => Unit): Unit
+  def paint(p: Vertex, backfaces: Boolean)(f: Polygon3d => Unit): Unit
 }
 
 trait BSPTreeLeaf extends BSPTree {
-  final def allPolygons: Seq[Polygon] = Vector.empty
+  final def allPolygons: Seq[Polygon3d] = Vector.empty
   final def clip(other: BSPTree): BSPTree = this
   final def translated(v: Vertex): BSPTree = this
-  final def insert(others: Seq[Polygon]): BSPTree = BSPTree(others)
-  final def paint(p: Vertex, backfaces: Boolean)(f: Polygon => Unit): Unit = ()
+  final def insert(others: Seq[Polygon3d]): BSPTree = BSPTree(others)
+  final def paint(p: Vertex, backfaces: Boolean)(f: Polygon3d => Unit): Unit = ()
 }
 
 case object BSPTreeIn extends BSPTreeLeaf {
-  def clipPolygons(ps: Seq[Polygon]): Seq[Polygon] = ps
+  def clipPolygons(ps: Seq[Polygon3d]): Seq[Polygon3d] = ps
   def inverted: BSPTree = BSPTreeOut
 }
 
 case object BSPTreeOut extends BSPTreeLeaf {
-  def clipPolygons(ps: Seq[Polygon]): Seq[Polygon] = Vector.empty
+  def clipPolygons(ps: Seq[Polygon3d]): Seq[Polygon3d] = Vector.empty
   def inverted: BSPTree = BSPTreeIn
 }
 
 final case class BSPTreeNode(
   plane: Plane,
-  polygons: Seq[Polygon],
+  polygons: Seq[Polygon3d],
   front: BSPTree,
   back: BSPTree
 ) extends BSPTree {
 
-  def allPolygons: Seq[Polygon] = {
+  def allPolygons: Seq[Polygon3d] = {
     polygons ++ front.allPolygons ++ back.allPolygons
   }
 
   // Clip facets to this BSPTree.
-  def clipPolygons(ps: Seq[Polygon]): Seq[Polygon] = {
+  def clipPolygons(ps: Seq[Polygon3d]): Seq[Polygon3d] = {
     val result = plane.split(ps)
     val frontPolygons = result.front ++ result.coFront
     val filteredFront = front.clipPolygons(frontPolygons)
@@ -73,14 +73,14 @@ final case class BSPTreeNode(
     )
   }
 
-  def insert(others: Seq[Polygon]): BSPTree = {
+  def insert(others: Seq[Polygon3d]): BSPTree = {
     val result = plane.split(others)
     val newFront = if (result.front.nonEmpty) front.insert(result.front) else front
     val newBack = if (result.back.nonEmpty) back.insert(result.back) else back
     BSPTreeNode(plane, polygons ++ (result.coFront ++ result.coBack), newFront, newBack)
   }
 
-  def paint(p: Vertex, backfaces: Boolean)(f: Polygon => Unit): Unit = {
+  def paint(p: Vertex, backfaces: Boolean)(f: Polygon3d => Unit): Unit = {
     val dp = p.dot(plane.normal)
     if (dp > 0) {
       back.paint(p, backfaces)(f)
@@ -97,7 +97,7 @@ final case class BSPTreeNode(
 }
 
 object BSPTree {
-  def helper(i: Int, polygons: Seq[Polygon]): BSPTree = {
+  def helper(i: Int, polygons: Seq[Polygon3d]): BSPTree = {
     val (before, after) = polygons.splitAt(i)
     val others = before ++ after.tail
     val current = after.head
@@ -108,7 +108,7 @@ object BSPTree {
     BSPTreeNode(plane, current +: (result.coFront ++ result.coBack), f, b)
   }
 
-  def apply(polygons: Seq[Polygon]): BSPTree = {
+  def apply(polygons: Seq[Polygon3d]): BSPTree = {
     if (polygons.isEmpty) {
       BSPTreeOut
     } else {

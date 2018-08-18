@@ -66,5 +66,5 @@ object Facet {
     }.toVector
   }
 
-  def toPolygons(facets: Seq[Facet]): Seq[Polygon] = facets.map(f => Polygon(f.vertices))
+  def toPolygons(facets: Seq[Facet]): Seq[Polygon3d] = facets.map(f => Polygon3d(f.vertices))
 }

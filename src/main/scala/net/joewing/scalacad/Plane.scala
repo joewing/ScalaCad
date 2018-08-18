@@ -13,7 +13,7 @@ final case class Plane(normal: Vertex, w: Double) {
     else Plane.Coplanar
   }
 
-  def splitPolygon(polygon: Polygon, result: Plane.SplitResult): Unit = {
+  def splitPolygon(polygon: Polygon3d, result: Plane.SplitResult): Unit = {
     val types = polygon.vertices.map(classify)
     types.foldLeft(Plane.Coplanar)(_ | _) match {
       case pt if pt == Plane.Coplanar =>
@@ -46,12 +46,12 @@ final case class Plane(normal: Vertex, w: Double) {
             bs += v
           }
         }
-        result.front += Polygon(fs)
-        result.back += Polygon(bs)
+        result.front += Polygon3d(fs)
+        result.back += Polygon3d(bs)
     }
   }
 
-  def split(polygons: Seq[Polygon]): Plane.SplitResult = {
+  def split(polygons: Seq[Polygon3d]): Plane.SplitResult = {
     val result = Plane.SplitResult()
     polygons.foreach { polygon =>
       splitPolygon(polygon, result)
@@ -64,10 +64,10 @@ object Plane {
 
   // These are mutable to improve performance during construction.
   case class SplitResult(
-    front: scala.collection.mutable.ArrayBuffer[Polygon] = scala.collection.mutable.ArrayBuffer(),
-    back: scala.collection.mutable.ArrayBuffer[Polygon] = scala.collection.mutable.ArrayBuffer(),
-    coFront: scala.collection.mutable.ArrayBuffer[Polygon] = scala.collection.mutable.ArrayBuffer(),
-    coBack: scala.collection.mutable.ArrayBuffer[Polygon] = scala.collection.mutable.ArrayBuffer()
+    front: scala.collection.mutable.ArrayBuffer[Polygon3d] = scala.collection.mutable.ArrayBuffer(),
+    back: scala.collection.mutable.ArrayBuffer[Polygon3d] = scala.collection.mutable.ArrayBuffer(),
+    coFront: scala.collection.mutable.ArrayBuffer[Polygon3d] = scala.collection.mutable.ArrayBuffer(),
+    coBack: scala.collection.mutable.ArrayBuffer[Polygon3d] = scala.collection.mutable.ArrayBuffer()
   )
 
   val Coplanar: Int = 0
@@ -75,5 +75,5 @@ object Plane {
   val Back: Int = 2
   val Spanning: Int = 3
 
-  def apply(polygon: Polygon): Plane = Plane(polygon.normal, polygon.normal.dot(polygon.vertices.head))
+  def apply(polygon: Polygon3d): Plane = Plane(polygon.normal, polygon.normal.dot(polygon.vertices.head))
 }
