@@ -1,8 +1,8 @@
 package net.joewing.scalacad.primitives
 
-import net.joewing.scalacad.{Facet, Polygon, RenderedObject, Vertex}
+import net.joewing.scalacad.{Facet, Polygon3d, RenderedObject, Vertex}
 
-case class Cylinder(length: Double, r1: Double, r2: Double, sides: Int) extends Primitive[ThreeDimensional] {
+case class Cylinder(length: Double, r1: Double, r2: Double, sides: Int) extends Primitive3d {
   require(sides > 2, s"Cylinder must have at least 3 sides, got $sides")
 
   private val angle = 2.0 * math.Pi / sides

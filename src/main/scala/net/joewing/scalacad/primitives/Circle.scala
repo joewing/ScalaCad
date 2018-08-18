@@ -2,7 +2,7 @@ package net.joewing.scalacad.primitives
 
 import net.joewing.scalacad.{RenderedObject, Vertex}
 
-case class Circle(r: Double, sides: Int) extends Primitive[TwoDimensional] {
+case class Circle(r: Double, sides: Int) extends Primitive2d {
   require(sides >= 3, s"sides must be at least 3 (got $sides)")
   lazy val render: RenderedObject = {
     val vs = Vector.tabulate(sides) { i =>

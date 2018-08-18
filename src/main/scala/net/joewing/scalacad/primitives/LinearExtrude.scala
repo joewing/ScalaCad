@@ -7,7 +7,15 @@ case class LinearExtrude(
   length: Double,
   rotation: Double = 0.0,
   slices: Int = 1
-) extends Primitive[ThreeDimensional] {
+) extends Primitive3d {
+
+  lazy val render: RenderedObject = RenderedObject.fromFacets {
+    val base = obj.render.facets
+    LinearExtrude.extrude(base, length, rotation, slices)
+  }
+}
+
+object LinearExtrude {
 
   private def includeEdge(allEdges: Seq[(Vertex, Vertex)])(edge: (Vertex, Vertex)): Boolean = {
     val (a, b) = edge
@@ -21,9 +29,7 @@ case class LinearExtrude(
     allEdges.filter(includeEdge(allEdges))
   }
 
-  lazy val render: RenderedObject = RenderedObject.fromFacets {
-    val base = obj.render.facets
-
+  def extrude(base: Seq[Facet], length: Double, rotation: Double, slices: Int): Seq[Facet] = {
     def positionVertex(i: Int, v: Vertex): Vertex = {
       val angle = i * rotation
       Vertex(

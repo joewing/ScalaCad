@@ -1,6 +1,9 @@
 package net.joewing.scalacad
 
+import net.joewing.scalacad.primitives.{Dim, LinearExtrude, ThreeDimensional, TwoDimensional}
+
 sealed trait RenderedObject {
+  implicit val dim: Dim
   def vertices: Seq[Vertex]
 
   def facets: Seq[Facet]
@@ -17,33 +20,42 @@ sealed trait RenderedObject {
   def filterNot(f: Facet => Boolean): FacetRenderedObject = RenderedObject.fromFacets(facets.filterNot(f))
 }
 
-final case class FacetRenderedObject(facets: Seq[Facet]) extends RenderedObject {
+final case class FacetRenderedObject(dim: Dim, facets: Seq[Facet]) extends RenderedObject {
   lazy val vertices: Seq[Vertex] = facets.flatMap(_.vertices).distinct
 
-  def tree: BSPTree = BSPTree(Facet.toPolygons(facets))
+  def tree: BSPTree = dim match {
+    case _: TwoDimensional => BSPTree(
+      Facet.toPolygons(
+        LinearExtrude.extrude(facets, 1, 0, 1)
+      )
+    )
+    case _: ThreeDimensional => BSPTree(Facet.toPolygons(facets))
+  }
 
-  def invert: RenderedObject = FacetRenderedObject(facets.map(_.flip))
+  def invert: RenderedObject = FacetRenderedObject(dim, facets.map(_.flip))
 
-  def translate(v: Vertex): RenderedObject = FacetRenderedObject(facets.map(_.moved(v.x, v.y, v.z)))
+  def translate(v: Vertex): RenderedObject = FacetRenderedObject(dim, facets.map(_.moved(v.x, v.y, v.z)))
 }
 
-final case class BSPTreeRenderedObject(tree: BSPTree) extends RenderedObject {
+final case class BSPTreeRenderedObject(dim: Dim, tree: BSPTree) extends RenderedObject {
   lazy val vertices: Seq[Vertex] = tree.allPolygons.flatMap(_.vertices)
 
-  def facets: Seq[Facet] = RenderedObject.treeToFacets(tree)
+  def facets: Seq[Facet] = RenderedObject.treeToFacets(dim, tree)
 
-  def invert: RenderedObject = BSPTreeRenderedObject(tree.inverted)
+  def invert: RenderedObject = BSPTreeRenderedObject(dim, tree.inverted)
 
-  def translate(v: Vertex): RenderedObject = BSPTreeRenderedObject(tree.translated(v))
+  def translate(v: Vertex): RenderedObject = BSPTreeRenderedObject(dim, tree.translated(v))
 }
 
 object RenderedObject {
 
-  val empty: RenderedObject = FacetRenderedObject(Seq.empty)
+  def fromFacets(facets: Seq[Facet])(implicit dim: Dim): FacetRenderedObject = {
+    FacetRenderedObject(dim, facets)
+  }
 
-  def fromFacets(facets: Seq[Facet]): FacetRenderedObject = FacetRenderedObject(facets)
-
-  def fromVertices(vertices: Seq[Vertex]): FacetRenderedObject = fromFacets(Facet.fromVertices(vertices))
+  def fromVertices(vertices: Seq[Vertex])(implicit dim: Dim): FacetRenderedObject = {
+    fromFacets(Facet.fromVertices(vertices))
+  }
 
   // Insert a point to the facet by splitting it.
   // Note that this assumes all inserted points are on an edge of the facet.
@@ -72,8 +84,12 @@ object RenderedObject {
     !f.v1.approxEqual(f.v2) && !f.v1.approxEqual(f.v3) && !f.v2.approxEqual(f.v3)
   }
 
-  def treeToFacets(root: BSPTree): Seq[Facet] = {
-    val polygons = root.allPolygons
+  def treeToFacets(dim: Dim, root: BSPTree): Seq[Facet] = {
+    val polygons = dim match {
+      case _: TwoDimensional =>
+        root.allPolygons.filter(_.vertices.forall(v => math.abs(v.z) < Vertex.epsilon))
+      case _: ThreeDimensional => root.allPolygons
+    }
     val vertices = polygons.flatMap(_.vertices).distinct
     val octree = Octree(vertices)
     polygons.par.flatMap { p =>
