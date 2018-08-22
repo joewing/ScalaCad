@@ -4,6 +4,8 @@ import net.joewing.scalacad._
 
 case class Difference[D <: Dim](base: Primitive[D], minus: Primitive[D]) extends Primitive[D] {
   implicit val dim: D = base.dim
-  lazy val render: RenderedObject = Invert(Union(Invert(base), minus)).render
-}
+  protected def render: RenderedObject = Invert(Union(Invert(base), minus)).rendered
 
+  override def transformed(f: Primitive[D] => Primitive[D]): Primitive[D] =
+    Difference(base.transformed(f), minus.transformed(f))
+}

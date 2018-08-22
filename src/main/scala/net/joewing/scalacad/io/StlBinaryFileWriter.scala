@@ -47,7 +47,7 @@ class StlBinaryFileWriter(os: OutputStream) {
 
 object StlBinaryFileWriter {
   def write(r: Primitive[ThreeDimensional], os: OutputStream): Unit = {
-    new StlBinaryFileWriter(os).write("", r.render.facets)
+    new StlBinaryFileWriter(os).write("", r.rendered.facets)
   }
   def write(r: Primitive[ThreeDimensional], fileName: String): Unit = write(r, new FileOutputStream(fileName))
 }

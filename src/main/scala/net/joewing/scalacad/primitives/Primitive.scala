@@ -15,7 +15,7 @@ object Dim {
 trait Primitive[D <: Dim] {
 
   private def reduceVertices(op: (Double, Double) => Double): Vertex = {
-    val vertices = render.vertices
+    val vertices = rendered.vertices
     if (vertices.nonEmpty) {
       vertices.tail.foldLeft(vertices.head) { (b, v) =>
         Vertex(op(b.x, v.x), op(b.y, v.y), op(b.z, v.z))
@@ -31,14 +31,8 @@ trait Primitive[D <: Dim] {
 
   implicit val dim: D
 
-  def render: RenderedObject
-}
+  protected def render: RenderedObject
+  def transformed(f: Primitive[D] => Primitive[D]): Primitive[D] = f(this)
 
-trait Primitive2d extends Primitive[TwoDimensional] {
-  implicit val dim: TwoDimensional = Dim.two
+  final lazy val rendered: RenderedObject = transformed(identity).render
 }
-
-trait Primitive3d extends Primitive[ThreeDimensional] {
-  implicit val dim: ThreeDimensional = Dim.three
-}
-

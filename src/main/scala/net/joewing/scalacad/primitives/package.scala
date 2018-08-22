@@ -4,25 +4,25 @@ package object primitives {
 
   type Operator[D <: Dim] = (Primitive[D], Primitive[D]) => Primitive[D]
 
-  def triangle(base: Double, height: Double): Triangle = Triangle(base, height)
+  def triangle(base: Double, height: Double): Primitive2d = Triangle(base, height)
 
-  def rectangle(width: Double, height: Double): Rectangle = Rectangle(width, height)
+  def rectangle(width: Double, height: Double): Primitive2d = Rectangle(width, height)
 
-  def square(width: Double): Rectangle = rectangle(width, width)
+  def square(width: Double): Primitive2d = rectangle(width, width)
 
-  def polygon(points: (Double, Double)*): Polygon = Polygon(points)
+  def polygon(points: (Double, Double)*): Primitive2d = Polygon(points)
 
-  def circle(r: Double, sides: Int = 8): Circle = Circle(r, sides)
+  def circle(r: Double, sides: Int = 8): Primitive2d = Circle(r, sides)
 
-  def cube(width: Double, height: Double, depth: Double): Cube = Cube(width, height, depth)
+  def cube(width: Double, height: Double, depth: Double): Primitive3d = Cube(width, height, depth)
 
-  def cylinder(length: Double, bottom: Double, top: Double, sides: Int): Cylinder =
+  def cylinder(length: Double, bottom: Double, top: Double, sides: Int): Primitive3d =
     Cylinder(length, bottom, top, sides)
 
-  def sphere(r: Double, slices: Int = 8, stacks: Int = 8): Sphere = Sphere(r, slices, stacks)
+  def sphere(r: Double, slices: Int = 8, stacks: Int = 8): Primitive3d = Sphere(r, slices, stacks)
 
-  def union[D <: Dim](objs: Seq[Primitive[D]]): Primitive[D] = objs.reduce(Union.apply[D])
-  def intersect[D <: Dim](objs: Seq[Primitive[D]]): Primitive[D] = objs.reduce(Intersection.apply[D])
+  def union[D <: Dim](objs: Primitive[D]*): Primitive[D] = objs.reduce(Union.apply[D])
+  def intersect[D <: Dim](objs: Primitive[D]*): Primitive[D] = objs.reduce(Intersection.apply[D])
 
   trait RichPrimitive[D <: Dim] {
     val left: Primitive[D]
@@ -70,7 +70,7 @@ package object primitives {
       length: Double,
       rotation: Double = 0.0,
       slices: Int = 1
-    ): LinearExtrude = LinearExtrude(left, length, rotation, slices)
+    ): Primitive3d = LinearExtrude(left, length, rotation, slices)
   }
 
 }

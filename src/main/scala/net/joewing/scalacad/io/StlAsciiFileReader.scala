@@ -3,7 +3,7 @@ package net.joewing.scalacad.io
 import java.io.{FileInputStream, InputStream, InputStreamReader}
 
 import net.joewing.scalacad._
-import net.joewing.scalacad.primitives.ImportedPart
+import net.joewing.scalacad.primitives.Primitive3d
 
 import scala.util.parsing.combinator.JavaTokenParsers
 
@@ -50,9 +50,9 @@ class StlAsciiFileReader(is: InputStream) {
     def parse(is: InputStream): ParseResult[Stl] = parseAll(solid, new InputStreamReader(is))
   }
 
-  def read: ImportedPart = {
+  def read: Primitive3d = {
     StlParser.parse(is) match {
-      case StlParser.Success(stl,_ ) => ImportedPart(stl.facets)
+      case StlParser.Success(stl,_ ) => Primitive3d(stl.facets)
       case StlParser.Error(msg, _)   => throw new IllegalArgumentException(s"parse error: $msg")
       case StlParser.Failure(msg, _) => throw new IllegalArgumentException(s"parse failure: $msg")
     }
@@ -60,6 +60,6 @@ class StlAsciiFileReader(is: InputStream) {
 }
 
 object StlAsciiFileReader {
-  def read(is: InputStream): ImportedPart = new StlAsciiFileReader(is).read
-  def read(fileName: String): ImportedPart = read(new FileInputStream(fileName))
+  def read(is: InputStream): Primitive3d = new StlAsciiFileReader(is).read
+  def read(fileName: String): Primitive3d = read(new FileInputStream(fileName))
 }

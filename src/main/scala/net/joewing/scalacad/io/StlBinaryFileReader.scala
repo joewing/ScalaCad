@@ -3,8 +3,8 @@ package net.joewing.scalacad.io
 import java.io.{FileInputStream, InputStream}
 import java.nio.{ByteBuffer, ByteOrder}
 
+import net.joewing.scalacad.primitives.Primitive3d
 import net.joewing.scalacad.{Facet, Vertex}
-import net.joewing.scalacad.primitives.ImportedPart
 
 import scala.annotation.tailrec
 import scala.collection.mutable.ArrayBuffer
@@ -37,7 +37,7 @@ class StlBinaryFileReader(is: InputStream) {
     facet
   }
 
-  def read: ImportedPart = {
+  def read: Primitive3d = {
     val array = ArrayBuffer[Byte]()
     loadStream(is, array)
 
@@ -55,11 +55,11 @@ class StlBinaryFileReader(is: InputStream) {
     val facets = (0 until facetCount).map { _ =>
       readFacet(buffer)
     }
-    ImportedPart(facets)
+    Primitive3d(facets)
   }
 }
 
 object StlBinaryFileReader {
-  def read(is: InputStream): ImportedPart = new StlBinaryFileReader(is).read
-  def read(fileName: String): ImportedPart = read(new FileInputStream(fileName))
+  def read(is: InputStream): Primitive3d = new StlBinaryFileReader(is).read
+  def read(fileName: String): Primitive3d = read(new FileInputStream(fileName))
 }

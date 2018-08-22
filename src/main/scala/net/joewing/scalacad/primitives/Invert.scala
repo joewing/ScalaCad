@@ -4,5 +4,7 @@ import net.joewing.scalacad.RenderedObject
 
 case class Invert[D <: Dim](obj: Primitive[D]) extends Primitive[D] {
   implicit val dim: D = obj.dim
-  lazy val render: RenderedObject = obj.render.invert
+  protected def render: RenderedObject = obj.rendered.invert
+
+  override def transformed(f: Primitive[D] => Primitive[D]): Primitive[D] = Invert(obj.transformed(f))
 }

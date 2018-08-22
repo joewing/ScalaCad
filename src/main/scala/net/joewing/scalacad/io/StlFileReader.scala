@@ -1,8 +1,8 @@
 package net.joewing.scalacad.io
 
-import java.io.{BufferedInputStream, FileInputStream, InputStream, InputStreamReader}
+import java.io.{BufferedInputStream, FileInputStream, InputStream}
 
-import net.joewing.scalacad.primitives.ImportedPart
+import net.joewing.scalacad.primitives.Primitive3d
 
 object StlFileReader {
 
@@ -14,7 +14,7 @@ object StlFileReader {
     new String(buffer) == "solid"
   }
 
-  def read(is: InputStream): ImportedPart = {
+  def read(is: InputStream): Primitive3d = {
     val bufferedStream = new BufferedInputStream(is)
     if (isAscii(bufferedStream)) {
       StlAsciiFileReader.read(bufferedStream)
@@ -23,5 +23,5 @@ object StlFileReader {
     }
   }
 
-  def read(fileName: String): ImportedPart = read(new FileInputStream(fileName))
+  def read(fileName: String): Primitive3d = read(new FileInputStream(fileName))
 }

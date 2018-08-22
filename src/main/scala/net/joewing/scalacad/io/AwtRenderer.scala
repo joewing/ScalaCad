@@ -18,8 +18,7 @@ class AwtRenderer(
   showBackfaces: Boolean
 ) {
 
-  private val offset = (obj.maxBound + obj.minBound) / -2
-  private val centered = obj.render.translate(offset)
+  private val centered = obj.centered.rendered
   private val bsp = centered.tree
   private lazy val polygons: Seq[Polygon3d] = bsp.allPolygons
 

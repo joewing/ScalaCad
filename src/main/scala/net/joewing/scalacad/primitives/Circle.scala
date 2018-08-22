@@ -1,14 +1,14 @@
 package net.joewing.scalacad.primitives
 
-import net.joewing.scalacad.{RenderedObject, Vertex}
+import net.joewing.scalacad.{Facet, Vertex}
 
-case class Circle(r: Double, sides: Int) extends Primitive2d {
-  require(sides >= 3, s"sides must be at least 3 (got $sides)")
-  lazy val render: RenderedObject = {
+object Circle {
+  def apply(r: Double, sides: Int): Primitive2d = {
+    require(sides >= 3, s"sides must be at least 3 (got $sides)")
     val vs = Vector.tabulate(sides) { i =>
       val angle = -i * math.Pi * 2.0 / sides
       Vertex(r * math.cos(angle), r * math.sin(angle), 0)
     }
-    RenderedObject.fromVertices(vs)
+    Primitive2d(Facet.fromVertices(vs))
   }
 }

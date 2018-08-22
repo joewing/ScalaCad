@@ -14,7 +14,7 @@ class StlBinaryFileReaderSpec extends FunSpec with Matchers {
       StlBinaryFileWriter.write(obj, os)
       val is = new ByteArrayInputStream(os.toByteArray)
 
-      StlBinaryFileReader.read(is).facets shouldBe obj.render.facets
+      StlBinaryFileReader.read(is).facets shouldBe obj.rendered.facets
     }
   }
 }

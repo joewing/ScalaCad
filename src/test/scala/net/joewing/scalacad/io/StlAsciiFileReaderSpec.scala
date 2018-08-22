@@ -14,7 +14,7 @@ class StlAsciiFileReaderSpec extends FunSpec with Matchers {
       StlAsciiFileWriter.write(obj, os)
       val is = new ByteArrayInputStream(os.toByteArray)
 
-      StlAsciiFileReader.read(is).facets shouldBe obj.render.facets
+      StlAsciiFileReader.read(is).facets shouldBe obj.rendered.facets
     }
   }
 }

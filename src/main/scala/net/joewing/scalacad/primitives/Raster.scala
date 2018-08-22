@@ -7,35 +7,32 @@ import java.awt.image.BufferedImage
 import java.io.{FileInputStream, InputStream}
 
 import javax.imageio.ImageIO
-import net.joewing.scalacad.{Facet, RenderedObject}
 
-case class Raster(grid: Vector[Vector[Boolean]], resolution: Double) extends Primitive2d {
+object Raster {
 
-  def pixel(x: Int, y: Int): Seq[Facet] = {
-    val rect = Rectangle(resolution, resolution).render.facets
-    rect.map(_.moved(x * resolution, y * resolution))
-  }
 
-  lazy val render: RenderedObject = {
+  def apply(grid: Vector[Vector[Boolean]], resolution: Double): Primitive2d = {
+    val rect = Rectangle(resolution, resolution).rendered.facets
     val width = grid.head.length
     val height = grid.length
-    RenderedObject.fromFacets {
+    val facets = {
       (0 until height).flatMap { y =>
         (0 until width).flatMap { x =>
-          if (grid(height - y - 1)(x)) pixel(x, y) else Vector.empty
+          if (grid(height - y - 1)(x)) {
+            rect.map(_.moved(x * resolution, y * resolution))
+          } else Vector.empty
         }
       }
     }
+    Primitive2d(facets)
   }
-}
 
-object Raster {
   def fromImage(
     image: BufferedImage,
     resolution: Double = 0.2,
     threshold: Double = 0.5,
     invert: Boolean = false
-  ): Raster = {
+  ): Primitive2d = {
     val width = image.getWidth
     val height = image.getHeight
     val thresholdSum = 3 * 255 * threshold
@@ -55,7 +52,7 @@ object Raster {
     resolution: Double = 0.2,
     threshold: Double = 0.5,
     invert: Boolean = false
-  ): Raster = {
+  ): Primitive2d = {
     fromImage(ImageIO.read(is), resolution, threshold, invert)
   }
 
@@ -64,7 +61,7 @@ object Raster {
     resolution: Double = 0.2,
     threshold: Double = 0.5,
     invert: Boolean = false
-  ): Raster = {
+  ): Primitive2d = {
     fromStream(new FileInputStream(fileName), resolution, threshold, invert)
   }
 
@@ -73,7 +70,7 @@ object Raster {
     size: Double = 12.0,
     font: String = Font.DIALOG,
     resolution: Double = 0.2
-  ): Raster = {
+  ): Primitive2d = {
     val transform = new AffineTransform()
     val frc = new FontRenderContext(transform, true, true)
     val f = Font.decode(font).deriveFont(size.toFloat)

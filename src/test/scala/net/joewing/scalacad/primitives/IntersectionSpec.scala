@@ -7,11 +7,11 @@ class IntersectionSpec extends FunSpec with Matchers {
     val obj = Cube(1, 1, 1)
 
     it("should return itself when intersected with itself") {
-      Intersection(obj, obj).render.facets.size shouldBe obj.render.facets.size
+      Intersection(obj, obj).rendered.facets.size shouldBe obj.rendered.facets.size
     }
 
     it("should return nothing when non-overlapping parts are intersected") {
-      Intersection(obj, Translate(obj, 10)).render.facets.size shouldBe 0
+      Intersection(obj, Translate(obj, 10)).rendered.facets.size shouldBe 0
     }
   }
 
@@ -19,11 +19,11 @@ class IntersectionSpec extends FunSpec with Matchers {
     val obj = square(5)
 
     it("should return itself when intersected with itself") {
-      Intersection(obj, obj).render.facets.size shouldBe obj.render.facets.size
+      Intersection(obj, obj).rendered.facets.size shouldBe obj.rendered.facets.size
     }
 
     it("should return nothing when non-overlapping parts are intersected") {
-      Intersection(obj, Translate(obj, 10)).render.facets.size shouldBe 0
+      Intersection(obj, Translate(obj, 10)).rendered.facets.size shouldBe 0
     }
   }
 }
