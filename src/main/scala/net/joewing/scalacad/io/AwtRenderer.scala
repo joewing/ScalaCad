@@ -20,7 +20,7 @@ class AwtRenderer(
 
   private val centered = obj.centered.rendered
   private val bsp = centered.tree
-  private lazy val polygons: Seq[Polygon3d] = bsp.allPolygons
+  private lazy val polygons: Seq[Polygon3d] = bsp.allPolygons.map(p => Polygon3d(p.vertices))
 
   private lazy val minBound: Vertex = polygons.flatMap(_.vertices).foldLeft(Vertex.max) { (m, v) =>
     Vertex(

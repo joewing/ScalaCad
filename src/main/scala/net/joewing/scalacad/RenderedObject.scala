@@ -25,11 +25,9 @@ final case class FacetRenderedObject(dim: Dim, facets: Seq[Facet]) extends Rende
 
   def tree: BSPTree = dim match {
     case _: TwoDimensional => BSPTree(
-      Facet.toPolygons(
-        LinearExtrude.extrude(facets, 1, 0, 1)
-      )
+      LinearExtrude.extrude(facets, 1, 0, 1).map(PlanePolygon.fromFacet)
     )
-    case _: ThreeDimensional => BSPTree(Facet.toPolygons(facets))
+    case _: ThreeDimensional => BSPTree(facets.map(PlanePolygon.fromFacet))
   }
 
   def invert: RenderedObject = FacetRenderedObject(dim, facets.map(_.flip))
@@ -44,7 +42,7 @@ final case class BSPTreeRenderedObject(dim: Dim, tree: BSPTree) extends Rendered
 
   def invert: RenderedObject = BSPTreeRenderedObject(dim, tree.inverted)
 
-  def translate(v: Vertex): RenderedObject = BSPTreeRenderedObject(dim, tree.translated(v))
+  def translate(v: Vertex): RenderedObject = FacetRenderedObject(dim, facets).translate(v)
 }
 
 object RenderedObject {
@@ -85,6 +83,7 @@ object RenderedObject {
   }
 
   def treeToFacets(dim: Dim, root: BSPTree): Seq[Facet] = {
+    println("to facets")
     val polygons = dim match {
       case _: TwoDimensional =>
         root.allPolygons.filter(_.vertices.forall(v => math.abs(v.z) < Vertex.epsilon))

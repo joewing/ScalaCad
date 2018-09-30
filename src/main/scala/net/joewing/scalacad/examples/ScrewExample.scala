@@ -26,8 +26,8 @@ object ScrewExample extends App {
 
   def nutThreads = Threads(screwRadius + tolerance, nutLength, nutTurns)
 
-  def nut: Primitive[ThreeDimensional] = cap - nutThreads
+  def nut: Primitive[ThreeDimensional] = cap.translate(x = nutRadius * 4) - nutThreads.translate(x = nutRadius * 4)
 
   val obj = screw.beside(nut, overlap = -nutRadius)
-  AwtRenderer.show(obj)
+  AwtRenderer.show(obj, showBackfaces = true, showVertices = true)
 }
