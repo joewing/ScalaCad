@@ -121,7 +121,15 @@ object BSPTree {
     if (polygons.isEmpty) {
       BSPTreeOut
     } else {
-      helper(polygons.size / 2, polygons)
+      // Find the partition that will split the fewest polygons.
+      val n = polygons.size
+      val maxIter = math.min(8, n)
+      val bestIndex = Vector.range(0, maxIter).par.minBy { i =>
+        val index = i * n / maxIter
+        val result = polygons(index).planes.head.split(polygons)
+        result.back.size + result.front.size
+      }
+      helper(bestIndex, polygons)
     }
   }
 }

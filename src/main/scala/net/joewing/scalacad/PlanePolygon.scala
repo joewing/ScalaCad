@@ -6,7 +6,7 @@ case class PlanePolygon(planes: IndexedSeq[Plane]) {
   val bounding: IndexedSeq[Plane] = planes.tail
   lazy val normal: Vertex = support.normal
 
-  def flip: PlanePolygon = PlanePolygon(support +: bounding.reverse)
+  def flip: PlanePolygon = PlanePolygon(support.flip +: bounding.reverse)
 
   def vertices: Seq[Vertex] = {
     points.map { case (p1, p2, p3) =>

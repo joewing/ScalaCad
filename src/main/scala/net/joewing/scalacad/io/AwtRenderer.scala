@@ -18,25 +18,11 @@ class AwtRenderer(
   showBackfaces: Boolean
 ) {
 
-  private val centered = obj.centered.rendered
-  private val bsp = centered.tree
+  private val bsp = obj.rendered.tree
   private lazy val polygons: Seq[Polygon3d] = bsp.allPolygons.map(p => Polygon3d(p.vertices))
 
-  private lazy val minBound: Vertex = polygons.flatMap(_.vertices).foldLeft(Vertex.max) { (m, v) =>
-    Vertex(
-      x = math.min(m.x, v.x),
-      y = math.min(m.y, v.y),
-      z = math.min(m.z, v.z)
-    )
-  }
-
-  private lazy val maxBound: Vertex = polygons.flatMap(_.vertices).foldLeft(Vertex.min) { (m, v) =>
-    Vertex(
-      x = math.max(m.x, v.x),
-      y = math.max(m.y, v.y),
-      z = math.max(m.z, v.z)
-    )
-  }
+  private lazy val minBound: Vertex = obj.minBound
+  private lazy val maxBound: Vertex = obj.maxBound
 
   private lazy val (initialScale, initialX, initialY): (Double, Double, Double) = {
     val buffer = (initialImageWidth * 0.05).toInt
@@ -88,12 +74,11 @@ class AwtRenderer(
 
     val rx = -rotationX + math.Pi
     val ry = -rotationY + math.Pi
-    val p = Vertex(
+    val lightSource = Vertex(
       r * math.sin(rx) * math.cos(ry),
       r * math.sin(ry),
       r * math.cos(rx) * math.cos(ry)
-    )
-    val lightSource = p.unit
+    ).unit
 
     val cx = math.cos(rotationX)
     val sx = math.sin(rotationX)
@@ -254,7 +239,7 @@ object AwtRenderer {
   ): Unit = {
     val renderer = new AwtRenderer(
       title = title,
-      obj = r,
+      obj = r.centered,
       initialImageWidth = imageWidth,
       initialImageHeight = imageHeight,
       showVertices = showVertices,

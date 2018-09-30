@@ -8,4 +8,7 @@ case class Difference[D <: Dim](base: Primitive[D], minus: Primitive[D]) extends
 
   override def transformed(f: Primitive[D] => Primitive[D]): Primitive[D] =
     Difference(base.transformed(f), minus.transformed(f))
+
+  override lazy val minBound: Vertex = base.minBound
+  override lazy val maxBound: Vertex = base.maxBound
 }

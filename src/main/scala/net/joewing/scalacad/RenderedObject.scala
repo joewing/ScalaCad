@@ -83,7 +83,6 @@ object RenderedObject {
   }
 
   def treeToFacets(dim: Dim, root: BSPTree): Seq[Facet] = {
-    println("to facets")
     val polygons = dim match {
       case _: TwoDimensional =>
         root.allPolygons.filter(_.vertices.forall(v => math.abs(v.z) < Vertex.epsilon))

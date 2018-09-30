@@ -13,5 +13,8 @@ final case class Union[D <: Dim](a: Primitive[D], b: Primitive[D]) extends Primi
   }
 
   override def transformed(f: Primitive[D] => Primitive[D]): Primitive[D] = Union(a.transformed(f), b.transformed(f))
+
+  override lazy val minBound: Vertex = a.minBound.min(b.minBound)
+  override lazy val maxBound: Vertex = a.maxBound.max(b.maxBound)
 }
 
