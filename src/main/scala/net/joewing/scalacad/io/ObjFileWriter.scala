@@ -5,6 +5,9 @@ import java.io.{FileOutputStream, OutputStream, PrintWriter}
 import net.joewing.scalacad.{Facet, Vertex}
 import net.joewing.scalacad.primitives.{Primitive, ThreeDimensional}
 
+import scala.concurrent.Await
+import scala.concurrent.duration._
+
 class ObjFileWriter(os: OutputStream) {
 
   private def fmt(d: Double): String = f"$d%.6f"

@@ -10,7 +10,6 @@ import javax.imageio.ImageIO
 
 object Raster {
 
-
   def apply(grid: Vector[Vector[Boolean]], resolution: Double): Primitive2d = {
     val rect = Rectangle(resolution, resolution).rendered.facets
     val width = grid.head.length

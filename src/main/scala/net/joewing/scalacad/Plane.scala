@@ -6,7 +6,7 @@ final case class Plane(normal: Vertex, w: Double) {
 
   // This determines how "thick" the plane is.
   private val epsilon: Double = Vertex.epsilon
-  private val fastMath: Boolean = false
+  private val fastMath: Boolean = true
   private val slowMath: Boolean = false
 
   def splitPlanePolygon(pp: PlanePolygon, result: Plane.PlaneSplitResult): Unit = {
@@ -111,7 +111,7 @@ final case class Plane(normal: Vertex, w: Double) {
       normal.x, normal.y, normal.z, w
     )
     val fast = left * right
-    if (fastMath || (math.abs(fast) > epsilon && !slowMath)) {
+    if (fastMath || (math.abs(fast) > 0 && !slowMath)) {
       if (fast > epsilon) Plane.Front
       else if (fast < -epsilon) Plane.Back
       else Plane.Coplanar
