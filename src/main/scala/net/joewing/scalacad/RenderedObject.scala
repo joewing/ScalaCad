@@ -11,8 +11,6 @@ sealed trait RenderedObject {
 
   def invert: RenderedObject
 
-  def translate(v: Vertex): RenderedObject
-
   def map(f: Facet => Facet): FacetRenderedObject = RenderedObject.fromFacets(facets.map(f))
 
   def filter(f: Facet => Boolean): FacetRenderedObject = RenderedObject.fromFacets(facets.filter(f))
@@ -31,8 +29,6 @@ final case class FacetRenderedObject(dim: Dim, facets: Seq[Facet]) extends Rende
   }
 
   def invert: RenderedObject = FacetRenderedObject(dim, facets.map(_.flip))
-
-  def translate(v: Vertex): RenderedObject = FacetRenderedObject(dim, facets.map(_.moved(v.x, v.y, v.z)))
 }
 
 final case class BSPTreeRenderedObject(dim: Dim, tree: BSPTree) extends RenderedObject {
@@ -41,8 +37,6 @@ final case class BSPTreeRenderedObject(dim: Dim, tree: BSPTree) extends Rendered
   def facets: Seq[Facet] = RenderedObject.treeToFacets(dim, tree)
 
   def invert: RenderedObject = BSPTreeRenderedObject(dim, tree.inverted)
-
-  def translate(v: Vertex): RenderedObject = FacetRenderedObject(dim, facets).translate(v)
 }
 
 object RenderedObject {

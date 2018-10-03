@@ -6,6 +6,8 @@ final case class Plane(normal: Vertex, w: Double) {
 
   // This determines how "thick" the plane is.
   private val epsilon: Double = Vertex.epsilon
+  private val fastMath: Boolean = false
+  private val slowMath: Boolean = false
 
   def splitPlanePolygon(pp: PlanePolygon, result: Plane.PlaneSplitResult): Unit = {
     if (coincident(pp.support)) {
@@ -63,36 +65,37 @@ final case class Plane(normal: Vertex, w: Double) {
     val (qa, qb, qc, qd) = (other.normal.x, other.normal.y, other.normal.z, other.w)
 
     def helper(a: Double, b: Double, c: Double, d: Double): Boolean = {
-      val diff = Predicates.expansionDifference(Predicates.product(a, b), Predicates.product(c, d))
-      diff.last == 0.0
+      val fast = math.abs(a * b - c * d)
+      if (fastMath || (fast > epsilon && !slowMath)) {
+        fast < epsilon
+      } else {
+        val diff = RobustFloat.diff(RobustFloat.product(a, b), RobustFloat.product(c, d))
+        RobustFloat.compare(RobustFloat.abs(diff), epsilon) < 0.0
+      }
     }
 
-    /*
     helper(pa, qb, pb, qa) &&
       helper(pa, qc, pc, qa) &&
       helper(pa, qd, pd, qa) &&
       helper(pb, qc, pc, qb) &&
       helper(pb, qd, pd, qb) &&
       helper(pc, qd, pd, qc)
-      */
-    math.abs(pa * qb - pb * qa) <= epsilon &&
-      math.abs(pa * qc - pc * qa) <= epsilon &&
-      math.abs(pa * qd - pd * qa) <= epsilon &&
-      math.abs(pb * qc - pc * qb) <= epsilon &&
-      math.abs(pb * qd - pd * qb) <= epsilon &&
-      math.abs(pc * qd - pd * qc) <= epsilon
   }
 
   def sameOrientation(other: Plane): Boolean = {
     val (pa, pb, pc, pd) = (normal.x, normal.y, normal.z, w)
     val (qa, qb, qc, qd) = (other.normal.x, other.normal.y, other.normal.z, other.w)
-    /*
-    Predicates.product(pa, qa).last >= 0.0 &&
-      Predicates.product(pb, qb).last >= 0.0 &&
-      Predicates.product(pc, qc).last >= 0.0 &&
-      Predicates.product(pd, qd).last >= 0.0
-      */
-    pa * qa >= -epsilon && pb * qb >= -epsilon && pc * qc >= -epsilon && pd * qd >= -epsilon
+
+    def helper(a: Double, b: Double): Boolean = {
+      val fast = a * b
+      if (fastMath || (math.abs(fast) > epsilon && !slowMath)) {
+        fast >= 0.0
+      } else {
+        RobustFloat.product(a, b).last >= 0.0
+      }
+    }
+
+    helper(pa, qa) && helper(pb, qb) && helper(pc, qc) && helper(pd, qd)
   }
 
   def classify(p: Plane, q: Plane, r: Plane): Plane.Classification = {
@@ -107,27 +110,28 @@ final case class Plane(normal: Vertex, w: Double) {
       r.normal.x, r.normal.y, r.normal.z, r.w,
       normal.x, normal.y, normal.z, w
     )
-    val d = left * right
-    if (d > epsilon) Plane.Front
-    else if (d < -epsilon) Plane.Back
-    else Plane.Coplanar
-    /*
-    val left = Predicates.det3x3(
-      p.normal.x, p.normal.y, p.normal.z,
-      q.normal.x, q.normal.y, q.normal.z,
-      r.normal.x, r.normal.y, r.normal.z
-    )
-    val right = Predicates.det4x4(
-      p.normal.x, p.normal.y, p.normal.z, p.w,
-      q.normal.x, q.normal.y, q.normal.z, q.w,
-      r.normal.x, r.normal.y, r.normal.z, r.w,
-      normal.x, normal.y, normal.z, w
-    )
-    val d = Predicates.product(left, right).last
-    if (d > 0.0) Plane.Front
-    else if (d < 0.0) Plane.Back
-    else Plane.Coplanar
-    */
+    val fast = left * right
+    if (fastMath || (math.abs(fast) > epsilon && !slowMath)) {
+      if (fast > epsilon) Plane.Front
+      else if (fast < -epsilon) Plane.Back
+      else Plane.Coplanar
+    } else {
+      val left = RobustFloat.det3x3(
+        p.normal.x, p.normal.y, p.normal.z,
+        q.normal.x, q.normal.y, q.normal.z,
+        r.normal.x, r.normal.y, r.normal.z
+      )
+      val right = RobustFloat.det4x4(
+        p.normal.x, p.normal.y, p.normal.z, p.w,
+        q.normal.x, q.normal.y, q.normal.z, q.w,
+        r.normal.x, r.normal.y, r.normal.z, r.w,
+        normal.x, normal.y, normal.z, w
+      )
+      val product = RobustFloat.product(left, right)
+      if (RobustFloat.compare(product, epsilon) > 0) Plane.Front
+      else if (RobustFloat.compare(product, -epsilon) < 0) Plane.Back
+      else Plane.Coplanar
+    }
   }
 }
 
