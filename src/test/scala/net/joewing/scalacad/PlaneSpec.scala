@@ -18,7 +18,7 @@ class PlaneSpec extends FunSpec with Matchers {
     }
 
     it("returns true for the same orientation") {
-      val other = Plane(Vertex(1, 0, 0), -5)
+      val other = Plane(Vertex(1, 0, 0), 5)
       plane.sameOrientation(other) shouldBe true
     }
   }

@@ -11,11 +11,37 @@ sealed trait RenderedObject {
 
   def invert: RenderedObject
 
-  def map(f: Facet => Facet): FacetRenderedObject = RenderedObject.fromFacets(facets.map(f))
+  def merge(other: RenderedObject): RenderedObject
 
-  def filter(f: Facet => Boolean): FacetRenderedObject = RenderedObject.fromFacets(facets.filter(f))
+  final def union(other: RenderedObject): BSPTreeRenderedObject = {
+    val left = tree
+    val right = other.tree
+    val leftClipped = left.clip(right)
+    val rightClipped = right.clip(leftClipped).inverted.clip(leftClipped).inverted
+    BSPTreeRenderedObject(dim, leftClipped.merge(rightClipped))
+  }
 
-  def filterNot(f: Facet => Boolean): FacetRenderedObject = RenderedObject.fromFacets(facets.filterNot(f))
+  final def intersect(other: RenderedObject): BSPTreeRenderedObject = {
+    val left = invert.tree
+    val right = other.invert.tree
+    val leftClipped = left.clip(right)
+    val rightClipped = right.clip(leftClipped).inverted.clip(leftClipped).inverted
+    BSPTreeRenderedObject(dim, leftClipped.merge(rightClipped).inverted)
+  }
+
+  final def minus(other: RenderedObject): BSPTreeRenderedObject = {
+    val left = invert.tree
+    val right = other.tree
+    val leftClipped = left.clip(right)
+    val rightClipped = right.clip(leftClipped).inverted.clip(leftClipped).inverted
+    BSPTreeRenderedObject(dim, leftClipped.merge(rightClipped).inverted)
+  }
+
+  final def map(f: Facet => Facet): FacetRenderedObject = RenderedObject.fromFacets(facets.map(f))
+
+  final def filter(f: Facet => Boolean): FacetRenderedObject = RenderedObject.fromFacets(facets.filter(f))
+
+  final def filterNot(f: Facet => Boolean): FacetRenderedObject = RenderedObject.fromFacets(facets.filterNot(f))
 }
 
 final case class FacetRenderedObject(dim: Dim, facets: Seq[Facet]) extends RenderedObject {
@@ -29,6 +55,13 @@ final case class FacetRenderedObject(dim: Dim, facets: Seq[Facet]) extends Rende
   }
 
   def invert: RenderedObject = FacetRenderedObject(dim, facets.map(_.flip))
+
+  def merge(other: RenderedObject): RenderedObject = {
+    other match {
+      case t: BSPTreeRenderedObject => BSPTreeRenderedObject(dim, tree.merge(t.tree))
+      case f: FacetRenderedObject   => FacetRenderedObject(dim, facets ++ f.facets)
+    }
+  }
 }
 
 final case class BSPTreeRenderedObject(dim: Dim, tree: BSPTree) extends RenderedObject {
@@ -37,6 +70,8 @@ final case class BSPTreeRenderedObject(dim: Dim, tree: BSPTree) extends Rendered
   def facets: Seq[Facet] = RenderedObject.treeToFacets(dim, tree)
 
   def invert: RenderedObject = BSPTreeRenderedObject(dim, tree.inverted)
+
+  def merge(other: RenderedObject): RenderedObject = BSPTreeRenderedObject(dim, tree.merge(other.tree))
 }
 
 object RenderedObject {

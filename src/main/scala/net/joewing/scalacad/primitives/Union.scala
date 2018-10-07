@@ -6,8 +6,6 @@ final case class Union[D <: Dim](a: Primitive[D], b: Primitive[D]) extends Primi
   val dim: D = a.dim
 
   protected def render: RenderedObject = {
-    val left = a.rendered.tree
-    val right = b.rendered.tree
 
     val mina = a.minBound
     val maxa = a.maxBound
@@ -18,11 +16,10 @@ final case class Union[D <: Dim](a: Primitive[D], b: Primitive[D]) extends Primi
       maxa.x < minb.x || maxa.y < minb.y || maxa.z < minb.z ||
       mina.x > maxb.x || mina.y > maxb.y || mina.z > maxb.z
     ) {
-      BSPTreeRenderedObject(dim, left.merge(right))
+      // No overlap, so just merge.
+      a.rendered.merge(b.rendered)
     } else {
-      val leftClipped = left.clip(right)
-      val rightClipped = right.clip(leftClipped).inverted.clip(leftClipped).inverted
-      BSPTreeRenderedObject(dim, leftClipped.merge(rightClipped))
+      a.rendered.union(b.rendered)
     }
   }
 

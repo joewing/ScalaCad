@@ -23,7 +23,8 @@ final case class Plane(normal: Vertex, w: Double) {
       val bs = scala.collection.mutable.ArrayBuffer[Plane]()
       val boundingPlanes = pp.bounding
       val count = boundingPlanes.size
-      for (i <- 0 until count) {
+      var i = 0
+      while (i < count) {
         val a = boundingPlanes((i + count - 2) % count)
         val b = boundingPlanes((i + count - 1) % count)
         val c = boundingPlanes(i)
@@ -46,6 +47,7 @@ final case class Plane(normal: Vertex, w: Double) {
           case (_, Plane.Back, Plane.Front)                  => bs += c; fs ++= Seq(this, c)
           case _                                             => ()
         }
+        i += 1
       }
       if (fs.nonEmpty) result.front += PlanePolygon(pp.support +: fs)
       if (bs.nonEmpty) result.back += PlanePolygon(pp.support +: bs)

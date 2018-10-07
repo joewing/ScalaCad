@@ -106,6 +106,7 @@ final case class BSPTreeNode(
 }
 
 object BSPTree {
+
   def helper(i: Int, polygons: Seq[PlanePolygon]): BSPTree = {
     val (before, after) = polygons.splitAt(i)
     val others = before ++ after.tail
