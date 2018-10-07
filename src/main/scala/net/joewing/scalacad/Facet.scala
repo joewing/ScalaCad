@@ -39,21 +39,6 @@ final case class Facet(v1: Vertex, v2: Vertex, v3: Vertex) {
     val me = -epsilon
     alpha > me && alpha < ep1 && beta > me && beta < ep1 && gamma > me && gamma < ep1 && math.abs(residual) < epsilon
   }
-
-  def onEdge(p: Vertex, epsilon: Double = Vertex.epsilon): Boolean = {
-    p.collinear(v1, v2, epsilon) && p.between(v1, v2) ||
-    p.collinear(v2, v3, epsilon) && p.between(v2, v3) ||
-    p.collinear(v3, v1, epsilon) && p.between(v3, v1) ||
-    p.approxEqual(v1) || p.approxEqual(v2) || p.approxEqual(v3)
-  }
-
-  def coplanar(p: Vertex, epsilon: Double = Vertex.epsilon): Boolean = {
-    math.abs((v2 - v1).cross(p - v1).dot(v3 - v1)) < epsilon
-  }
-
-  def coplanar(other: Facet, epsilon: Double): Boolean = {
-    normal.approxEqual(other.normal, epsilon) && coplanar(other.v1, epsilon)
-  }
 }
 
 object Facet {
