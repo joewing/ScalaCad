@@ -8,25 +8,43 @@ case class PlanePolygon(planes: IndexedSeq[Plane]) {
 
   def flip: PlanePolygon = PlanePolygon(support.flip +: bounding.reverse)
 
-  def vertices: Seq[Vertex] = {
-    points.map { case (p1, p2, p3) =>
+  lazy val vertices: Seq[Vertex] = {
+    val p1 = support
+    val p1n = PlanePolygon.toBigVertex(p1.normal)
+    (bounding.last +: bounding).sliding(2).toSeq.par.map { case Seq(p2, p3) =>
       // Compute the point of intersection.
-      val n2xn3 = p2.normal.cross(p3.normal)
-      val n3xn1 = p3.normal.cross(p1.normal)
-      val n1xn2 = p1.normal.cross(p2.normal)
-      val denom = -p1.normal.dot(n2xn3)
-      n2xn3 * p1.w / denom + n3xn1 * p2.w / denom + n1xn2 * p3.w / denom
-    }.toList
-  }
-
-  lazy val points: Seq[(Plane, Plane, Plane)] = {
-    (bounding.last +: bounding).sliding(2).map { case Seq(p2, p3) =>
-      (support, p2, p3)
-    }.toList
+      val p2n = PlanePolygon.toBigVertex(p2.normal)
+      val p3n = PlanePolygon.toBigVertex(p3.normal)
+      val n2xn3 = PlanePolygon.cross(p2n, p3n)
+      val n3xn1 = PlanePolygon.cross(p3n, p1n)
+      val n1xn2 = PlanePolygon.cross(p1n, p2n)
+      val denom = -PlanePolygon.dot(p1n, n2xn3)
+      Vertex(
+        ((n2xn3._1 * p1.w + n3xn1._1 * p2.w + n1xn2._1 * p3.w) / denom).toDouble,
+        ((n2xn3._2 * p1.w + n3xn1._2 * p2.w + n1xn2._2 * p3.w) / denom).toDouble,
+        ((n2xn3._3 * p1.w + n3xn1._3 * p2.w + n1xn2._3 * p3.w) / denom).toDouble
+      )
+    }.seq
   }
 }
 
 object PlanePolygon {
+
+  private type BigVertex = (BigDecimal, BigDecimal, BigDecimal)
+
+  private def toBigVertex(v: Vertex): BigVertex = {
+    (BigDecimal(v.x), BigDecimal(v.y), BigDecimal(v.z))
+  }
+
+  private def cross(a: BigVertex, b: BigVertex): BigVertex = (
+    a._2 * b._3 - a._3 * b._2,
+    a._3 * b._1 - a._1 * b._3,
+    a._1 * b._2 - a._2 * b._1
+  )
+
+  private def dot(a: BigVertex, b: BigVertex): BigDecimal = {
+    a._1 * b._1 + a._2 * b._2 + a._3 * b._3
+  }
 
   def fromFacet(facet: Facet): PlanePolygon = {
     val support = Plane(facet.v1, facet.v2, facet.v3)

@@ -9,7 +9,7 @@ final case class RobustFloat(values: IndexedSeq[Double]) extends Ordered[RobustF
   def +(right: RobustFloat): RobustFloat = RobustFloat(RobustFloat.sum(values, right.values))
   def -(right: RobustFloat): RobustFloat = RobustFloat(RobustFloat.diff(values, right.values))
   def *(right: RobustFloat): RobustFloat = RobustFloat(RobustFloat.product(values, right.values))
-  def /(right: RobustFloat): RobustFloat = RobustFloat(RobustFloat.product(values, RobustFloat.inverted(right.values)))
+  def /(right: RobustFloat): RobustFloat = RobustFloat(toDouble / right.toDouble)
   def unary_-(): RobustFloat = RobustFloat(RobustFloat.negated(values))
 
   def compare(right: RobustFloat): Int = RobustFloat.compare(values, right.values)
@@ -18,6 +18,7 @@ final case class RobustFloat(values: IndexedSeq[Double]) extends Ordered[RobustF
 
   def abs: RobustFloat = RobustFloat(RobustFloat.abs(values))
 
+  def toDouble: Double = values.last
 }
 
 @strictfp
@@ -240,5 +241,15 @@ object RobustFloat {
     val m3 = det3x3(x21, x22, x24, x31, x32, x34, x41, x42, x44) * x13
     val m4 = det3x3(x21, x22, x23, x31, x32, x33, x41, x42, x43) * x14
     (m1 + m3) - (m2 + m4)
+  }
+
+  def crossProduct(a: Vertex, b: Vertex): (RobustFloat, RobustFloat, RobustFloat) = (
+    RobustFloat(diff(product(a.y, b.z), product(a.z, b.y))),
+    RobustFloat(diff(product(a.z, b.x), product(a.x, b.z))),
+    RobustFloat(diff(product(a.x, b.y), product(a.y, b.x)))
+  )
+
+  def dotProduct(a: Vertex, b: (RobustFloat, RobustFloat, RobustFloat)): RobustFloat = {
+    (b._1 * a.x) + (b._2 * a.y) + (b._3 * a.z)
   }
 }

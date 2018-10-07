@@ -66,7 +66,7 @@ final case class Plane(normal: Vertex, w: Double) {
 
     def helper(a: Double, b: Double, c: Double, d: Double): Boolean = {
       val fast = math.abs(a * b - c * d)
-      if (fastMath || (fast > epsilon && !slowMath)) {
+      if (fastMath || (fast > 2 * epsilon && !slowMath)) {
         fast < epsilon
       } else {
         (RobustFloat(a) * RobustFloat(b) - RobustFloat(c) * RobustFloat(d)).abs < epsilon
@@ -87,7 +87,7 @@ final case class Plane(normal: Vertex, w: Double) {
 
     def helper(a: Double, b: Double): Boolean = {
       val fast = a * b
-      if (fastMath || (math.abs(fast) > epsilon && !slowMath)) {
+      if (fastMath || (math.abs(fast) > 2 * epsilon && !slowMath)) {
         fast >= 0.0
       } else {
         RobustFloat(a) * RobustFloat(b) >= 0
@@ -110,7 +110,7 @@ final case class Plane(normal: Vertex, w: Double) {
       normal.x, normal.y, normal.z, w
     )
     val fast = left * right
-    if (fastMath || (math.abs(fast) > epsilon && !slowMath)) {
+    if (fastMath || (math.abs(fast) > 4 * epsilon && !slowMath)) {
       if (fast > epsilon) Plane.Front
       else if (fast < -epsilon) Plane.Back
       else Plane.Coplanar

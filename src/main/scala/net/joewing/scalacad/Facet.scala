@@ -5,9 +5,6 @@ final case class Facet(v1: Vertex, v2: Vertex, v3: Vertex) {
   // Outward normal according to the right-hand rule.
   lazy val normal: Vertex = (v2 - v1).cross(v3 - v1).unit
 
-  //require(!v1.approxEqual(v2) && !v2.approxEqual(v3) && !v3.approxEqual(v1), s"invalid facet: $v1, $v2, $v3")
-  //require(normal.length > 0, s"invalid facet: $v1, $v2, $v3, ${v2 - v1} x ${v3 - v1} = ${(v2 - v1).cross(v3 - v1)}")
-
   lazy val vertices: Seq[Vertex] = Vector(v1, v2, v3)
 
   lazy val area: Double = (v2 - v1).cross(v3 - v1).length / 2.0

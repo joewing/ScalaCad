@@ -66,4 +66,30 @@ class RobustFloatSpec extends FunSpec with Matchers {
       RobustFloat.compare(Array(0.1, 3.0), Array(0.1, 3.0)) shouldBe 0
     }
   }
+
+  describe("divide") {
+    it("returns the right result") {
+      RobustFloat(12) / RobustFloat(3) shouldBe RobustFloat(4)
+    }
+  }
+
+  describe("crossProduct") {
+    it("returns the right result") {
+      val a = Vertex(1, 2, 3)
+      val b = Vertex(3, 4, 5)
+      val result = RobustFloat.crossProduct(a, b)
+      val expected = a.cross(b)
+      result._1.toDouble shouldBe expected.x
+      result._2.toDouble shouldBe expected.y
+      result._3.toDouble shouldBe expected.z
+    }
+  }
+
+  describe("dotProduct") {
+    it("returns the right result") {
+      val a = Vertex(1, 2, 3)
+      val result = RobustFloat.dotProduct(a, (RobustFloat(3), RobustFloat(4), RobustFloat(5)))
+      result.toDouble shouldBe a.dot(Vertex(3, 4, 5))
+    }
+  }
 }
