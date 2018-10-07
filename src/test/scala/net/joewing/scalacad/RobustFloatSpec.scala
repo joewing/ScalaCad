@@ -51,19 +51,19 @@ class RobustFloatSpec extends FunSpec with Matchers {
 
   describe("compare") {
     it("returns >0 if a > b (simple case)") {
-      RobustFloat.compare(Array(0.0, 2.0), Array(0.1, 1.0)) should be > 0.0
+      RobustFloat.compare(Array(0.0, 2.0), Array(0.1, 1.0)) should be > 0
     }
 
     it("returns >0 if a > b (complicated case)") {
-      RobustFloat.compare(Array(0.2, 1.0), Array(0.1, 1.0)) should be > 0.0
+      RobustFloat.compare(Array(0.2, 1.0), Array(0.1, 1.0)) should be > 0
     }
 
     it("returns <0 if a < b") {
-      RobustFloat.compare(Array(0.0, 2.0), Array(0.1, 3.0)) should be < 0.0
+      RobustFloat.compare(Array(0.0, 2.0), Array(0.1, 3.0)) should be < 0
     }
 
     it("returns 0 if a == b") {
-      RobustFloat.compare(Array(0.1, 3.0), Array(0.1, 3.0)) shouldBe 0.0
+      RobustFloat.compare(Array(0.1, 3.0), Array(0.1, 3.0)) shouldBe 0
     }
   }
 }

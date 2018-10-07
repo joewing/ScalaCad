@@ -15,7 +15,7 @@ case class PlanePolygon(planes: IndexedSeq[Plane]) {
       val n3xn1 = p3.normal.cross(p1.normal)
       val n1xn2 = p1.normal.cross(p2.normal)
       val denom = -p1.normal.dot(n2xn3)
-      (n2xn3 * p1.w + n3xn1 * p2.w + n1xn2 * p3.w) / denom
+      n2xn3 * p1.w / denom + n3xn1 * p2.w / denom + n1xn2 * p3.w / denom
     }.toList
   }
 

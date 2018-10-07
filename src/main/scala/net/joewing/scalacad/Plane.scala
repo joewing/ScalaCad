@@ -69,8 +69,7 @@ final case class Plane(normal: Vertex, w: Double) {
       if (fastMath || (fast > epsilon && !slowMath)) {
         fast < epsilon
       } else {
-        val diff = RobustFloat.diff(RobustFloat.product(a, b), RobustFloat.product(c, d))
-        RobustFloat.compare(RobustFloat.abs(diff), epsilon) < 0.0
+        (RobustFloat(a) * RobustFloat(b) - RobustFloat(c) * RobustFloat(d)).abs < epsilon
       }
     }
 
@@ -91,7 +90,7 @@ final case class Plane(normal: Vertex, w: Double) {
       if (fastMath || (math.abs(fast) > epsilon && !slowMath)) {
         fast >= 0.0
       } else {
-        RobustFloat.product(a, b).last >= 0.0
+        RobustFloat(a) * RobustFloat(b) >= 0
       }
     }
 
@@ -111,7 +110,7 @@ final case class Plane(normal: Vertex, w: Double) {
       normal.x, normal.y, normal.z, w
     )
     val fast = left * right
-    if (fastMath || (math.abs(fast) > 0 && !slowMath)) {
+    if (fastMath || (math.abs(fast) > epsilon && !slowMath)) {
       if (fast > epsilon) Plane.Front
       else if (fast < -epsilon) Plane.Back
       else Plane.Coplanar
@@ -127,9 +126,9 @@ final case class Plane(normal: Vertex, w: Double) {
         r.normal.x, r.normal.y, r.normal.z, r.w,
         normal.x, normal.y, normal.z, w
       )
-      val product = RobustFloat.product(left, right)
-      if (RobustFloat.compare(product, epsilon) > 0) Plane.Front
-      else if (RobustFloat.compare(product, -epsilon) < 0) Plane.Back
+      val comp = left * right
+      if (comp > epsilon) Plane.Front
+      else if (comp < -epsilon) Plane.Back
       else Plane.Coplanar
     }
   }
