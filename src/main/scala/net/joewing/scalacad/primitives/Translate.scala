@@ -2,6 +2,8 @@ package net.joewing.scalacad.primitives
 
 import net.joewing.scalacad.{RenderedObject, Vertex}
 
+import scala.concurrent.{ExecutionContext, Future}
+
 final case class Translate[D <: Dim](
   obj: Primitive[D],
   x: Double = 0,
@@ -11,7 +13,9 @@ final case class Translate[D <: Dim](
 
   val dim: D = obj.dim
 
-  protected def render: RenderedObject = obj.rendered.map(_.moved(x, y, z))
+  protected def render(implicit ec: ExecutionContext): Future[RenderedObject] = {
+    obj.renderedFuture.map(_.map(_.moved(x, y, z)))
+  }
 
   override def transformed(f: Primitive[D] => Primitive[D]): Primitive[D] =
     obj.transformed(o => f(Translate(o, x, y, z)))

@@ -11,7 +11,7 @@ case class PlanePolygon(planes: IndexedSeq[Plane]) {
   lazy val vertices: Seq[Vertex] = {
     val p1 = support
     val p1n = BigVertex(p1.normal)
-    (bounding.last +: bounding).sliding(2).toSeq.par.map { case Seq(p2, p3) =>
+    (bounding.last +: bounding).sliding(2).map { case Seq(p2, p3) =>
       // Compute the point of intersection.
       val p2n = BigVertex(p2.normal)
       val p3n = BigVertex(p3.normal)
@@ -20,7 +20,7 @@ case class PlanePolygon(planes: IndexedSeq[Plane]) {
       val n1xn2 = p1n.cross(p2n)
       val denom = -p1n.dot(n2xn3)
       ((n2xn3 * p1.w + n3xn1 * p2.w + n1xn2 * p3.w) / denom).toVertex
-    }.seq
+    }.toVector
   }
 }
 

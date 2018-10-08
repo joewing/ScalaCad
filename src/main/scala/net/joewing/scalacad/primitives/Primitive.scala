@@ -2,6 +2,9 @@ package net.joewing.scalacad.primitives
 
 import net.joewing.scalacad.{RenderedObject, Vertex}
 
+import scala.concurrent.duration.Duration
+import scala.concurrent.{Await, ExecutionContext, Future}
+
 sealed trait Dim
 
 class TwoDimensional extends Dim
@@ -30,8 +33,13 @@ trait Primitive[D <: Dim] {
 
   val dim: D
 
-  protected def render: RenderedObject
+  protected def render(implicit ec: ExecutionContext): Future[RenderedObject]
   def transformed(f: Primitive[D] => Primitive[D]): Primitive[D] = f(this)
 
-  final lazy val rendered: RenderedObject = transformed(identity).render
+  final lazy val renderedFuture: Future[RenderedObject] = {
+    import scala.concurrent.ExecutionContext.Implicits.global
+    transformed(identity).render
+  }
+
+  final lazy val rendered: RenderedObject = Await.result(renderedFuture, Duration.Inf)
 }

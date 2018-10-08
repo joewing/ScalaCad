@@ -9,6 +9,9 @@ import net.joewing.scalacad._
 import net.joewing.scalacad.io.internal.SaveDialog
 import net.joewing.scalacad.primitives.{Primitive, ThreeDimensional}
 
+import scala.concurrent.Await
+import scala.concurrent.duration.Duration
+
 class AwtRenderer(
   title: String,
   obj: Primitive[ThreeDimensional],
@@ -18,7 +21,10 @@ class AwtRenderer(
   showBackfaces: Boolean
 ) {
 
-  private val bsp = obj.rendered.tree
+  private val bsp = {
+    import scala.concurrent.ExecutionContext.Implicits.global
+    Await.result(obj.rendered.treeFuture, Duration.Inf)
+  }
   private lazy val polygons: Seq[Polygon3d] = bsp.allPolygons.map(p => Polygon3d(p.vertices))
 
   private lazy val minBound: Vertex = obj.minBound
