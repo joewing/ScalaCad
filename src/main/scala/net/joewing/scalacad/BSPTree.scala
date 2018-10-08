@@ -107,30 +107,34 @@ final case class BSPTreeNode(
 
 object BSPTree {
 
-  def helper(i: Int, polygons: Seq[PlanePolygon]): BSPTree = {
-    val (before, after) = polygons.splitAt(i)
-    val others = before ++ after.tail
-    val current = after.head
-    val plane = current.planes.head
-    val result = plane.split(others)
-    val f = if (result.front.nonEmpty) apply(result.front) else BSPTreeIn
-    val b = if (result.back.nonEmpty) apply(result.back) else BSPTreeOut
-    BSPTreeNode(plane, current +: (result.coFront ++ result.coBack), f, b)
+  /** Log base 2 of an integer. */
+  private def lg(n: Int): Int = Integer.SIZE - Integer.numberOfLeadingZeros(n)
+
+  private def findPartition(polygons: Seq[PlanePolygon]): Int = {
+    val n = polygons.size
+    if (n > 1) {
+      val maxIter = lg(n)
+      Vector.range(0, maxIter).par.minBy { i =>
+        val index = i * maxIter / n
+        val result = polygons(index).planes.head.split(polygons)
+        result.back.size + result.front.size
+      }
+    } else 0
   }
 
   def apply(polygons: Seq[PlanePolygon]): BSPTree = {
     if (polygons.isEmpty) {
       BSPTreeOut
     } else {
-      // Find the partition that will split the fewest polygons.
-      val n = polygons.size
-      val maxIter = math.min(8, n)
-      val bestIndex = Vector.range(0, maxIter).par.minBy { i =>
-        val index = i * n / maxIter
-        val result = polygons(index).planes.head.split(polygons)
-        result.back.size + result.front.size
-      }
-      helper(bestIndex, polygons)
+      val i = findPartition(polygons)
+      val (before, after) = polygons.splitAt(i)
+      val others = before ++ after.tail
+      val current = after.head
+      val plane = current.planes.head
+      val result = plane.split(others)
+      val f = if (result.front.nonEmpty) apply(result.front) else BSPTreeIn
+      val b = if (result.back.nonEmpty) apply(result.back) else BSPTreeOut
+      BSPTreeNode(plane, current +: (result.coFront ++ result.coBack), f, b)
     }
   }
 }
