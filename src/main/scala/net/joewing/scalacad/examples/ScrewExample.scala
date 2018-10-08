@@ -18,7 +18,7 @@ object ScrewExample extends App {
 
   val nutTurns = screwTurns * nutLength / screwLength
 
-  def cap: Primitive[ThreeDimensional] = cylinder(nutLength, nutRadius, nutRadius, nutSides)
+  def cap: Primitive[ThreeDimensional] = cylinder(nutLength, nutRadius, sides = nutSides)
 
   def screwThreads = Threads(screwRadius, screwLength, screwTurns)
 
@@ -35,5 +35,5 @@ object ScrewExample extends App {
   val end = System.currentTimeMillis
   println(s"Duration: ${end - start} ms")
 
-  AwtRenderer.show(obj, showBackfaces = true, showVertices = true)
+  AwtRenderer.show(obj)
 }

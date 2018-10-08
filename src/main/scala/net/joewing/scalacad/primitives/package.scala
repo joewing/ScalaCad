@@ -12,14 +12,14 @@ package object primitives {
 
   def polygon(points: (Double, Double)*): Primitive2d = Polygon(points)
 
-  def circle(r: Double, sides: Int = 8): Primitive2d = Circle(r, sides)
+  def circle(r: Double, sides: Int = 0): Primitive2d = Circle(r, sides)
 
   def cube(width: Double, height: Double, depth: Double): Primitive3d = Cube(width, height, depth)
 
-  def cylinder(length: Double, bottom: Double, top: Double, sides: Int): Primitive3d =
-    Cylinder(length, bottom, top, sides)
+  def cylinder(length: Double, top: Double, bottom: Double = -1, sides: Int = 0): Primitive3d =
+    Cylinder(length, top, bottom, sides)
 
-  def sphere(r: Double, slices: Int = 8, stacks: Int = 8): Primitive3d = Sphere(r, slices, stacks)
+  def sphere(r: Double, slices: Int = 0, stacks: Int = 0): Primitive3d = Sphere(r, slices, stacks)
 
   def union[D <: Dim](objs: Primitive[D]*): Primitive[D] = objs.reduce(Union.apply[D])
   def intersect[D <: Dim](objs: Primitive[D]*): Primitive[D] = objs.reduce(Intersection.apply[D])

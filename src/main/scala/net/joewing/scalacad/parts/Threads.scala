@@ -20,8 +20,7 @@ object Threads {
     resolution: Double = 0.2
   ): Primitive[ThreeDimensional] = {
     val slices = (length / resolution).toInt
-    val sides = (radius / resolution).toInt
     val radiansPerSlice = math.Pi * turns / slices
-    circle(radius, sides).scale(x = threadRatio).extrude(length, radiansPerSlice, slices)
+    circle(radius).scale(x = threadRatio).extrude(length, radiansPerSlice, slices)
   }
 }
