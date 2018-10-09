@@ -109,6 +109,20 @@ class AwtRenderer(
       renderFacet(xs, ys, color, graphics)
     }
 
+    val x0 = 50
+    val y0 = image.getHeight - 50
+
+    def drawVector(v: Vertex, c: Color): Unit = {
+      graphics.setColor(c)
+      val x2 = x0 + v.x * cx + v.z * sx
+      val y2 = y0 + v.x * sysx + v.y * cy - v.z * sycx
+      graphics.drawLine(x0.toInt, y0.toInt, x2.toInt, y2.toInt)
+    }
+
+    drawVector(Vertex(40, 0, 0), Color.red)
+    drawVector(Vertex(0, -40, 0), Color.green)
+    drawVector(Vertex(0, 0, 40), Color.yellow)
+
     frame.repaint()
 
     val end = System.currentTimeMillis
@@ -142,6 +156,7 @@ class AwtRenderer(
       if ((e.getModifiersEx & (InputEvent.BUTTON3_DOWN_MASK | InputEvent.CTRL_DOWN_MASK)) == 0) {
         rotationX += math.Pi * dx / 180.0
         rotationY += math.Pi * dy / 180.0
+        rotationY = math.min(math.max(rotationY, -math.Pi / 2), math.Pi / 2)
       } else {
         positionX += dx
         positionY -= dy
