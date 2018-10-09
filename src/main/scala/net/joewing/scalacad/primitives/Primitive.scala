@@ -2,6 +2,9 @@ package net.joewing.scalacad.primitives
 
 import net.joewing.scalacad.{RenderedObject, Vertex}
 
+import scala.concurrent.duration.Duration
+import scala.concurrent.{Await, ExecutionContext, Future}
+
 sealed trait Dim
 
 class TwoDimensional extends Dim
@@ -14,8 +17,7 @@ object Dim {
 
 trait Primitive[D <: Dim] {
 
-  private def reduceVertices(op: (Double, Double) => Double): Vertex = {
-    val vertices = render.vertices
+  final protected def reduceVertices(vertices: Seq[Vertex], op: (Double, Double) => Double): Vertex = {
     if (vertices.nonEmpty) {
       vertices.tail.foldLeft(vertices.head) { (b, v) =>
         Vertex(op(b.x, v.x), op(b.y, v.y), op(b.z, v.z))
@@ -25,20 +27,19 @@ trait Primitive[D <: Dim] {
     }
   }
 
-  lazy val minBound: Vertex = reduceVertices(math.min)
-  lazy val maxBound: Vertex = reduceVertices(math.max)
-  lazy val extent: Vertex = maxBound - minBound
+  val minBound: Vertex
+  val maxBound: Vertex
+  final lazy val extent: Vertex = maxBound - minBound
 
-  implicit val dim: D
+  val dim: D
 
-  def render: RenderedObject
+  protected def render(implicit ec: ExecutionContext): Future[RenderedObject]
+  def transformed(f: Primitive[D] => Primitive[D]): Primitive[D] = f(this)
+
+  final lazy val renderedFuture: Future[RenderedObject] = {
+    import scala.concurrent.ExecutionContext.Implicits.global
+    transformed(identity).render
+  }
+
+  final lazy val rendered: RenderedObject = Await.result(renderedFuture, Duration.Inf)
 }
-
-trait Primitive2d extends Primitive[TwoDimensional] {
-  implicit val dim: TwoDimensional = Dim.two
-}
-
-trait Primitive3d extends Primitive[ThreeDimensional] {
-  implicit val dim: ThreeDimensional = Dim.three
-}
-

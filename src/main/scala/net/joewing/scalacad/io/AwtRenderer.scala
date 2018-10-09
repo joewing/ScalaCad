@@ -9,6 +9,9 @@ import net.joewing.scalacad._
 import net.joewing.scalacad.io.internal.SaveDialog
 import net.joewing.scalacad.primitives.{Primitive, ThreeDimensional}
 
+import scala.concurrent.Await
+import scala.concurrent.duration.Duration
+
 class AwtRenderer(
   title: String,
   obj: Primitive[ThreeDimensional],
@@ -18,26 +21,14 @@ class AwtRenderer(
   showBackfaces: Boolean
 ) {
 
-  private val offset = (obj.maxBound + obj.minBound) / -2
-  private val centered = obj.render.translate(offset)
-  private val bsp = centered.tree
-  private lazy val polygons: Seq[Polygon3d] = bsp.allPolygons
-
-  private lazy val minBound: Vertex = polygons.flatMap(_.vertices).foldLeft(Vertex.max) { (m, v) =>
-    Vertex(
-      x = math.min(m.x, v.x),
-      y = math.min(m.y, v.y),
-      z = math.min(m.z, v.z)
-    )
+  private val bsp = {
+    import scala.concurrent.ExecutionContext.Implicits.global
+    Await.result(obj.rendered.treeFuture, Duration.Inf)
   }
+  private lazy val polygons: Seq[Polygon3d] = bsp.allPolygons.map(p => Polygon3d(p.vertices))
 
-  private lazy val maxBound: Vertex = polygons.flatMap(_.vertices).foldLeft(Vertex.min) { (m, v) =>
-    Vertex(
-      x = math.max(m.x, v.x),
-      y = math.max(m.y, v.y),
-      z = math.max(m.z, v.z)
-    )
-  }
+  private lazy val minBound: Vertex = obj.minBound
+  private lazy val maxBound: Vertex = obj.maxBound
 
   private lazy val (initialScale, initialX, initialY): (Double, Double, Double) = {
     val buffer = (initialImageWidth * 0.05).toInt
@@ -89,12 +80,11 @@ class AwtRenderer(
 
     val rx = -rotationX + math.Pi
     val ry = -rotationY + math.Pi
-    val p = Vertex(
+    val lightSource = Vertex(
       r * math.sin(rx) * math.cos(ry),
       r * math.sin(ry),
       r * math.cos(rx) * math.cos(ry)
-    )
-    val lightSource = p.unit
+    ).unit
 
     val cx = math.cos(rotationX)
     val sx = math.sin(rotationX)
@@ -118,6 +108,20 @@ class AwtRenderer(
       val color = if (v < 0) Color.RED else new Color(0.0f, 0.0f, brightness)
       renderFacet(xs, ys, color, graphics)
     }
+
+    val x0 = 50
+    val y0 = image.getHeight - 50
+
+    def drawVector(v: Vertex, c: Color): Unit = {
+      graphics.setColor(c)
+      val x2 = x0 + v.x * cx + v.z * sx
+      val y2 = y0 + v.x * sysx + v.y * cy - v.z * sycx
+      graphics.drawLine(x0.toInt, y0.toInt, x2.toInt, y2.toInt)
+    }
+
+    drawVector(Vertex(40, 0, 0), Color.red)
+    drawVector(Vertex(0, -40, 0), Color.green)
+    drawVector(Vertex(0, 0, 40), Color.yellow)
 
     frame.repaint()
 
@@ -152,6 +156,7 @@ class AwtRenderer(
       if ((e.getModifiersEx & (InputEvent.BUTTON3_DOWN_MASK | InputEvent.CTRL_DOWN_MASK)) == 0) {
         rotationX += math.Pi * dx / 180.0
         rotationY += math.Pi * dy / 180.0
+        rotationY = math.min(math.max(rotationY, -math.Pi / 2), math.Pi / 2)
       } else {
         positionX += dx
         positionY -= dy
@@ -255,7 +260,7 @@ object AwtRenderer {
   ): Unit = {
     val renderer = new AwtRenderer(
       title = title,
-      obj = r,
+      obj = r.centered,
       initialImageWidth = imageWidth,
       initialImageHeight = imageHeight,
       showVertices = showVertices,

@@ -1,21 +1,18 @@
 package net.joewing.scalacad.primitives
 
-import net.joewing.scalacad.{RenderedObject, Facet, Vertex}
-
-case class LinearExtrude(
-  obj: Primitive[TwoDimensional],
-  length: Double,
-  rotation: Double = 0.0,
-  slices: Int = 1
-) extends Primitive3d {
-
-  lazy val render: RenderedObject = RenderedObject.fromFacets {
-    val base = obj.render.facets
-    LinearExtrude.extrude(base, length, rotation, slices)
-  }
-}
+import net.joewing.scalacad.{Facet, Vertex}
 
 object LinearExtrude {
+
+  def apply(
+    obj: Primitive[TwoDimensional],
+    length: Double,
+    rotation: Double = 0.0,
+    slices: Int = 1
+  ): Primitive3d = {
+    val base = obj.rendered.facets
+    Primitive3d(extrude(base, length, rotation, slices))
+  }
 
   private def includeEdge(allEdges: Seq[(Vertex, Vertex)])(edge: (Vertex, Vertex)): Boolean = {
     val (a, b) = edge

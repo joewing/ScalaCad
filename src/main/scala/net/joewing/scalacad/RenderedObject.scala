@@ -2,49 +2,85 @@ package net.joewing.scalacad
 
 import net.joewing.scalacad.primitives.{Dim, LinearExtrude, ThreeDimensional, TwoDimensional}
 
+import scala.concurrent.{ExecutionContext, Future}
+
 sealed trait RenderedObject {
   implicit val dim: Dim
   def vertices: Seq[Vertex]
 
   def facets: Seq[Facet]
-  def tree: BSPTree
+  def treeFuture(implicit ec: ExecutionContext): Future[BSPTree]
 
   def invert: RenderedObject
 
-  def translate(v: Vertex): RenderedObject
+  def merge(other: RenderedObject)(implicit ec: ExecutionContext): Future[RenderedObject]
 
-  def map(f: Facet => Facet): FacetRenderedObject = RenderedObject.fromFacets(facets.map(f))
+  final def union(other: RenderedObject)(implicit ec: ExecutionContext): Future[BSPTreeRenderedObject] = {
+    val leftFuture = treeFuture
+    val rightFuture = other.treeFuture
+    for {
+      left <- leftFuture
+      right <- rightFuture
+      leftClipped <- left.clip(right)
+      rightClipped <- right.clip(leftClipped)
+      invertClipped <- rightClipped.inverted.clip(leftClipped)
+      merged <- leftClipped.merge(invertClipped.inverted)
+    } yield BSPTreeRenderedObject(dim, merged)
+  }
 
-  def filter(f: Facet => Boolean): FacetRenderedObject = RenderedObject.fromFacets(facets.filter(f))
+  final def intersect(other: RenderedObject)(implicit ec: ExecutionContext): Future[RenderedObject] = {
+    invert.union(other.invert).map(_.invert)
+  }
 
-  def filterNot(f: Facet => Boolean): FacetRenderedObject = RenderedObject.fromFacets(facets.filterNot(f))
+  final def minus(other: RenderedObject)(implicit ec: ExecutionContext): Future[RenderedObject] = {
+    invert.union(other).map(_.invert)
+  }
+
+  final def map(f: Facet => Facet): FacetRenderedObject = RenderedObject.fromFacets(facets.map(f))
+
+  final def filter(f: Facet => Boolean): FacetRenderedObject = RenderedObject.fromFacets(facets.filter(f))
+
+  final def filterNot(f: Facet => Boolean): FacetRenderedObject = RenderedObject.fromFacets(facets.filterNot(f))
 }
 
 final case class FacetRenderedObject(dim: Dim, facets: Seq[Facet]) extends RenderedObject {
   lazy val vertices: Seq[Vertex] = facets.flatMap(_.vertices).distinct
 
-  def tree: BSPTree = dim match {
-    case _: TwoDimensional => BSPTree(
-      Facet.toPolygons(
-        LinearExtrude.extrude(facets, 1, 0, 1)
+  def treeFuture(implicit ec: ExecutionContext): Future[BSPTree] = {
+    dim match {
+      case _: TwoDimensional => BSPTree(
+        LinearExtrude.extrude(facets, 1, 0, 1).map(PlanePolygon.fromFacet)
       )
-    )
-    case _: ThreeDimensional => BSPTree(Facet.toPolygons(facets))
+      case _: ThreeDimensional => BSPTree(facets.map(PlanePolygon.fromFacet))
+    }
   }
 
   def invert: RenderedObject = FacetRenderedObject(dim, facets.map(_.flip))
 
-  def translate(v: Vertex): RenderedObject = FacetRenderedObject(dim, facets.map(_.moved(v.x, v.y, v.z)))
+  def merge(other: RenderedObject)(implicit ec: ExecutionContext): Future[RenderedObject] = {
+    other match {
+      case rightTree: BSPTreeRenderedObject =>
+        for {
+          leftTree <- treeFuture
+          merged <- leftTree.merge(rightTree.tree)
+        } yield BSPTreeRenderedObject(dim, merged)
+      case f: FacetRenderedObject   => Future(FacetRenderedObject(dim, facets ++ f.facets))
+    }
+  }
 }
 
 final case class BSPTreeRenderedObject(dim: Dim, tree: BSPTree) extends RenderedObject {
   lazy val vertices: Seq[Vertex] = tree.allPolygons.flatMap(_.vertices)
 
   def facets: Seq[Facet] = RenderedObject.treeToFacets(dim, tree)
+  def treeFuture(implicit ec: ExecutionContext): Future[BSPTree] = Future.successful(tree)
 
   def invert: RenderedObject = BSPTreeRenderedObject(dim, tree.inverted)
 
-  def translate(v: Vertex): RenderedObject = BSPTreeRenderedObject(dim, tree.translated(v))
+  def merge(other: RenderedObject)(implicit ec: ExecutionContext): Future[RenderedObject] = for {
+    otherTree <- other.treeFuture
+    merged <- tree.merge(otherTree)
+  }  yield BSPTreeRenderedObject(dim, merged)
 }
 
 object RenderedObject {
@@ -90,7 +126,7 @@ object RenderedObject {
         root.allPolygons.filter(_.vertices.forall(v => math.abs(v.z) < Vertex.epsilon))
       case _: ThreeDimensional => root.allPolygons
     }
-    val vertices = polygons.flatMap(_.vertices).distinct
+    val vertices = polygons.par.flatMap(_.vertices).seq.distinct
     val octree = Octree(vertices)
     polygons.par.flatMap { p =>
       Facet.fromVertices(p.vertices).flatMap(f => insertPoints(f, octree).filter(validFacet))

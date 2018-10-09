@@ -18,7 +18,7 @@ object ScrewExample extends App {
 
   val nutTurns = screwTurns * nutLength / screwLength
 
-  def cap: Primitive[ThreeDimensional] = cylinder(nutLength, nutRadius, nutRadius, nutSides)
+  def cap: Primitive[ThreeDimensional] = cylinder(nutLength, nutRadius, sides = nutSides)
 
   def screwThreads = Threads(screwRadius, screwLength, screwTurns)
 
@@ -26,8 +26,14 @@ object ScrewExample extends App {
 
   def nutThreads = Threads(screwRadius + tolerance, nutLength, nutTurns)
 
-  def nut: Primitive[ThreeDimensional] = cap - nutThreads
+  def nut: Primitive[ThreeDimensional] = cap.translate(x = nutRadius * 4) - nutThreads.translate(x = nutRadius * 4)
 
   val obj = screw.beside(nut, overlap = -nutRadius)
+
+  val start = System.currentTimeMillis
+  StlFileWriter.write(obj, "screw.stl")
+  val end = System.currentTimeMillis
+  println(s"Duration: ${end - start} ms")
+
   AwtRenderer.show(obj)
 }

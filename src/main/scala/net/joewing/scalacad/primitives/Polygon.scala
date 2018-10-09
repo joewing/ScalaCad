@@ -1,7 +1,10 @@
 package net.joewing.scalacad.primitives
 
-import net.joewing.scalacad.{RenderedObject, Vertex}
+import net.joewing.scalacad.{Facet, Vertex}
 
-case class Polygon(points: Seq[(Double, Double)]) extends Primitive2d {
-  lazy val render: RenderedObject = RenderedObject.fromVertices(points.map(p => Vertex(p._1, p._2, 0)))
+object Polygon {
+  def apply(points: Seq[(Double, Double)]): Primitive2d = {
+    require(points.size > 2, s"polygon must have at least 3 points, got ${points.size}")
+    Primitive2d(Facet.fromVertices(points.map(p => Vertex(p._1, p._2, 0))))
+  }
 }

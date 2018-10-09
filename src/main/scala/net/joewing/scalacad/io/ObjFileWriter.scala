@@ -5,6 +5,9 @@ import java.io.{FileOutputStream, OutputStream, PrintWriter}
 import net.joewing.scalacad.{Facet, Vertex}
 import net.joewing.scalacad.primitives.{Primitive, ThreeDimensional}
 
+import scala.concurrent.Await
+import scala.concurrent.duration._
+
 class ObjFileWriter(os: OutputStream) {
 
   private def fmt(d: Double): String = f"$d%.6f"
@@ -36,7 +39,7 @@ class ObjFileWriter(os: OutputStream) {
 
 object ObjFileWriter {
   def write(r: Primitive[ThreeDimensional], os: OutputStream): Unit = {
-    new ObjFileWriter(os).write(r.render.facets)
+    new ObjFileWriter(os).write(r.rendered.facets)
   }
   def write(r: Primitive[ThreeDimensional], fileName: String): Unit = {
     write(r, new FileOutputStream(fileName))

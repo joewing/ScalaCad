@@ -71,7 +71,7 @@ case class Vertex(x: Double, y: Double, z: Double) {
   def max(right: Vertex): Vertex = Vertex(math.max(x, right.x), math.max(y, right.y), math.max(z, right.z))
 
   def collinear(a: Vertex, b: Vertex, epsilon: Double = Vertex.epsilon): Boolean =
-    (b - a).cross(this - a).length < epsilon
+    (b - a).cross(this - a).dotSelf < epsilon * epsilon
 
   // Find 't' such that 'a + t(b - a) = this'.
   // If this returns t in (0, 1), then this is between a and b.

@@ -20,7 +20,7 @@ class CircleSpec extends FunSpec with Matchers {
 
   describe("render") {
     it("should have all normals pointing down") {
-      val facets = Circle(4, 6).render.facets
+      val facets = Circle(4, 6).rendered.facets
       facets.foreach { facet =>
         facet.normal.z should be < 0.0
       }

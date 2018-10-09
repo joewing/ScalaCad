@@ -1,9 +1,9 @@
 package net.joewing.scalacad.primitives
 
-import net.joewing.scalacad.{Facet, RenderedObject, Vertex}
+import net.joewing.scalacad.{Facet, Vertex}
 
-case class Cube(width: Double, height: Double, depth: Double) extends Primitive3d {
-  lazy val render: RenderedObject = {
+object Cube {
+  def apply(width: Double, height: Double, depth: Double): Primitive3d = {
     val sides = Seq(
       Seq(Vertex(0, 0, 0), Vertex(0, height, 0), Vertex(width, height, 0), Vertex(width, 0, 0)),
       Seq(Vertex(width, height, depth), Vertex(0, height, depth), Vertex(0, 0, depth), Vertex(width, 0, depth)),
@@ -12,6 +12,6 @@ case class Cube(width: Double, height: Double, depth: Double) extends Primitive3
       Seq(Vertex(0, height, depth), Vertex(0, height, 0), Vertex(0, 0, 0), Vertex(0, 0, depth)),
       Seq(Vertex(width, 0, depth), Vertex(width, 0, 0), Vertex(width, height, 0), Vertex(width, height, depth))
     )
-    RenderedObject.fromFacets(sides.flatMap(Facet.fromVertices))
+    Primitive3d(sides.flatMap(Facet.fromVertices))
   }
 }
