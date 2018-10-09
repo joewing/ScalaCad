@@ -137,7 +137,7 @@ object BSPTree {
       Vector.range(0, maxIter).par.minBy { i =>
         val index = i * maxIter / n
         val result = polygons(index).planes.head.split(polygons)
-        i -> (result.back.size + result.front.size)
+        result.back.size + result.front.size
       }
     } else 0
   }

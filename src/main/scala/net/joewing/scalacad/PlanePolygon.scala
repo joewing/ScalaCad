@@ -1,6 +1,6 @@
 package net.joewing.scalacad
 
-case class PlanePolygon(planes: IndexedSeq[Plane]) {
+final case class PlanePolygon(planes: IndexedSeq[Plane]) {
 
   val support: Plane = planes.head
   val bounding: IndexedSeq[Plane] = planes.tail

@@ -9,7 +9,7 @@ final case class Plane(normal: Vertex, w: Double) {
   private val fastMath: Boolean = true
   private val slowMath: Boolean = false
 
-  def splitPlanePolygon(pp: PlanePolygon, result: Plane.PlaneSplitResult): Unit = {
+  private def splitPlanePolygon(pp: PlanePolygon, result: Plane.PlaneSplitResult): Unit = {
     if (coincident(pp.support)) {
       if (sameOrientation(pp.support)) {
         // Co-planar front
@@ -139,7 +139,7 @@ final case class Plane(normal: Vertex, w: Double) {
 object Plane {
 
   // These are mutable to improve performance during construction.
-  case class PlaneSplitResult(
+  final case class PlaneSplitResult(
     front: scala.collection.mutable.ArrayBuffer[PlanePolygon] = scala.collection.mutable.ArrayBuffer(),
     back: scala.collection.mutable.ArrayBuffer[PlanePolygon] = scala.collection.mutable.ArrayBuffer(),
     coFront: scala.collection.mutable.ArrayBuffer[PlanePolygon] = scala.collection.mutable.ArrayBuffer(),
