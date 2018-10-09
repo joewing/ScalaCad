@@ -130,28 +130,31 @@ object BSPTree {
   /** Log base 2 of an integer. */
   private def lg(n: Int): Int = Integer.SIZE - Integer.numberOfLeadingZeros(n)
 
-  private def findPartition(polygons: Seq[PlanePolygon]): Int = {
+  private val emptyPlaneResult: Plane.PlaneSplitResult = Plane.PlaneSplitResult()
+
+  private def findPartition(polygons: Seq[PlanePolygon]): (PlanePolygon, Plane.PlaneSplitResult) = {
     val n = polygons.size
     if (n > 1) {
       val maxIter = lg(n)
-      Vector.range(0, maxIter).par.minBy { i =>
-        val index = i * maxIter / n
-        val result = polygons(index).planes.head.split(polygons)
-        result.back.size + result.front.size
-      }
-    } else 0
+      Vector.range(0, maxIter).par.map { i =>
+        val part = i * maxIter / n
+        val (before, after) = polygons.splitAt(part)
+        val plane = polygons(part).planes.head
+        val result = plane.split(before)
+        plane.split(after.tail, result)
+        after.head -> result
+      }.minBy(x => x._2.back.size + x._2.front.size)
+    } else {
+      polygons.head -> emptyPlaneResult
+    }
   }
 
   def apply(polygons: Seq[PlanePolygon])(implicit ec: ExecutionContext): Future[BSPTree] = {
     if (polygons.isEmpty) {
-      Future(BSPTreeOut)
+      Future.successful(BSPTreeOut)
     } else {
-      val part = findPartition(polygons)
-      val (before, after) = polygons.splitAt(part)
-      val others = before ++ after.tail
-      val current = after.head
+      val (current, result) = findPartition(polygons)
       val plane = current.planes.head
-      val result = plane.split(others)
       val frontFuture = if (result.front.nonEmpty) apply(result.front) else Future.successful(BSPTreeIn)
       val backFuture = if (result.back.nonEmpty) apply(result.back) else Future.successful(BSPTreeOut)
       for {

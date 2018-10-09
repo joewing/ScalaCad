@@ -54,11 +54,15 @@ final case class Plane(normal: Vertex, w: Double) {
     }
   }
 
-  def split(polygons: Seq[PlanePolygon]): Plane.PlaneSplitResult = {
-    val result = Plane.PlaneSplitResult()
+  def split(polygons: Seq[PlanePolygon], result: Plane.PlaneSplitResult): Unit = {
     polygons.foreach { polygon =>
       splitPlanePolygon(polygon, result)
     }
+  }
+
+  def split(polygons: Seq[PlanePolygon]): Plane.PlaneSplitResult = {
+    val result = Plane.PlaneSplitResult()
+    split(polygons, result)
     result
   }
 
