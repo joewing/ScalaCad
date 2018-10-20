@@ -3,33 +3,31 @@ package net.joewing.scalacad
 import scala.concurrent.{ExecutionContext, Future}
 
 sealed trait BSPTree {
-  def allPolygons: Seq[PlanePolygon]
-  def clipPolygons(ps: Seq[PlanePolygon])(implicit ec: ExecutionContext): Future[Seq[PlanePolygon]]
+  def allPolygons: Seq[Polygon3d]
+  def clipPolygons(ps: Seq[Polygon3d])(implicit ec: ExecutionContext): Future[Seq[Polygon3d]]
   def clip(other: BSPTree)(implicit ec: ExecutionContext): Future[BSPTree]
   def inverted: BSPTree
-  def insert(others: Seq[PlanePolygon])(implicit ec: ExecutionContext): Future[BSPTree]
-  def reduce: BSPTree
+  def insert(others: Seq[Polygon3d])(implicit ec: ExecutionContext): Future[BSPTree]
   final def merge(other: BSPTree)(implicit ec: ExecutionContext): Future[BSPTree] = insert(other.allPolygons)
-  def paint(p: Vertex, backfaces: Boolean)(f: PlanePolygon => Unit): Unit
+  def paint(p: Vertex, backfaces: Boolean)(f: Polygon3d => Unit): Unit
 }
 
-trait BSPTreeLeaf extends BSPTree {
-  final def allPolygons: Seq[PlanePolygon] = Vector.empty
+sealed trait BSPTreeLeaf extends BSPTree {
+  final def allPolygons: Seq[Polygon3d] = Vector.empty
   final def clip(other: BSPTree)(implicit ec: ExecutionContext): Future[BSPTree] = Future.successful(this)
-  final def insert(others: Seq[PlanePolygon])(implicit ec: ExecutionContext): Future[BSPTree] = BSPTree(others)
-  final def reduce: BSPTree = this
-  final def paint(p: Vertex, backfaces: Boolean)(f: PlanePolygon => Unit): Unit = ()
+  final def insert(others: Seq[Polygon3d])(implicit ec: ExecutionContext): Future[BSPTree] = BSPTree(others)
+  final def paint(p: Vertex, backfaces: Boolean)(f: Polygon3d => Unit): Unit = ()
 }
 
 case object BSPTreeIn extends BSPTreeLeaf {
-  def clipPolygons(ps: Seq[PlanePolygon])(implicit ec: ExecutionContext): Future[Seq[PlanePolygon]] = {
+  def clipPolygons(ps: Seq[Polygon3d])(implicit ec: ExecutionContext): Future[Seq[Polygon3d]] = {
     Future.successful(ps)
   }
   def inverted: BSPTree = BSPTreeOut
 }
 
 case object BSPTreeOut extends BSPTreeLeaf {
-  def clipPolygons(ps: Seq[PlanePolygon])(implicit ec: ExecutionContext): Future[Seq[PlanePolygon]] = {
+  def clipPolygons(ps: Seq[Polygon3d])(implicit ec: ExecutionContext): Future[Seq[Polygon3d]] = {
     Future.successful(Vector.empty)
   }
   def inverted: BSPTree = BSPTreeIn
@@ -37,17 +35,15 @@ case object BSPTreeOut extends BSPTreeLeaf {
 
 final case class BSPTreeNode(
   plane: Plane,
-  polygons: Seq[PlanePolygon],
+  polygons: Seq[Polygon3d],
   front: BSPTree,
   back: BSPTree
 ) extends BSPTree {
 
-  def allPolygons: Seq[PlanePolygon] = {
-    polygons ++ front.allPolygons ++ back.allPolygons
-  }
+  def allPolygons: Seq[Polygon3d] = front.allPolygons ++ polygons ++ back.allPolygons
 
   // Clip facets to this BSPTree.
-  def clipPolygons(ps: Seq[PlanePolygon])(implicit ec: ExecutionContext): Future[Seq[PlanePolygon]] = {
+  def clipPolygons(ps: Seq[Polygon3d])(implicit ec: ExecutionContext): Future[Seq[Polygon3d]] = {
     val result = plane.split(ps)
     val frontPolygons = result.front ++ result.coFront
     val filteredFrontFuture = front.clipPolygons(frontPolygons)
@@ -82,7 +78,7 @@ final case class BSPTreeNode(
     back = front.inverted
   )
 
-  def insert(others: Seq[PlanePolygon])(implicit ec: ExecutionContext): Future[BSPTree] = {
+  def insert(others: Seq[Polygon3d])(implicit ec: ExecutionContext): Future[BSPTree] = {
     val result = plane.split(others)
     val newFrontFuture = if (result.front.nonEmpty) front.insert(result.front) else Future.successful(front)
     val newBackFuture = if (result.back.nonEmpty) back.insert(result.back) else Future.successful(back)
@@ -92,24 +88,7 @@ final case class BSPTreeNode(
     } yield BSPTreeNode(plane, polygons ++ (result.coFront ++ result.coBack), newFront, newBack)
   }
 
-  def reduce: BSPTree = {
-    (front, back) match {
-      case (BSPTreeIn, BSPTreeIn)   => BSPTreeIn
-      case (BSPTreeOut, BSPTreeOut) => BSPTreeOut
-      case _                        =>
-        if (polygons.isEmpty) {
-          if (front.isInstanceOf[BSPTreeLeaf]) {
-            back.reduce
-          } else if (back.isInstanceOf[BSPTreeLeaf]) {
-            front.reduce
-          } else {
-            copy(front = front.reduce, back = back.reduce)
-          }
-        } else copy(front = front.reduce, back = back.reduce)
-    }
-  }
-
-  def paint(p: Vertex, backfaces: Boolean)(f: PlanePolygon => Unit): Unit = {
+  def paint(p: Vertex, backfaces: Boolean)(f: Polygon3d => Unit): Unit = {
     val dp = p.dot(plane.normal)
     if (dp > 0) {
       back.paint(p, backfaces)(f)
@@ -127,40 +106,38 @@ final case class BSPTreeNode(
 
 object BSPTree {
 
-  /** Log base 2 of an integer. */
-  private def lg(n: Int): Int = Integer.SIZE - Integer.numberOfLeadingZeros(n)
+  private val emptyPlaneResult: Plane.SplitResult = Plane.SplitResult()
 
-  private val emptyPlaneResult: Plane.PlaneSplitResult = Plane.PlaneSplitResult()
-
-  private def findPartition(polygons: Seq[PlanePolygon]): (PlanePolygon, Plane.PlaneSplitResult) = {
+  private def findPartition(prev: Vertex, polygons: Seq[Polygon3d]): (Polygon3d, Plane.SplitResult) = {
     val n = polygons.size
     if (n > 1) {
-      val maxIter = lg(n)
-      Vector.range(0, maxIter).par.map { i =>
-        val part = i * maxIter / n
-        val (before, after) = polygons.splitAt(part)
-        val plane = polygons(part).planes.head
-        val result = plane.split(before)
-        plane.split(after.tail, result)
-        after.head -> result
-      }.minBy(x => x._2.back.size + x._2.front.size)
+      // Find the plane most orthogonal to prev.
+      val current = polygons.minBy(p => math.abs(p.normal.dot(prev)))
+      val plane = Plane(current)
+      val result = plane.split(polygons.filter(_ != current))
+      current -> result
     } else {
       polygons.head -> emptyPlaneResult
     }
   }
 
-  def apply(polygons: Seq[PlanePolygon])(implicit ec: ExecutionContext): Future[BSPTree] = {
+  private def helper(polygons: Seq[Polygon3d], prev: Vertex)(implicit ec: ExecutionContext): Future[BSPTree] = {
     if (polygons.isEmpty) {
       Future.successful(BSPTreeOut)
     } else {
-      val (current, result) = findPartition(polygons)
-      val plane = current.planes.head
-      val frontFuture = if (result.front.nonEmpty) apply(result.front) else Future.successful(BSPTreeIn)
-      val backFuture = if (result.back.nonEmpty) apply(result.back) else Future.successful(BSPTreeOut)
+      val (current, result) = findPartition(prev, polygons)
+      val plane = Plane(current)
+      val frontFuture = if (result.front.nonEmpty) helper(result.front, plane.normal) else Future.successful(BSPTreeIn)
+      val backFuture = if (result.back.nonEmpty) helper(result.back, plane.normal) else Future.successful(BSPTreeOut)
       for {
         f <- frontFuture
         b <- backFuture
       } yield BSPTreeNode(plane, current +: (result.coFront ++ result.coBack), f, b)
     }
   }
+
+  def apply(polygons: Seq[Polygon3d])(implicit ec: ExecutionContext): Future[BSPTree] = {
+    helper(polygons, Vertex(1, 0, 0))
+  }
+
 }

@@ -11,45 +11,6 @@ class PlaneSpec extends FunSpec with Matchers {
     }
   }
 
-  describe("sameOrientation") {
-    val plane = Plane(Vertex(1, 0, 0), 3)
-    it("returns true for the same plane") {
-      plane.sameOrientation(plane) shouldBe true
-    }
-
-    it("returns true for the same orientation") {
-      val other = Plane(Vertex(1, 0, 0), 5)
-      plane.sameOrientation(other) shouldBe true
-    }
-  }
-
-  describe("classify") {
-    val vertices = Seq(
-      Vertex(0, 0, 0),
-      Vertex(1, 0, 0),
-      Vertex(1, 1, 0),
-      Vertex(0, 1, 0)
-    )
-    val pp = PlanePolygon.fromVertices(vertices)
-    val Seq(a, b, c) = pp.planes.take(3)
-
-    it("classifies points in front of the plane") {
-      val plane = Plane(Vertex(0, 0, 1), 5)
-      plane.classify(a, b, c) shouldBe Plane.Front
-    }
-
-    it("classifies points behind the plane") {
-      val plane = Plane(Vertex(0, 0, 1), -5)
-      plane.classify(a, b, c) shouldBe Plane.Back
-    }
-
-    it("classifies coplanar points") {
-      val plane = Plane(Vertex(0, 0, 1), 0)
-      plane.classify(a, b, c) shouldBe Plane.Coplanar
-    }
-  }
-
-  /*
   describe("classify") {
     it("identifies co-planar vertices") {
       val plane = Plane(Polygon3d(Seq(Vertex(0, 0, 0), Vertex(1, 0, 0), Vertex(1, 1, 0))))
@@ -66,9 +27,7 @@ class PlaneSpec extends FunSpec with Matchers {
       plane.classify(Vertex(0, 1, -1)) shouldBe Plane.Back
     }
   }
-  */
 
-  /*
   describe("splitPolygon") {
     it("splits polygons behind the plane") {
       val plane = Plane(Polygon3d(Seq(Vertex(0, 0, 0), Vertex(1, 0, 0), Vertex(1, 1, 0))))
@@ -127,9 +86,7 @@ class PlaneSpec extends FunSpec with Matchers {
       result.coBack shouldBe Seq.empty
     }
   }
-  */
 
-  /*
   describe("split") {
     it("combines the results from splitPolygons") {
       val plane = Plane(Polygon3d(Seq(Vertex(0, 0, 0), Vertex(1, 0, 0), Vertex(1, 1, 0))))
@@ -142,5 +99,4 @@ class PlaneSpec extends FunSpec with Matchers {
       result.coBack shouldBe Seq.empty
     }
   }
-  */
 }

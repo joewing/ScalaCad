@@ -9,15 +9,15 @@ import scala.concurrent.ExecutionContext.Implicits.global
 class BSPTreeSpec extends FunSpec with Matchers {
 
   val obj = Seq(
-    PlanePolygon.fromVertices(Seq(Vertex(-0.5, 1, 0), Vertex(1, 0, 0), Vertex(0, 0, 1))),
-    PlanePolygon.fromVertices(Seq(Vertex(-0.5, -1, 0), Vertex(-0.5, 1, 0), Vertex(0, 0, 1))),
-    PlanePolygon.fromVertices(Seq(Vertex(1, 0, 0), Vertex(-0.5, -1, 0), Vertex(0, 0, 1))),
-    PlanePolygon.fromVertices(Seq(Vertex(1, 0, 0), Vertex(-0.5, 1, 0), Vertex(-0.5, -1, 0)))
+    Polygon3d(Seq(Vertex(-0.5, 1, 0), Vertex(1, 0, 0), Vertex(0, 0, 1))),
+    Polygon3d(Seq(Vertex(-0.5, -1, 0), Vertex(-0.5, 1, 0), Vertex(0, 0, 1))),
+    Polygon3d(Seq(Vertex(1, 0, 0), Vertex(-0.5, -1, 0), Vertex(0, 0, 1))),
+    Polygon3d(Seq(Vertex(1, 0, 0), Vertex(-0.5, 1, 0), Vertex(-0.5, -1, 0)))
   )
 
   describe("apply") {
     it("creates a BSP from a single polygon") {
-      val polygon = PlanePolygon.fromVertices(Seq(Vertex(1, 0, 0), Vertex(0, 1, 0), Vertex(1, 1, 0)))
+      val polygon = Polygon3d(Seq(Vertex(1, 0, 0), Vertex(0, 1, 0), Vertex(1, 1, 0)))
       val bsp = Await.result(BSPTree(Seq(polygon)), Duration.Inf).asInstanceOf[BSPTreeNode]
 
       bsp.plane shouldBe Plane(Vertex(0, 0, -1), 0.0)
@@ -27,7 +27,7 @@ class BSPTreeSpec extends FunSpec with Matchers {
 
   describe("allPolygons") {
     it("returns all polygons in the tree") {
-      val polygon = PlanePolygon.fromVertices(Seq(Vertex(1, 0, 0), Vertex(0, 1, 0), Vertex(1, 1, 0)))
+      val polygon = Polygon3d(Seq(Vertex(1, 0, 0), Vertex(0, 1, 0), Vertex(1, 1, 0)))
       val bsp = Await.result(BSPTree(Seq(polygon)), Duration.Inf)
       bsp.allPolygons shouldBe Seq(polygon)
     }
@@ -36,7 +36,7 @@ class BSPTreeSpec extends FunSpec with Matchers {
   describe("clip") {
     val bsp = Await.result(BSPTree(obj), Duration.Inf)
 
-    ignore("returns itself when clipped with itself") {
+    it("returns itself when clipped with itself") {
       Await.result(bsp.clip(bsp), Duration.Inf) shouldBe bsp
     }
 
@@ -51,7 +51,7 @@ class BSPTreeSpec extends FunSpec with Matchers {
 
   describe("inverted") {
     it("inverts the space") {
-      val polygon = PlanePolygon.fromVertices(Seq(Vertex(1, 0, 0), Vertex(0, 1, 0), Vertex(1, 1, 0)))
+      val polygon = Polygon3d(Seq(Vertex(1, 0, 0), Vertex(0, 1, 0), Vertex(1, 1, 0)))
       val bsp = Await.result(BSPTree(Seq(polygon)), Duration.Inf).inverted.asInstanceOf[BSPTreeNode]
 
       bsp.plane shouldBe Plane(Vertex(0, 0, 1), 0.0)

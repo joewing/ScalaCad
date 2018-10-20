@@ -25,8 +25,6 @@ class AwtRenderer(
     import scala.concurrent.ExecutionContext.Implicits.global
     Await.result(obj.rendered.treeFuture, Duration.Inf)
   }
-  private lazy val polygons: Seq[Polygon3d] = bsp.allPolygons.map(p => Polygon3d(p.vertices))
-
   private lazy val minBound: Vertex = obj.minBound
   private lazy val maxBound: Vertex = obj.maxBound
 

@@ -1,6 +1,6 @@
 package net.joewing.scalacad.examples
 
-import net.joewing.scalacad.io.{AwtRenderer, StlFileWriter}
+import net.joewing.scalacad.io.{AwtRenderer, StlFileReader, StlFileWriter}
 import net.joewing.scalacad.parts.Threads
 import net.joewing.scalacad.primitives._
 
@@ -35,5 +35,5 @@ object ScrewExample extends App {
   val end = System.currentTimeMillis
   println(s"Duration: ${end - start} ms")
 
-  AwtRenderer.show(obj)
+  AwtRenderer.show(StlFileReader.read("screw.stl"))
 }
