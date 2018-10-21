@@ -52,20 +52,6 @@ class AwtRenderer(
   private var image = createImage(initialImageWidth, initialImageHeight)
   private val label = new JLabel(new ImageIcon(image))
 
-  private def renderFacet(
-    xpoints: Array[Int],
-    ypoints: Array[Int],
-    color: Color,
-    graphics: Graphics2D
-  ): Unit = {
-    graphics.setColor(color)
-    graphics.fillPolygon(xpoints, ypoints, xpoints.length)
-    if (showVertices) {
-      graphics.setColor(Color.white)
-      graphics.drawPolygon(xpoints, ypoints, xpoints.length)
-    }
-  }
-
   private def render(): Unit = {
 
     val start = System.currentTimeMillis
@@ -90,21 +76,36 @@ class AwtRenderer(
     val sy = math.sin(rotationY)
     val sycx = sy * cx
     val sysx = sy * sx
+    val width = image.getWidth
+    val height = image.getHeight
     bsp.paint(lightSource, showBackfaces) { polygon =>
       val sz = polygon.vertices.size
-      val xs = Array.fill[Int](sz)(0)
-      val ys = Array.fill[Int](sz)(0)
-      polygon.vertices.indices.foreach { i =>
+      val xs = Array.ofDim[Int](sz)
+      val ys = Array.ofDim[Int](sz)
+      var xInRange = false
+      var yInRange = false
+      var i = 0
+      while (i < sz) {
         val v = polygon.vertices(i)
         val x = v.x * cx + v.z * sx
         val y = v.x * sysx + v.y * cy - v.z * sycx
+        xInRange = xInRange || x >= 0 || x < width
+        yInRange = yInRange || y >= 0 || y < height
         xs(i) = (x * scale + positionX).toInt
-        ys(i) = image.getHeight - (y * scale + positionY).toInt
+        ys(i) = height - (y * scale + positionY).toInt
+        i += 1
       }
-      val v = polygon.normal.dot(lightSource)
-      val brightness = math.max(0.1, math.min(1.0, v)).toFloat
-      val color = if (v < 0) Color.RED else new Color(0.0f, 0.0f, brightness)
-      renderFacet(xs, ys, color, graphics)
+      if (xInRange && yInRange && xs.exists(_ != xs.head) && ys.exists(_  != ys.head)) {
+        val v = polygon.normal.dot(lightSource)
+        val brightness = math.max(0.1, math.min(1.0, v)).toFloat
+        val color = if (v < 0) Color.RED else new Color(0.0f, 0.0f, brightness)
+        graphics.setColor(color)
+        graphics.fillPolygon(xs, ys, sz)
+        if (showVertices) {
+          graphics.setColor(Color.white)
+          graphics.drawPolygon(xs, ys, sz)
+        }
+      }
     }
 
     val x0 = 50

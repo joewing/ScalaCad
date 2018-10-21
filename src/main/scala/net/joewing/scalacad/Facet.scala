@@ -9,10 +9,8 @@ final case class Facet(v1: Vertex, v2: Vertex, v3: Vertex) {
 
   lazy val area: Double = (v2 - v1).cross(v3 - v1).length / 2.0
 
-  def minBound: Vertex = vertices.tail.foldLeft(vertices.head)(_ min _)
-  def maxBound: Vertex = vertices.tail.foldLeft(vertices.head)(_ max _)
-
-  def centroid: Vertex = v1 / 3 + v2 / 3 + v3 / 3
+  lazy val minBound: Vertex = vertices.tail.foldLeft(vertices.head)(_ min _)
+  lazy val maxBound: Vertex = vertices.tail.foldLeft(vertices.head)(_ max _)
 
   def flip: Facet = Facet(v1, v3, v2)
 
@@ -29,16 +27,6 @@ final case class Facet(v1: Vertex, v2: Vertex, v3: Vertex) {
   )
 
   def edges: Seq[(Vertex, Vertex)] = Seq(v1 -> v2, v2 -> v3, v3 -> v1)
-
-  def contains(p: Vertex, epsilon: Double = Vertex.epsilon): Boolean = {
-    val alpha = (v2 - p).cross(v3 - p).length / (area * 2.0)
-    val beta = (v3 - p).cross(v1 - p).length / (area * 2.0)
-    val gamma = (v1 - p).cross(v2 - p).length / (area * 2.0)
-    val residual = 1 - alpha - beta - gamma
-    val ep1 = epsilon + 1
-    val me = -epsilon
-    alpha > me && alpha < ep1 && beta > me && beta < ep1 && gamma > me && gamma < ep1 && math.abs(residual) < epsilon
-  }
 }
 
 object Facet {

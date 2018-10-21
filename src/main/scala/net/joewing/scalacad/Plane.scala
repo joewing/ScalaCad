@@ -31,8 +31,8 @@ final case class Plane(normal: Vertex, w: Double) {
     } else if (hasBack && !hasFront) {
       result.back += polygon
     } else {
-      val fs = scala.collection.mutable.ArrayBuffer[Vertex]()
-      val bs = scala.collection.mutable.ArrayBuffer[Vertex]()
+      val fs = scala.collection.mutable.ArrayBuffer.empty[Vertex]
+      val bs = scala.collection.mutable.ArrayBuffer.empty[Vertex]
       val len = polygon.vertices.length
       var i = 0
       while (i < len) {
@@ -56,15 +56,14 @@ final case class Plane(normal: Vertex, w: Double) {
     }
   }
 
-  def split(polygons: Seq[Polygon3d], result: Plane.SplitResult): Unit = {
-    polygons.foreach { polygon =>
-      splitPolygon(polygon, result)
-    }
-  }
-
   def split(polygons: Seq[Polygon3d]): Plane.SplitResult = {
     val result = Plane.SplitResult()
-    split(polygons, result)
+    var i = 0
+    val len = polygons.length
+    while (i < len) {
+      splitPolygon(polygons(i), result)
+      i += 1
+    }
     result
   }
 
@@ -73,10 +72,10 @@ final case class Plane(normal: Vertex, w: Double) {
 object Plane {
 
   case class SplitResult(
-    front: scala.collection.mutable.ArrayBuffer[Polygon3d] = scala.collection.mutable.ArrayBuffer(),
-    back: scala.collection.mutable.ArrayBuffer[Polygon3d] = scala.collection.mutable.ArrayBuffer(),
-    coFront: scala.collection.mutable.ArrayBuffer[Polygon3d] = scala.collection.mutable.ArrayBuffer(),
-    coBack: scala.collection.mutable.ArrayBuffer[Polygon3d] = scala.collection.mutable.ArrayBuffer()
+    front: scala.collection.mutable.ArrayBuffer[Polygon3d] = scala.collection.mutable.ArrayBuffer.empty,
+    back: scala.collection.mutable.ArrayBuffer[Polygon3d] = scala.collection.mutable.ArrayBuffer.empty,
+    coFront: scala.collection.mutable.ArrayBuffer[Polygon3d] = scala.collection.mutable.ArrayBuffer.empty,
+    coBack: scala.collection.mutable.ArrayBuffer[Polygon3d] = scala.collection.mutable.ArrayBuffer.empty
   )
 
   val Coplanar: Int = 0
