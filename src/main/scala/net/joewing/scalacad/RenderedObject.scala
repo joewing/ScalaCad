@@ -6,8 +6,6 @@ import scala.concurrent.{ExecutionContext, Future}
 
 sealed trait RenderedObject {
   implicit val dim: Dim
-  val min: Vertex
-  val max: Vertex
 
   def facets: Seq[Facet]
   def treeFuture(implicit ec: ExecutionContext): Future[BSPTree]
@@ -17,8 +15,6 @@ sealed trait RenderedObject {
   def merge(other: RenderedObject)(implicit ec: ExecutionContext): Future[RenderedObject]
 
   final def union(other: RenderedObject)(implicit ec: ExecutionContext): Future[BSPTreeRenderedObject] = {
-    val newMin = min.min(other.min)
-    val newMax = max.max(other.max)
     val leftFuture = treeFuture
     val rightFuture = other.treeFuture
     for {
@@ -28,7 +24,7 @@ sealed trait RenderedObject {
       rightClipped <- right.clip(leftClipped)
       invertClipped <- rightClipped.inverted.clip(leftClipped)
       merged <- leftClipped.merge(invertClipped.inverted)
-    } yield BSPTreeRenderedObject(dim, merged, newMin, newMax)
+    } yield BSPTreeRenderedObject(dim, merged)
   }
 
   final def intersect(other: RenderedObject)(implicit ec: ExecutionContext): Future[RenderedObject] = {
@@ -47,10 +43,6 @@ sealed trait RenderedObject {
 }
 
 final case class FacetRenderedObject(dim: Dim, facets: Seq[Facet]) extends RenderedObject {
-
-  lazy val min: Vertex = facets.map(_.minBound).reduce(_ min _)
-  lazy val max: Vertex = facets.map(_.maxBound).reduce(_ max _)
-
   def treeFuture(implicit ec: ExecutionContext): Future[BSPTree] = {
     dim match {
       case _: TwoDimensional => BSPTree(
@@ -68,13 +60,13 @@ final case class FacetRenderedObject(dim: Dim, facets: Seq[Facet]) extends Rende
         for {
           leftTree <- treeFuture
           merged <- leftTree.merge(rightTree.tree)
-        } yield BSPTreeRenderedObject(dim, merged, min, max)
+        } yield BSPTreeRenderedObject(dim, merged)
       case f: FacetRenderedObject   => Future(FacetRenderedObject(dim, facets ++ f.facets))
     }
   }
 }
 
-final case class BSPTreeRenderedObject(dim: Dim, tree: BSPTree, min: Vertex, max: Vertex) extends RenderedObject {
+final case class BSPTreeRenderedObject(dim: Dim, tree: BSPTree) extends RenderedObject {
   def facets: Seq[Facet] = {
     val polygons = dim match {
       case _: TwoDimensional => tree.allPolygons.filter(_.vertices.forall(v => math.abs(v.z) < Vertex.epsilon))
@@ -89,12 +81,12 @@ final case class BSPTreeRenderedObject(dim: Dim, tree: BSPTree, min: Vertex, max
 
   def treeFuture(implicit ec: ExecutionContext): Future[BSPTree] = Future.successful(tree)
 
-  def invert: RenderedObject = BSPTreeRenderedObject(dim, tree.inverted, min, max)
+  def invert: RenderedObject = BSPTreeRenderedObject(dim, tree.inverted)
 
   def merge(other: RenderedObject)(implicit ec: ExecutionContext): Future[RenderedObject] = for {
     otherTree <- other.treeFuture
     merged <- tree.merge(otherTree)
-  }  yield BSPTreeRenderedObject(dim, merged, min.min(other.min), max.max(other.max))
+  }  yield BSPTreeRenderedObject(dim, merged)
 }
 
 object RenderedObject {

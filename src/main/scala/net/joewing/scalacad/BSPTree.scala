@@ -7,15 +7,21 @@ sealed trait BSPTree {
   def clipPolygons(ps: Seq[Polygon3d])(implicit ec: ExecutionContext): Future[Seq[Polygon3d]]
   def clip(other: BSPTree)(implicit ec: ExecutionContext): Future[BSPTree]
   def inverted: BSPTree
-  def insert(others: Seq[Polygon3d])(implicit ec: ExecutionContext): Future[BSPTree]
-  final def merge(other: BSPTree)(implicit ec: ExecutionContext): Future[BSPTree] = insert(other.allPolygons)
+  final def merge(other: BSPTree)(implicit ec: ExecutionContext): Future[BSPTree] = {
+    val leftPolygonsFuture = Future(allPolygons)
+    val rightPolygonsFuture = Future(other.allPolygons)
+    for {
+      left <- leftPolygonsFuture
+      right <- rightPolygonsFuture
+      tree <- BSPTree(left ++ right)
+    } yield tree
+  }
   def paint(p: Vertex, backfaces: Boolean)(f: Polygon3d => Unit): Unit
 }
 
 sealed trait BSPTreeLeaf extends BSPTree {
   final def allPolygons: Seq[Polygon3d] = Vector.empty
   final def clip(other: BSPTree)(implicit ec: ExecutionContext): Future[BSPTree] = Future.successful(this)
-  final def insert(others: Seq[Polygon3d])(implicit ec: ExecutionContext): Future[BSPTree] = BSPTree(others)
   final def paint(p: Vertex, backfaces: Boolean)(f: Polygon3d => Unit): Unit = ()
 }
 
@@ -78,16 +84,6 @@ final case class BSPTreeNode(
     back = front.inverted
   )
 
-  def insert(others: Seq[Polygon3d])(implicit ec: ExecutionContext): Future[BSPTree] = {
-    val result = plane.split(others)
-    val newFrontFuture = if (result.front.nonEmpty) front.insert(result.front) else Future.successful(front)
-    val newBackFuture = if (result.back.nonEmpty) back.insert(result.back) else Future.successful(back)
-    for {
-      newFront <- newFrontFuture
-      newBack <- newBackFuture
-    } yield BSPTreeNode(plane, polygons ++ (result.coFront ++ result.coBack), newFront, newBack)
-  }
-
   def paint(p: Vertex, backfaces: Boolean)(f: Polygon3d => Unit): Unit = {
     val dp = p.dot(plane.normal)
     if (dp > 0) {
@@ -106,27 +102,15 @@ final case class BSPTreeNode(
 
 object BSPTree {
 
-  private val emptyPlaneResult: Plane.SplitResult = Plane.SplitResult()
-
-  private def findPartition(prev: Vertex, polygons: Seq[Polygon3d]): (Polygon3d, Plane.SplitResult) = {
-    val n = polygons.size
-    if (n > 1) {
-      // Find the plane most orthogonal to prev.
-      val current = polygons.minBy(p => math.abs(p.normal.dot(prev)))
-      val plane = Plane(current)
-      val result = plane.split(polygons.filter(_ != current))
-      current -> result
-    } else {
-      polygons.head -> emptyPlaneResult
-    }
-  }
-
   private def helper(polygons: Seq[Polygon3d], prev: Vertex)(implicit ec: ExecutionContext): Future[BSPTree] = {
     if (polygons.isEmpty) {
       Future.successful(BSPTreeOut)
     } else {
-      val (current, result) = findPartition(prev, polygons)
+      // Find the plane most orthogonal to prev.
+      val current = polygons.minBy(p => math.abs(p.normal.dot(prev)))
       val plane = Plane(current)
+      val result = plane.split(polygons.filter(_ != current))
+
       val frontFuture = if (result.front.nonEmpty) helper(result.front, plane.normal) else Future.successful(BSPTreeIn)
       val backFuture = if (result.back.nonEmpty) helper(result.back, plane.normal) else Future.successful(BSPTreeOut)
       for {
