@@ -87,12 +87,12 @@ class AwtRenderer(
       var i = 0
       while (i < sz) {
         val v = polygon.vertices(i)
-        val x = v.x * cx + v.z * sx
-        val y = v.x * sysx + v.y * cy - v.z * sycx
+        val x = (v.x * cx + v.z * sx) * scale + positionX
+        val y = height - (v.x * sysx + v.y * cy - v.z * sycx) * scale - positionY
         xInRange = xInRange || x >= 0 || x < width
         yInRange = yInRange || y >= 0 || y < height
-        xs(i) = (x * scale + positionX).toInt
-        ys(i) = height - (y * scale + positionY).toInt
+        xs(i) = x.toInt
+        ys(i) = y.toInt
         i += 1
       }
       if (xInRange && yInRange && xs.exists(_ != xs.head) && ys.exists(_  != ys.head)) {
