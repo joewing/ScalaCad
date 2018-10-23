@@ -21,7 +21,7 @@ object Cylinder {
 
     val angle = 2.0 * math.Pi / sides
 
-    def renderEnd(r: Double, z: Double): Seq[Facet] = {
+    def renderEnd(r: Double, z: Double): Vector[Facet] = {
       if (r > 0) {
         val vertices = Vector.range(0, sides).map { i =>
           val theta1 = angle * i
@@ -30,7 +30,7 @@ object Cylinder {
         }
         Facet.fromVertices(vertices)
       } else {
-        Seq.empty
+        Vector.empty
       }
     }
 

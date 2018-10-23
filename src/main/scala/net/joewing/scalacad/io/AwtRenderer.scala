@@ -21,12 +21,12 @@ class AwtRenderer(
   showBackfaces: Boolean
 ) {
 
-  private val bsp = {
+  private val bsp: BSPTree = {
     import scala.concurrent.ExecutionContext.Implicits.global
     Await.result(obj.rendered.treeFuture, Duration.Inf)
   }
-  private lazy val minBound: Vertex = obj.minBound
-  private lazy val maxBound: Vertex = obj.maxBound
+  private val minBound: Vertex = obj.minBound
+  private val maxBound: Vertex = obj.maxBound
 
   private lazy val (initialScale, initialX, initialY): (Double, Double, Double) = {
     val buffer = (initialImageWidth * 0.05).toInt
@@ -56,12 +56,13 @@ class AwtRenderer(
 
     val start = System.currentTimeMillis
 
+    val width = image.getWidth
+    val height = image.getHeight
     val graphics = image.createGraphics
     graphics.setColor(Color.BLACK)
-    graphics.fillRect(0, 0, image.getWidth, image.getHeight)
+    graphics.fillRect(0, 0, width, height)
 
     val r = math.max(math.max(maxBound.x, maxBound.y), maxBound.z) * 2
-
     val rx = -rotationX + math.Pi
     val ry = -rotationY + math.Pi
     val lightSource = Vertex(
@@ -76,8 +77,6 @@ class AwtRenderer(
     val sy = math.sin(rotationY)
     val sycx = sy * cx
     val sysx = sy * sx
-    val width = image.getWidth
-    val height = image.getHeight
     bsp.paint(lightSource, showBackfaces) { polygon =>
       val sz = polygon.vertices.size
       val xs = Array.ofDim[Int](sz)
@@ -109,7 +108,7 @@ class AwtRenderer(
     }
 
     val x0 = 50
-    val y0 = image.getHeight - 50
+    val y0 = height - 50
 
     def drawVector(v: Vertex, c: Color): Unit = {
       graphics.setColor(c)

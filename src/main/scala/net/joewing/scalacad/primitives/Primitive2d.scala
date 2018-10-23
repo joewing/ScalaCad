@@ -4,7 +4,7 @@ import net.joewing.scalacad.{Facet, FacetRenderedObject, RenderedObject, Vertex}
 
 import scala.concurrent.{ExecutionContext, Future}
 
-final case class Primitive2d(facets: Seq[Facet]) extends Primitive[TwoDimensional] {
+final case class Primitive2d(facets: IndexedSeq[Facet]) extends Primitive[TwoDimensional] {
   val dim: TwoDimensional = Dim.two
 
   protected def render(implicit ec: ExecutionContext): Future[RenderedObject] = {

@@ -1,36 +1,25 @@
 package net.joewing.scalacad
 
-import breeze.linalg.{DenseMatrix, DenseVector}
-
-case class Vertex(x: Double, y: Double, z: Double) {
+final case class Vertex(x: Double, y: Double, z: Double) {
 
   override def toString: String = f"[$x%.4f, $y%.4f, $z%.4f]"
-
-  private def rx(radians: Double): DenseMatrix[Double] = DenseMatrix(
-    DenseVector(1.0, 0.0, 0.0),
-    DenseVector(0.0, math.cos(radians), -math.sin(radians)),
-    DenseVector(0.0, math.sin(radians), math.cos(radians))
-  )
-
-  private def ry(radians: Double): DenseMatrix[Double] = DenseMatrix(
-    DenseVector(math.cos(radians), 0.0, math.sin(radians)),
-    DenseVector(0.0, 1.0, 0.0),
-    DenseVector(-math.sin(radians), 0.0, math.cos(radians))
-  )
-
-  private def rz(radians: Double): DenseMatrix[Double] = DenseMatrix(
-    DenseVector(math.cos(radians), -math.sin(radians), 0.0),
-    DenseVector(math.sin(radians), math.cos(radians), 0.0),
-    DenseVector(0.0, 0.0, 1.0)
-  )
 
   def scaled(x: Double = 1.0, y: Double = 1.0, z: Double = 1.0): Vertex = {
     Vertex(this.x * x, this.y * y, this.z * z)
   }
 
   def rotated(x: Double = 0.0, y: Double = 0.0, z: Double = 0.0): Vertex = {
-    val v = rx(x) * ry(y) * rz(z) * DenseVector(this.x, this.y, this.z)
-    Vertex(v(0), v(1), v(2))
+    val cx = math.cos(x)
+    val cy = math.cos(y)
+    val cz = math.cos(z)
+    val sx = math.sin(x)
+    val sy = math.sin(y)
+    val sz = math.sin(z)
+    Vertex(
+      this.x * cy * cz - this.y * cy * sz + this.z * sy,
+      this.x * (sx * sy * cz + cx * sz) + this.y * (cx * cz - sx * sy * sz) - this.z * sx * cz,
+      this.x * (sx * sz - cx * sy * cz) + this.y * (cx * sy * sz + sx * cz) + this.z * cx * cy
+    )
   }
 
   def moved(x: Double = 0.0, y: Double = 0.0, z: Double = 0.0): Vertex =
@@ -57,8 +46,6 @@ case class Vertex(x: Double, y: Double, z: Double) {
   def length: Double = math.sqrt(dotSelf)
 
   def unit: Vertex = if (length > 0) this / length else this
-
-  def interpolate(other: Vertex, d: Double): Vertex = this + (other - this) * d
 
   def negated: Vertex = Vertex(-x, -y, -z)
 

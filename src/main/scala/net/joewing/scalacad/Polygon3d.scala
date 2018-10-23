@@ -1,6 +1,6 @@
 package net.joewing.scalacad
 
-final case class Polygon3d(vertices: Seq[Vertex]) {
+final case class Polygon3d(vertices: IndexedSeq[Vertex]) {
 
   lazy val normal: Vertex = {
     val a = vertices.head

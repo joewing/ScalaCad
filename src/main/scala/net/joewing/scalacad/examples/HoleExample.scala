@@ -9,6 +9,5 @@ object HoleExample extends App {
   val cyl2 = cyl1.rotate(x = math.Pi / 2)
   val cyl3 = cyl1.rotate(y = math.Pi / 2)
   val obj = sphere(size / 2) - (cyl1 | cyl2 | cyl3)
-  io.StlFileWriter.write(obj, "hole.stl")
-  io.AwtRenderer.show(io.StlFileReader.read("hole.stl"), showBackfaces = true, showVertices = true)
+  io.AwtRenderer.show(obj)
 }

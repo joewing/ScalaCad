@@ -26,7 +26,7 @@ object LinearExtrude {
     allEdges.filter(includeEdge(allEdges))
   }
 
-  def extrude(base: Seq[Facet], length: Double, rotation: Double, slices: Int): Seq[Facet] = {
+  def extrude(base: IndexedSeq[Facet], length: Double, rotation: Double, slices: Int): IndexedSeq[Facet] = {
     def positionVertex(i: Int, v: Vertex): Vertex = {
       val angle = i * rotation
       Vertex(

@@ -5,7 +5,7 @@ final case class Facet(v1: Vertex, v2: Vertex, v3: Vertex) {
   // Outward normal according to the right-hand rule.
   lazy val normal: Vertex = (v2 - v1).cross(v3 - v1).unit
 
-  lazy val vertices: Seq[Vertex] = Vector(v1, v2, v3)
+  lazy val vertices: Vector[Vertex] = Vector(v1, v2, v3)
 
   lazy val area: Double = (v2 - v1).cross(v3 - v1).length / 2.0
 
@@ -35,6 +35,4 @@ object Facet {
       Facet(vertices.head, a, b)
     }.toVector
   }
-
-  def toPolygons(facets: Seq[Facet]): Seq[Polygon3d] = facets.map(f => Polygon3d(f.vertices))
 }

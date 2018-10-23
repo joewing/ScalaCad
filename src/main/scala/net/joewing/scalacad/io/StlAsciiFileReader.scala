@@ -9,7 +9,7 @@ import scala.util.parsing.combinator.JavaTokenParsers
 
 class StlAsciiFileReader(is: InputStream) {
 
-  private case class Stl(name: String, facets: Seq[Facet])
+  private case class Stl(name: String, facets: IndexedSeq[Facet])
 
   private object StlParser extends JavaTokenParsers {
 
@@ -44,7 +44,7 @@ class StlAsciiFileReader(is: InputStream) {
     val facets: Parser[Seq[Facet]] = facet.*
 
     val solid: Parser[Stl] = startSolid ~ facets <~ endSolid ^^ {
-      case n ~ fs => Stl(n, fs)
+      case n ~ fs => Stl(n, fs.toVector)
     }
 
     def parse(is: InputStream): ParseResult[Stl] = parseAll(solid, new InputStreamReader(is))

@@ -8,17 +8,17 @@ import scala.concurrent.ExecutionContext.Implicits.global
 
 class BSPTreeSpec extends FunSpec with Matchers {
 
-  val obj = Seq(
-    Polygon3d(Seq(Vertex(-0.5, 1, 0), Vertex(1, 0, 0), Vertex(0, 0, 1))),
-    Polygon3d(Seq(Vertex(-0.5, -1, 0), Vertex(-0.5, 1, 0), Vertex(0, 0, 1))),
-    Polygon3d(Seq(Vertex(1, 0, 0), Vertex(-0.5, -1, 0), Vertex(0, 0, 1))),
-    Polygon3d(Seq(Vertex(1, 0, 0), Vertex(-0.5, 1, 0), Vertex(-0.5, -1, 0)))
+  val obj = Vector(
+    Polygon3d(Vector(Vertex(-0.5, 1, 0), Vertex(1, 0, 0), Vertex(0, 0, 1))),
+    Polygon3d(Vector(Vertex(-0.5, -1, 0), Vertex(-0.5, 1, 0), Vertex(0, 0, 1))),
+    Polygon3d(Vector(Vertex(1, 0, 0), Vertex(-0.5, -1, 0), Vertex(0, 0, 1))),
+    Polygon3d(Vector(Vertex(1, 0, 0), Vertex(-0.5, 1, 0), Vertex(-0.5, -1, 0)))
   )
 
   describe("apply") {
     it("creates a BSP from a single polygon") {
-      val polygon = Polygon3d(Seq(Vertex(1, 0, 0), Vertex(0, 1, 0), Vertex(1, 1, 0)))
-      val bsp = Await.result(BSPTree(Seq(polygon)), Duration.Inf).asInstanceOf[BSPTreeNode]
+      val polygon = Polygon3d(Vector(Vertex(1, 0, 0), Vertex(0, 1, 0), Vertex(1, 1, 0)))
+      val bsp = Await.result(BSPTree(Vector(polygon)), Duration.Inf).asInstanceOf[BSPTreeNode]
 
       bsp.plane shouldBe Plane(Vertex(0, 0, -1), 0.0)
       bsp.allPolygons shouldBe Seq(polygon)
@@ -27,8 +27,8 @@ class BSPTreeSpec extends FunSpec with Matchers {
 
   describe("allPolygons") {
     it("returns all polygons in the tree") {
-      val polygon = Polygon3d(Seq(Vertex(1, 0, 0), Vertex(0, 1, 0), Vertex(1, 1, 0)))
-      val bsp = Await.result(BSPTree(Seq(polygon)), Duration.Inf)
+      val polygon = Polygon3d(Vector(Vertex(1, 0, 0), Vertex(0, 1, 0), Vertex(1, 1, 0)))
+      val bsp = Await.result(BSPTree(Vector(polygon)), Duration.Inf)
       bsp.allPolygons shouldBe Seq(polygon)
     }
   }
@@ -43,16 +43,12 @@ class BSPTreeSpec extends FunSpec with Matchers {
     it("returns nothing when clipped with itself inverted") {
       Await.result(bsp.clip(bsp.inverted), Duration.Inf).allPolygons shouldBe Seq.empty
     }
-
-    ignore("returns itself inverted when the inverted is clipped with the inverted") {
-      bsp.inverted.clip(bsp.inverted) shouldBe bsp.inverted
-    }
   }
 
   describe("inverted") {
     it("inverts the space") {
-      val polygon = Polygon3d(Seq(Vertex(1, 0, 0), Vertex(0, 1, 0), Vertex(1, 1, 0)))
-      val bsp = Await.result(BSPTree(Seq(polygon)), Duration.Inf).inverted.asInstanceOf[BSPTreeNode]
+      val polygon = Polygon3d(Vector(Vertex(1, 0, 0), Vertex(0, 1, 0), Vertex(1, 1, 0)))
+      val bsp = Await.result(BSPTree(Vector(polygon)), Duration.Inf).inverted.asInstanceOf[BSPTreeNode]
 
       bsp.plane shouldBe Plane(Vertex(0, 0, 1), 0.0)
       bsp.polygons shouldBe Seq(polygon.flip)

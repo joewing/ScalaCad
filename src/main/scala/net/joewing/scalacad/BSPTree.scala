@@ -3,8 +3,8 @@ package net.joewing.scalacad
 import scala.concurrent.{ExecutionContext, Future}
 
 sealed trait BSPTree {
-  def allPolygons: Seq[Polygon3d]
-  def clipPolygons(ps: Seq[Polygon3d])(implicit ec: ExecutionContext): Future[Seq[Polygon3d]]
+  def allPolygons: IndexedSeq[Polygon3d]
+  def clipPolygons(ps: IndexedSeq[Polygon3d])(implicit ec: ExecutionContext): Future[IndexedSeq[Polygon3d]]
   def clip(other: BSPTree)(implicit ec: ExecutionContext): Future[BSPTree]
   def inverted: BSPTree
   final def merge(other: BSPTree)(implicit ec: ExecutionContext): Future[BSPTree] = {
@@ -20,20 +20,20 @@ sealed trait BSPTree {
 }
 
 sealed trait BSPTreeLeaf extends BSPTree {
-  final def allPolygons: Seq[Polygon3d] = Vector.empty
+  final def allPolygons: IndexedSeq[Polygon3d] = Vector.empty
   final def clip(other: BSPTree)(implicit ec: ExecutionContext): Future[BSPTree] = Future.successful(this)
   final def paint(p: Vertex, backfaces: Boolean)(f: Polygon3d => Unit): Unit = ()
 }
 
 case object BSPTreeIn extends BSPTreeLeaf {
-  def clipPolygons(ps: Seq[Polygon3d])(implicit ec: ExecutionContext): Future[Seq[Polygon3d]] = {
+  def clipPolygons(ps: IndexedSeq[Polygon3d])(implicit ec: ExecutionContext): Future[IndexedSeq[Polygon3d]] = {
     Future.successful(ps)
   }
   def inverted: BSPTree = BSPTreeOut
 }
 
 case object BSPTreeOut extends BSPTreeLeaf {
-  def clipPolygons(ps: Seq[Polygon3d])(implicit ec: ExecutionContext): Future[Seq[Polygon3d]] = {
+  def clipPolygons(ps: IndexedSeq[Polygon3d])(implicit ec: ExecutionContext): Future[IndexedSeq[Polygon3d]] = {
     Future.successful(Vector.empty)
   }
   def inverted: BSPTree = BSPTreeIn
@@ -41,15 +41,15 @@ case object BSPTreeOut extends BSPTreeLeaf {
 
 final case class BSPTreeNode(
   plane: Plane,
-  polygons: Seq[Polygon3d],
+  polygons: IndexedSeq[Polygon3d],
   front: BSPTree,
   back: BSPTree
 ) extends BSPTree {
 
-  def allPolygons: Seq[Polygon3d] = front.allPolygons ++ polygons ++ back.allPolygons
+  def allPolygons: IndexedSeq[Polygon3d] = front.allPolygons ++ polygons ++ back.allPolygons
 
   // Clip facets to this BSPTree.
-  def clipPolygons(ps: Seq[Polygon3d])(implicit ec: ExecutionContext): Future[Seq[Polygon3d]] = {
+  def clipPolygons(ps: IndexedSeq[Polygon3d])(implicit ec: ExecutionContext): Future[IndexedSeq[Polygon3d]] = {
     val result = plane.split(ps)
     val frontPolygons = result.front ++ result.coFront
     val filteredFrontFuture = front.clipPolygons(frontPolygons)
@@ -102,7 +102,7 @@ final case class BSPTreeNode(
 
 object BSPTree {
 
-  private def helper(polygons: Seq[Polygon3d], prev: Vertex)(implicit ec: ExecutionContext): Future[BSPTree] = {
+  private def helper(polygons: IndexedSeq[Polygon3d], prev: Vertex)(implicit ec: ExecutionContext): Future[BSPTree] = {
     if (polygons.isEmpty) {
       Future.successful(BSPTreeOut)
     } else {
@@ -120,7 +120,7 @@ object BSPTree {
     }
   }
 
-  def apply(polygons: Seq[Polygon3d])(implicit ec: ExecutionContext): Future[BSPTree] = {
+  def apply(polygons: IndexedSeq[Polygon3d])(implicit ec: ExecutionContext): Future[BSPTree] = {
     helper(polygons, Vertex(1, 0, 0))
   }
 

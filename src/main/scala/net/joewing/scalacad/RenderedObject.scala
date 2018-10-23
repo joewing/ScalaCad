@@ -7,7 +7,7 @@ import scala.concurrent.{ExecutionContext, Future}
 sealed trait RenderedObject {
   implicit val dim: Dim
 
-  def facets: Seq[Facet]
+  def facets: IndexedSeq[Facet]
   def treeFuture(implicit ec: ExecutionContext): Future[BSPTree]
 
   def invert: RenderedObject
@@ -42,7 +42,7 @@ sealed trait RenderedObject {
   final def filterNot(f: Facet => Boolean): FacetRenderedObject = RenderedObject.fromFacets(facets.filterNot(f))
 }
 
-final case class FacetRenderedObject(dim: Dim, facets: Seq[Facet]) extends RenderedObject {
+final case class FacetRenderedObject(dim: Dim, facets: IndexedSeq[Facet]) extends RenderedObject {
   def treeFuture(implicit ec: ExecutionContext): Future[BSPTree] = {
     dim match {
       case _: TwoDimensional => BSPTree(
@@ -67,7 +67,7 @@ final case class FacetRenderedObject(dim: Dim, facets: Seq[Facet]) extends Rende
 }
 
 final case class BSPTreeRenderedObject(dim: Dim, tree: BSPTree) extends RenderedObject {
-  def facets: Seq[Facet] = {
+  def facets: IndexedSeq[Facet] = {
     val polygons = dim match {
       case _: TwoDimensional => tree.allPolygons.filter(_.vertices.forall(v => math.abs(v.z) < Vertex.epsilon))
       case _: ThreeDimensional => tree.allPolygons
@@ -76,7 +76,7 @@ final case class BSPTreeRenderedObject(dim: Dim, tree: BSPTree) extends Rendered
     val octree = Octree(vertices)
     polygons.par.flatMap { p =>
       Facet.fromVertices(p.vertices).flatMap(f => RenderedObject.insertPoints(f, octree).filter(RenderedObject.validFacet))
-    }.seq
+    }.seq.toIndexedSeq
   }
 
   def treeFuture(implicit ec: ExecutionContext): Future[BSPTree] = Future.successful(tree)
@@ -91,7 +91,7 @@ final case class BSPTreeRenderedObject(dim: Dim, tree: BSPTree) extends Rendered
 
 object RenderedObject {
 
-  def fromFacets(facets: Seq[Facet])(implicit dim: Dim): FacetRenderedObject = {
+  def fromFacets(facets: IndexedSeq[Facet])(implicit dim: Dim): FacetRenderedObject = {
     FacetRenderedObject(dim, facets)
   }
 

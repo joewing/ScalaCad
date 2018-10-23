@@ -15,15 +15,21 @@ final case class Plane(normal: Vertex, w: Double) {
   }
 
   def splitPolygon(polygon: Polygon3d, result: Plane.SplitResult): Unit = {
-    val types = polygon.vertices.map(classify)
-    val hasFront = types.contains(Plane.Front)
-    val hasBack = types.contains(Plane.Back)
+    val len = polygon.vertices.length
+    val types = Array.ofDim[Int](len)
+    var hasFront = false
+    var hasBack = false
+    var i = 0
+    while (i < len) {
+      types(i) = classify(polygon.vertices(i))
+      hasFront = hasFront || (types(i) == Plane.Front)
+      hasBack = hasBack || (types(i) == Plane.Back)
+      i += 1
+    }
     if (!hasFront && !hasBack) {
       if (normal.dot(polygon.normal) > 0) {
-        // Coplanar front
         result.coFront += polygon
       } else {
-        // Coplanar back
         result.coBack += polygon
       }
     } else if (hasFront && !hasBack) {
@@ -33,8 +39,7 @@ final case class Plane(normal: Vertex, w: Double) {
     } else {
       val fs = scala.collection.mutable.ArrayBuffer.empty[Vertex]
       val bs = scala.collection.mutable.ArrayBuffer.empty[Vertex]
-      val len = polygon.vertices.length
-      var i = 0
+      i = 0
       while (i < len) {
         val j = (i + 1) % len
         val ti = types(i)
@@ -44,8 +49,9 @@ final case class Plane(normal: Vertex, w: Double) {
         if (ti != Plane.Back) fs += vi
         if (ti != Plane.Front) bs += vi
         if ((ti | tj) == Plane.Spanning) {
-          val t = (w - normal.dot(vi)) / normal.dot(vj - vi)
-          val v = vi + (vj - vi) * t
+          val diff = vj - vi
+          val t = (w - normal.dot(vi)) / normal.dot(diff)
+          val v = vi + diff * t
           fs += v
           bs += v
         }
@@ -56,8 +62,8 @@ final case class Plane(normal: Vertex, w: Double) {
     }
   }
 
-  def split(polygons: Seq[Polygon3d]): Plane.SplitResult = {
-    val result = Plane.SplitResult()
+  def split(polygons: IndexedSeq[Polygon3d]): Plane.SplitResult = {
+    val result = new Plane.SplitResult()
     var i = 0
     val len = polygons.length
     while (i < len) {
@@ -71,12 +77,12 @@ final case class Plane(normal: Vertex, w: Double) {
 
 object Plane {
 
-  case class SplitResult(
-    front: scala.collection.mutable.ArrayBuffer[Polygon3d] = scala.collection.mutable.ArrayBuffer.empty,
-    back: scala.collection.mutable.ArrayBuffer[Polygon3d] = scala.collection.mutable.ArrayBuffer.empty,
-    coFront: scala.collection.mutable.ArrayBuffer[Polygon3d] = scala.collection.mutable.ArrayBuffer.empty,
-    coBack: scala.collection.mutable.ArrayBuffer[Polygon3d] = scala.collection.mutable.ArrayBuffer.empty
-  )
+  final class SplitResult {
+    val front: scala.collection.mutable.ArrayBuffer[Polygon3d] = scala.collection.mutable.ArrayBuffer.empty
+    val back: scala.collection.mutable.ArrayBuffer[Polygon3d] = scala.collection.mutable.ArrayBuffer.empty
+    val coFront: scala.collection.mutable.ArrayBuffer[Polygon3d] = scala.collection.mutable.ArrayBuffer.empty
+    val coBack: scala.collection.mutable.ArrayBuffer[Polygon3d] = scala.collection.mutable.ArrayBuffer.empty
+  }
 
   val Coplanar: Int = 0
   val Front: Int = 1

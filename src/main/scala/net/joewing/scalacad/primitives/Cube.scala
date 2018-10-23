@@ -4,7 +4,7 @@ import net.joewing.scalacad.{Facet, Vertex}
 
 object Cube {
   def apply(width: Double, height: Double, depth: Double): Primitive3d = {
-    val sides = Seq(
+    val sides = Vector(
       Seq(Vertex(0, 0, 0), Vertex(0, height, 0), Vertex(width, height, 0), Vertex(width, 0, 0)),
       Seq(Vertex(width, height, depth), Vertex(0, height, depth), Vertex(0, 0, depth), Vertex(width, 0, depth)),
       Seq(Vertex(width, 0, depth), Vertex(0, 0, depth), Vertex(0, 0, 0), Vertex(width, 0, 0)),
