@@ -4,8 +4,11 @@ import net.joewing.scalacad.primitives.{Dim, LinearExtrude, ThreeDimensional, Tw
 
 import scala.concurrent.{ExecutionContext, Future}
 
-sealed trait RenderedObject {
+sealed trait RenderedObject extends Product with Serializable {
   implicit val dim: Dim
+
+  val minBound: Vertex
+  val maxBound: Vertex
 
   def facets: IndexedSeq[Facet]
   def treeFuture(implicit ec: ExecutionContext): Future[BSPTree]
@@ -14,17 +17,25 @@ sealed trait RenderedObject {
 
   def merge(other: RenderedObject)(implicit ec: ExecutionContext): Future[RenderedObject]
 
-  final def union(other: RenderedObject)(implicit ec: ExecutionContext): Future[BSPTreeRenderedObject] = {
-    val leftFuture = treeFuture
-    val rightFuture = other.treeFuture
-    for {
-      left <- leftFuture
-      right <- rightFuture
-      leftClipped <- left.clip(right)
-      rightClipped <- right.clip(leftClipped)
-      invertClipped <- rightClipped.inverted.clip(leftClipped)
-      merged <- leftClipped.merge(invertClipped.inverted)
-    } yield BSPTreeRenderedObject(dim, merged)
+  private def overlaps(right: RenderedObject): Boolean = {
+    val (mina, maxa) = (minBound, maxBound)
+    val (minb, maxb) = (right.minBound, right.maxBound)
+    !(maxa.x < minb.x || maxa.y < minb.y || maxa.z < minb.z || mina.x > maxb.x || mina.y > maxb.y || mina.z > maxb.z)
+  }
+
+  final def union(other: RenderedObject)(implicit ec: ExecutionContext): Future[RenderedObject] = {
+    if (overlaps(other)) {
+      val leftFuture = treeFuture
+      val rightFuture = other.treeFuture
+      for {
+        left <- leftFuture
+        right <- rightFuture
+        leftClipped <- left.clip(right)
+        rightClipped <- right.clip(leftClipped)
+        invertClipped <- rightClipped.inverted.clip(leftClipped)
+        merged <- leftClipped.merge(invertClipped.inverted)
+      } yield BSPTreeRenderedObject(merged)
+    } else merge(other)
   }
 
   final def intersect(other: RenderedObject)(implicit ec: ExecutionContext): Future[RenderedObject] = {
@@ -43,50 +54,45 @@ sealed trait RenderedObject {
 }
 
 final case class FacetRenderedObject(dim: Dim, facets: IndexedSeq[Facet]) extends RenderedObject {
+
+  lazy val minBound: Vertex = facets.foldLeft(Vertex.max) { (v, f) => f.minBound.min(v) }
+  lazy val maxBound: Vertex = facets.foldLeft(Vertex.min) { (v, f) => f.maxBound.max(v) }
+
   def treeFuture(implicit ec: ExecutionContext): Future[BSPTree] = {
-    dim match {
-      case _: TwoDimensional => BSPTree(
-        LinearExtrude.extrude(facets, 1, 0, 1).map(f => Polygon3d(f.vertices))
-      )
-      case _: ThreeDimensional => BSPTree(facets.map(f => Polygon3d(f.vertices)))
-    }
+    require(dim == Dim.three, s"cannot convert 2d object to BSPTree")
+    BSPTree(facets.map(f => Polygon3d(f.vertices)))
   }
 
   def invert: RenderedObject = FacetRenderedObject(dim, facets.map(_.flip))
 
-  def merge(other: RenderedObject)(implicit ec: ExecutionContext): Future[RenderedObject] = {
-    other match {
-      case rightTree: BSPTreeRenderedObject =>
-        for {
-          leftTree <- treeFuture
-          merged <- leftTree.merge(rightTree.tree)
-        } yield BSPTreeRenderedObject(dim, merged)
-      case f: FacetRenderedObject   => Future(FacetRenderedObject(dim, facets ++ f.facets))
-    }
+  def merge(other: RenderedObject)(implicit ec: ExecutionContext): Future[RenderedObject] = Future {
+    FacetRenderedObject(dim, facets ++ other.facets)
   }
 }
 
-final case class BSPTreeRenderedObject(dim: Dim, tree: BSPTree) extends RenderedObject {
+final case class BSPTreeRenderedObject(tree: BSPTree) extends RenderedObject {
+  val dim: Dim = Dim.three
+
+  lazy val minBound: Vertex = tree.allPolygons.foldLeft(Vertex.max) { (v, p) => p.minBound.min(v) }
+  lazy val maxBound: Vertex = tree.allPolygons.foldLeft(Vertex.min) { (v, p) => p.maxBound.max(v) }
+
   def facets: IndexedSeq[Facet] = {
-    val polygons = dim match {
-      case _: TwoDimensional => tree.allPolygons.filter(_.vertices.forall(v => math.abs(v.z) < Vertex.epsilon))
-      case _: ThreeDimensional => tree.allPolygons
-    }
+    val polygons = tree.allPolygons
     val vertices = polygons.par.flatMap(_.vertices).seq.distinct
     val octree = Octree(vertices)
     polygons.par.flatMap { p =>
-      Facet.fromVertices(p.vertices).flatMap(f => RenderedObject.insertPoints(f, octree).filter(RenderedObject.validFacet))
+      Facet.fromVertices(p.vertices).flatMap(f => RenderedObject.insertPoints(f, octree))
     }.seq.toIndexedSeq
   }
 
   def treeFuture(implicit ec: ExecutionContext): Future[BSPTree] = Future.successful(tree)
 
-  def invert: RenderedObject = BSPTreeRenderedObject(dim, tree.inverted)
+  def invert: RenderedObject = BSPTreeRenderedObject(tree.inverted)
 
   def merge(other: RenderedObject)(implicit ec: ExecutionContext): Future[RenderedObject] = for {
     otherTree <- other.treeFuture
     merged <- tree.merge(otherTree)
-  }  yield BSPTreeRenderedObject(dim, merged)
+  } yield BSPTreeRenderedObject(merged)
 }
 
 object RenderedObject {
@@ -102,11 +108,11 @@ object RenderedObject {
   // Insert a point to the facet by splitting it.
   // Note that this assumes all inserted points are on an edge of the facet.
   def insertPoint(facet: Facet, p: Vertex): Seq[Facet] = {
-    if (p.between(facet.v1, facet.v2) && p.collinear(facet.v1, facet.v2)) {
+    if (p.between(facet.v1, facet.v2)) {
       Vector(Facet(facet.v1, p, facet.v3), Facet(p, facet.v2, facet.v3))
-    } else if (p.between(facet.v2, facet.v3) && p.collinear(facet.v2, facet.v3)) {
+    } else if (p.between(facet.v2, facet.v3)) {
       Vector(Facet(facet.v1, facet.v2, p), Facet(p, facet.v3, facet.v1))
-    } else if (p.between(facet.v3, facet.v1) && p.collinear(facet.v3, facet.v1)) {
+    } else if (p.between(facet.v3, facet.v1)) {
       Vector(Facet(facet.v1, facet.v2, p), Facet(facet.v2, facet.v3, p))
     } else {
       Vector(facet)
@@ -117,7 +123,7 @@ object RenderedObject {
   def insertPoints(facet: Facet, octree: Octree): Seq[Facet] = {
     val d = Vertex(Vertex.epsilon, Vertex.epsilon, Vertex.epsilon)
     octree.contained(facet.minBound - d, facet.maxBound + d).foldLeft(Vector(facet)) { (oldFacets, point) =>
-      oldFacets.flatMap { f => insertPoint(f, point) }
+      oldFacets.flatMap { f => insertPoint(f, point).filter(validFacet) }
     }
   }
 

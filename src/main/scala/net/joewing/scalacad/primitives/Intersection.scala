@@ -20,6 +20,10 @@ final case class Intersection[D <: Dim](a: Primitive[D], b: Primitive[D]) extend
   override def transformed(f: Primitive[D] => Primitive[D]): Primitive[D] =
     Intersection(a.transformed(f), b.transformed(f))
 
+  override def extruded(
+    f: Primitive[TwoDimensional] => Primitive[ThreeDimensional]
+  ): Primitive[ThreeDimensional] = Intersection(a.extruded(f), b.extruded(f))
+
   lazy val minBound: Vertex = a.minBound.max(b.minBound)
   lazy val maxBound: Vertex = a.maxBound.min(b.maxBound)
 }

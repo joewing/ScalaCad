@@ -1,13 +1,15 @@
 package net.joewing.scalacad.examples
 
-import net.joewing.scalacad.io.{AwtRenderer, StlFileWriter}
+import java.awt.Font
+
+import net.joewing.scalacad.io.AwtRenderer
 import net.joewing.scalacad.primitives._
 
 object TextExample extends App {
 
   val text = "Hello!"
   val textDepth = 5
-  val textObj = Raster.fromText(text, 64).extrude(textDepth).centered
+  val textObj = Raster.fromText(text, Font.getFont(Font.DIALOG).deriveFont(64f)).extrude(textDepth).centered
 
   val padding = 16
   val boxWidth = textObj.extent.x + padding

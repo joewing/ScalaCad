@@ -14,9 +14,12 @@ final case class Facet(v1: Vertex, v2: Vertex, v3: Vertex) {
 
   def flip: Facet = Facet(v1, v3, v2)
 
-  def scaled(x: Double = 1, y: Double = 1, z: Double = 1): Facet = Facet(
-    v1.scaled(x, y, z), v2.scaled(x, y, z), v3.scaled(x, y, z)
-  )
+  def scaled(x: Double = 1, y: Double = 1, z: Double = 1): Facet = {
+    val newFacet = Facet(
+      v1.scaled(x, y, z), v2.scaled(x, y, z), v3.scaled(x, y, z)
+    )
+    if (x * y * z < 0) newFacet.flip else newFacet
+  }
 
   def rotated(x: Double = 0, y: Double = 0, z: Double = 0): Facet = Facet(
     v1.rotated(x, y, z), v2.rotated(x, y, z), v3.rotated(x, y, z)

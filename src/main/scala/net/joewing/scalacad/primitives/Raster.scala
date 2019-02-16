@@ -66,23 +66,21 @@ object Raster {
 
   def fromText(
     text: String,
-    size: Double = 12.0,
-    font: String = Font.DIALOG,
+    font: Font = Font.decode(Font.DIALOG),
     resolution: Double = 0.2
   ): Primitive2d = {
     val transform = new AffineTransform()
     val frc = new FontRenderContext(transform, true, true)
-    val f = Font.decode(font).deriveFont(size.toFloat)
-    val bounds = f.getStringBounds(text, frc)
-    val width = bounds.getWidth.toInt
-    val height = bounds.getHeight.toInt
+    val bounds = font.getStringBounds(text, frc)
+    val width = bounds.getWidth.ceil.toInt * 2
+    val height = bounds.getHeight.ceil.toInt
     val image = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB)
     val gc = image.getGraphics
-    gc.setFont(f)
+    gc.setFont(font)
     gc.setColor(Color.BLACK)
     gc.fillRect(0, 0, width, height)
     gc.setColor(Color.WHITE)
-    gc.drawString(text, 0, -bounds.getY.toInt)
+    gc.drawString(text, -bounds.getX.toInt, -bounds.getY.toInt)
     fromImage(image, resolution)
   }
 }

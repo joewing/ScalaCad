@@ -15,7 +15,7 @@ object Dim {
   val three: ThreeDimensional = new ThreeDimensional
 }
 
-trait Primitive[D <: Dim] {
+trait Primitive[D <: Dim] extends Product with Serializable {
 
   final protected def reduceVertices(vertices: Seq[Vertex], op: (Double, Double) => Double): Vertex = {
     if (vertices.nonEmpty) {
@@ -35,6 +35,10 @@ trait Primitive[D <: Dim] {
 
   protected def render(implicit ec: ExecutionContext): Future[RenderedObject]
   def transformed(f: Primitive[D] => Primitive[D]): Primitive[D] = f(this)
+
+  def extruded(
+    extrude: Primitive[TwoDimensional] => Primitive[ThreeDimensional]
+  ): Primitive[ThreeDimensional]
 
   final lazy val renderedFuture: Future[RenderedObject] = {
     import scala.concurrent.ExecutionContext.Implicits.global

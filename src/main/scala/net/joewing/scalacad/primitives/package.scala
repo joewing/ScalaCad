@@ -70,7 +70,7 @@ package object primitives {
       length: Double,
       rotation: Double = 0.0,
       slices: Int = 1
-    ): Primitive3d = LinearExtrude(left, length, rotation, slices)
+    ): Primitive[ThreeDimensional] = LinearExtrude(left, length, rotation, slices)
   }
 
 }

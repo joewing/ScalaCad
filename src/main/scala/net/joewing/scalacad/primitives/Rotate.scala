@@ -14,6 +14,10 @@ final case class Rotate[D <: Dim](obj: Primitive[D], x: Double = 0, y: Double = 
   override def transformed(f: Primitive[D] => Primitive[D]): Primitive[D] =
     obj.transformed(o => f(Rotate(o, x, y, z)))
 
+  override def extruded(
+    f: Primitive[TwoDimensional] => Primitive[ThreeDimensional]
+  ): Primitive[ThreeDimensional] = obj.extruded(o => f(Rotate(o, x, y, z)))
+
   private lazy val boundingVertices: Seq[Vertex] = Seq(
     Vertex(obj.minBound.x, obj.minBound.y, obj.minBound.z),
     Vertex(obj.maxBound.x, obj.minBound.y, obj.minBound.z),

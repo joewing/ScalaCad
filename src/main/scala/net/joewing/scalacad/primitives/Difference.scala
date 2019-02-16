@@ -20,6 +20,10 @@ final case class Difference[D <: Dim](base: Primitive[D], minus: Primitive[D]) e
   override def transformed(f: Primitive[D] => Primitive[D]): Primitive[D] =
     Difference(base.transformed(f), minus.transformed(f))
 
+  override def extruded(
+    f: Primitive[TwoDimensional] => Primitive[ThreeDimensional]
+  ): Primitive[ThreeDimensional] = Difference(base.extruded(f), minus.extruded(f))
+
   lazy val minBound: Vertex = base.minBound
   lazy val maxBound: Vertex = base.maxBound
 }

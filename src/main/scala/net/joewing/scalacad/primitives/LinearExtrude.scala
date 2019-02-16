@@ -1,18 +1,38 @@
 package net.joewing.scalacad.primitives
 
-import net.joewing.scalacad.{Facet, Vertex}
+import net.joewing.scalacad.{Facet, RenderedObject, Vertex}
+
+import scala.concurrent.{ExecutionContext, Future}
+
+final case class LinearExtrude(
+  obj: Primitive[TwoDimensional],
+  length: Double,
+  rotation: Double = 0.0,
+  slices: Int = 1
+) extends Primitive[ThreeDimensional] {
+  implicit val dim: ThreeDimensional = Dim.three
+
+  protected def render(implicit ec: ExecutionContext): Future[RenderedObject] = {
+    obj.renderedFuture.map { base =>
+      RenderedObject.fromFacets(LinearExtrude.extrude(base.facets, length, rotation, slices))
+    }
+  }
+
+  override def transformed(
+    f: Primitive[ThreeDimensional] => Primitive[ThreeDimensional]
+  ): Primitive[ThreeDimensional] =  {
+    obj.extruded(o => f(LinearExtrude(o, length, rotation, slices)))
+  }
+
+  override def extruded(
+    f: Primitive[TwoDimensional] => Primitive[ThreeDimensional]
+  ): Primitive[ThreeDimensional] = throw new IllegalStateException(s"cannot extrude 3d primitive")
+
+  lazy val minBound: Vertex = obj.minBound.copy(z = 0)
+  lazy val maxBound: Vertex = obj.maxBound.copy(z = length)
+}
 
 object LinearExtrude {
-
-  def apply(
-    obj: Primitive[TwoDimensional],
-    length: Double,
-    rotation: Double = 0.0,
-    slices: Int = 1
-  ): Primitive3d = {
-    val base = obj.rendered.facets
-    Primitive3d(extrude(base, length, rotation, slices))
-  }
 
   private def includeEdge(allEdges: Seq[(Vertex, Vertex)])(edge: (Vertex, Vertex)): Boolean = {
     val (a, b) = edge

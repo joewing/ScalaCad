@@ -14,6 +14,10 @@ final case class Scale[D <: Dim](obj: Primitive[D], x: Double, y: Double, z: Dou
   override def transformed(f: Primitive[D] => Primitive[D]): Primitive[D] =
     obj.transformed(o => f(Scale(o, x, y, z)))
 
+  override def extruded(
+    f: Primitive[TwoDimensional] => Primitive[ThreeDimensional]
+  ): Primitive[ThreeDimensional] = obj.extruded(o => f(Scale(o, x, y, z)))
+
   lazy val minBound: Vertex = obj.minBound.scaled(x, y, z)
   lazy val maxBound: Vertex = obj.maxBound.scaled(x, y, z)
 }
