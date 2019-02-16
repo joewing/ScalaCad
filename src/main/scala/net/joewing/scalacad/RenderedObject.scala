@@ -65,16 +65,26 @@ final case class FacetRenderedObject(dim: Dim, facets: IndexedSeq[Facet]) extend
 
   def invert: RenderedObject = FacetRenderedObject(dim, facets.map(_.flip))
 
-  def merge(other: RenderedObject)(implicit ec: ExecutionContext): Future[RenderedObject] = Future {
-    FacetRenderedObject(dim, facets ++ other.facets)
+  def merge(other: RenderedObject)(implicit ec: ExecutionContext): Future[RenderedObject] = {
+    other match {
+      case BSPTreeRenderedObject(otherTree)    =>
+        for {
+          tree <- treeFuture
+          merged <- tree.merge(otherTree)
+        } yield BSPTreeRenderedObject(merged)
+      case FacetRenderedObject(_, otherFacets) => Future {
+        FacetRenderedObject(dim, facets ++ otherFacets)
+      }
+    }
   }
 }
 
 final case class BSPTreeRenderedObject(tree: BSPTree) extends RenderedObject {
   val dim: Dim = Dim.three
 
-  lazy val minBound: Vertex = tree.allPolygons.foldLeft(Vertex.max) { (v, p) => p.minBound.min(v) }
-  lazy val maxBound: Vertex = tree.allPolygons.foldLeft(Vertex.min) { (v, p) => p.maxBound.max(v) }
+  lazy val vertices: Seq[Vertex] = tree.allPolygons.flatMap(_.vertices)
+  lazy val minBound: Vertex = vertices.foldLeft(Vertex.max) { (v, p) => p.min(v) }
+  lazy val maxBound: Vertex = vertices.foldLeft(Vertex.min) { (v, p) => p.max(v) }
 
   def facets: IndexedSeq[Facet] = {
     val polygons = tree.allPolygons

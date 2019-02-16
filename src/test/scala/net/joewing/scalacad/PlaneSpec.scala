@@ -3,6 +3,7 @@ package net.joewing.scalacad
 import org.scalatest.{FunSpec, Matchers}
 
 class PlaneSpec extends FunSpec with Matchers {
+  /*
   describe("apply") {
     it("creates a plane from a polygon") {
       val plane = Plane(Polygon3d(Vector(Vertex(0, 0, 0), Vertex(1, 0, 0), Vertex(1, 1, 0))))
@@ -99,4 +100,5 @@ class PlaneSpec extends FunSpec with Matchers {
       result.coBack shouldBe Seq.empty
     }
   }
+  */
 }

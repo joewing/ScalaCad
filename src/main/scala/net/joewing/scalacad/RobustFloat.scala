@@ -14,20 +14,28 @@ final case class RobustFloat(values: IndexedSeq[Double]) extends Ordered[RobustF
 
   def compare(right: RobustFloat): Int = RobustFloat.compare(values, right.values)
 
+  def min(right: RobustFloat): RobustFloat = if (compare(right) < 0) this else right
+  def max(right: RobustFloat): RobustFloat = if (compare(right) > 0) this else right
+
   def *(right: Double): RobustFloat = RobustFloat(RobustFloat.scale(values, right))
 
   def abs: RobustFloat = RobustFloat(RobustFloat.abs(values))
 
+  def sqrt: Double = math.sqrt(toDouble)
+
   def toDouble: Double = values.last
+  def toInt: Int = toDouble.toInt
 }
 
 @strictfp
 object RobustFloat {
 
-  // Predicates base off of:
+  // Predicates based off of:
   // Jonathan Richard Shewchuk, "Adaptive Precision Floating-Point Arithmetic".
 
   val epsilon: Double = math.ulp(1.0) / 2.0
+  val min: RobustFloat = RobustFloat(Double.MinValue)
+  val max: RobustFloat = RobustFloat(Double.MaxValue)
   val splitter: Double = math.pow(2, 27) + 1.0
 
   implicit def apply(i: Int): RobustFloat = RobustFloat(IndexedSeq(i.toDouble))

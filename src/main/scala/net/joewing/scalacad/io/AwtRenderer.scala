@@ -25,8 +25,8 @@ class AwtRenderer(
     import scala.concurrent.ExecutionContext.Implicits.global
     Await.result(obj.rendered.treeFuture, Duration.Inf)
   }
-  private val minBound: Vertex = obj.minBound
-  private val maxBound: Vertex = obj.maxBound
+  private lazy val minBound: Vertex = obj.minBound
+  private lazy val maxBound: Vertex = obj.maxBound
 
   private lazy val (initialScale, initialX, initialY): (Double, Double, Double) = {
     val buffer = (initialImageWidth * 0.05).toInt
@@ -96,7 +96,7 @@ class AwtRenderer(
       }
       if (xInRange && yInRange && xs.exists(_ != xs.head) && ys.exists(_  != ys.head)) {
         val v = polygon.normal.dot(lightSource)
-        val brightness = math.max(0.1, math.min(1.0, v)).toFloat
+        val brightness = math.max(0.1, math.min(1.0, v.toDouble)).toFloat
         val color = if (v < 0) Color.RED else new Color(0.0f, 0.0f, brightness)
         graphics.setColor(color)
         graphics.fillPolygon(xs, ys, sz)

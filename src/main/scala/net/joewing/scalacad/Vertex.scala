@@ -62,7 +62,7 @@ final case class Vertex(x: Double, y: Double, z: Double) {
 
   // Find 't' such that 'a + t(b - a) = this'.
   // If this returns t in (0, 1), then this is between a and b.
-  def solve(a: RobustVertex, b: RobustVertex): RobustFloat = {
+  def solve(a: Vertex, b: Vertex): Double = {
     if ((a.x - b.x).abs > Vertex.epsilon) (x - a.x) / (b.x - a.x)
     else if ((a.y - b.y).abs > Vertex.epsilon) (y - a.y) / (b.y - a.y)
     else if ((a.z - b.z).abs > Vertex.epsilon) (z - a.z) / (b.z - a.z)
@@ -71,11 +71,8 @@ final case class Vertex(x: Double, y: Double, z: Double) {
 
   // Returns true if this is strictly between a and b.
   def between(a: Vertex, b: Vertex, epsilon: Double = Vertex.epsilon): Boolean = {
-    val ra = RobustVertex(a)
-    val rb = RobustVertex(b)
-    val rt = RobustVertex(this)
-    val t = solve(ra, rb)
-    t >= epsilon && t <= 1 - epsilon && (rb - ra).cross(rt - ra).dotSelf < epsilon * epsilon
+    val t = solve(a, b)
+    t >= epsilon && t <= 1 - epsilon && collinear(a, b, epsilon)
   }
 }
 

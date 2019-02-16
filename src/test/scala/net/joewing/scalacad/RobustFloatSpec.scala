@@ -67,6 +67,18 @@ class RobustFloatSpec extends FunSpec with Matchers {
     }
   }
 
+  describe("min") {
+    it("returns the min value") {
+      RobustFloat(12).min(RobustFloat(13)) shouldBe RobustFloat(12)
+    }
+  }
+
+  describe("max") {
+    it("returns the max value") {
+      RobustFloat(12).max(RobustFloat(13)) shouldBe RobustFloat(13)
+    }
+  }
+
   describe("divide") {
     it("returns the right result") {
       RobustFloat(12) / RobustFloat(3) shouldBe RobustFloat(4)

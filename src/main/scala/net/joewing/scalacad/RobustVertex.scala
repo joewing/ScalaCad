@@ -11,6 +11,11 @@ final case class RobustVertex(x: RobustFloat, y: RobustFloat, z: RobustFloat) {
 
   def dotSelf: RobustFloat = dot(this)
 
+  def unit: RobustVertex = {
+    val scale = 1.0 / dotSelf.sqrt
+    RobustVertex(x * scale, y * scale, z * scale)
+  }
+
   def toVertex: Vertex = Vertex(x.toDouble, y.toDouble, z.toDouble)
 
   def +(right: RobustVertex): RobustVertex = RobustVertex(x + right.x, y + right.y, z + right.z)
@@ -19,6 +24,9 @@ final case class RobustVertex(x: RobustFloat, y: RobustFloat, z: RobustFloat) {
   def /(right: RobustFloat): RobustVertex = RobustVertex(x / right, y / right, z / right)
 
   def negated: RobustVertex = RobustVertex(-x, -y, -z)
+
+  def min(right: RobustVertex): RobustVertex = RobustVertex(x.min(right.x), y.min(right.y), z.min(right.z))
+  def max(right: RobustVertex): RobustVertex = RobustVertex(x.max(right.x), y.max(right.y), z.max(right.z))
 
   // Find 't' such that 'a + t(b - a) = this'.
   // If this returns t in (0, 1), then this is between a and b.
@@ -38,6 +46,8 @@ final case class RobustVertex(x: RobustFloat, y: RobustFloat, z: RobustFloat) {
 object RobustVertex {
 
   val epsilon: Double = 1e-9
+  val min: RobustVertex = RobustVertex(RobustFloat.min, RobustFloat.min, RobustFloat.min)
+  val max: RobustVertex = RobustVertex(RobustFloat.max, RobustFloat.max, RobustFloat.max)
 
   def apply(vertex: Vertex): RobustVertex = RobustVertex(
     RobustFloat(vertex.x),

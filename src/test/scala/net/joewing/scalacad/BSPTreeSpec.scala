@@ -8,6 +8,7 @@ import scala.concurrent.ExecutionContext.Implicits.global
 
 class BSPTreeSpec extends FunSpec with Matchers {
 
+  /*
   val obj = Vector(
     Polygon3d(Vector(Vertex(-0.5, 1, 0), Vertex(1, 0, 0), Vertex(0, 0, 1))),
     Polygon3d(Vector(Vertex(-0.5, -1, 0), Vertex(-0.5, 1, 0), Vertex(0, 0, 1))),
@@ -59,4 +60,5 @@ class BSPTreeSpec extends FunSpec with Matchers {
       bsp.inverted.inverted shouldBe bsp
     }
   }
+  */
 }
