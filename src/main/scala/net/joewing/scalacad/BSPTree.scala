@@ -2,7 +2,7 @@ package net.joewing.scalacad
 
 import scala.concurrent.{ExecutionContext, Future}
 
-sealed trait BSPTree {
+sealed trait BSPTree extends Product with Serializable {
   def allPolygons: IndexedSeq[Polygon3d]
   def clipPolygons(ps: IndexedSeq[Polygon3d])(implicit ec: ExecutionContext): Future[IndexedSeq[Polygon3d]]
   def clip(other: BSPTree)(implicit ec: ExecutionContext): Future[BSPTree]
@@ -51,8 +51,7 @@ final case class BSPTreeNode(
   // Clip facets to this BSPTree.
   def clipPolygons(ps: IndexedSeq[Polygon3d])(implicit ec: ExecutionContext): Future[IndexedSeq[Polygon3d]] = {
     val result = plane.split(ps)
-    val frontPolygons = result.front ++ result.coFront
-    val filteredFrontFuture = front.clipPolygons(frontPolygons)
+    val filteredFrontFuture = front.clipPolygons(result.front ++ result.coFront)
     val filteredBackFuture = back.clipPolygons(result.back ++ result.coBack)
     for {
       filteredFront <- filteredFrontFuture

@@ -29,7 +29,7 @@ object GearBearing extends App {
   ): Primitive[ThreeDimensional] = {
     val pitchRadius = numberOfTeeth * circularPitch / (2.0 * math.Pi)
     val twist = math.tan(helixAngle) * gearThickness / pitchRadius
-    val slices = 2
+    val slices = 3
     gear2d(numberOfTeeth, circularPitch, pressureAngle, depthRatio, clearance)
       .extrude(gearThickness, twist / slices, slices = slices)
   }
@@ -124,9 +124,10 @@ object GearBearing extends App {
       herringbone(nr, pitch, pressureAngle, depthRatio, -tolerance, helixAngle, thickness + 0.2)
 
   val sun = herringbone(ns, pitch, pressureAngle, depthRatio, tolerance, helixAngle, thickness)
+    .rotate(z = math.Pi / ns)
     .scale(y = -1)
 
-  val planets = union(
+  val planets = disjointUnion(
     Vector.range(1, nPlanets + 1).map { i =>
       herringbone(planetTeeth, pitch, pressureAngle, depthRatio, tolerance, helixAngle, thickness)
         .rotate(0, 0, 2.0 * math.Pi * i * ns / nPlanets / planetTeeth)

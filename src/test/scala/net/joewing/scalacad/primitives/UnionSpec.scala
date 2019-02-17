@@ -7,7 +7,7 @@ class UnionSpec extends FunSpec with Matchers {
     it("should render something") {
       val o1 = Cube(10, 10, 10)
       val o2 = Translate(Cube(1, 1, 1), 1, 1, 1)
-      Union(o1, o2).rendered.facets should not be empty
+      Union.union(o1, o2).rendered.facets should not be empty
     }
   }
 
@@ -15,7 +15,7 @@ class UnionSpec extends FunSpec with Matchers {
     it("should render something") {
       val o1 = square(10)
       val o2 = Translate(square(1), 1, 1)
-      Union(o1, o2).rendered.facets should not be empty
+      Union.union(o1, o2).rendered.facets should not be empty
     }
   }
 }

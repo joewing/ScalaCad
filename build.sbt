@@ -31,3 +31,6 @@ releaseProcess := Seq[ReleaseStep](
 bintrayOrganization := Some("joewing")
 bintrayRepository := "maven"
 bintrayPackageLabels := Seq("scala", "csg", "cad")
+
+fork := true
+javaOptions ++= Seq("-Xmx12G")

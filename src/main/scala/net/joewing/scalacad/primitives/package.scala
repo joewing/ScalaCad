@@ -21,13 +21,14 @@ package object primitives {
 
   def sphere(r: Double, slices: Int = 0, stacks: Int = 0): Primitive3d = Sphere(r, slices, stacks)
 
-  def union[D <: Dim](objs: Primitive[D]*): Primitive[D] = objs.reduce(Union.apply[D])
+  def union[D <: Dim](objs: Primitive[D]*): Primitive[D] = objs.reduce(Union.union[D])
+  def disjointUnion[D <: Dim](objs: Primitive[D]*): Primitive[D] = objs.reduce(Union.disjoint[D])
   def intersect[D <: Dim](objs: Primitive[D]*): Primitive[D] = objs.reduce(Intersection.apply[D])
 
   trait RichPrimitive[D <: Dim] {
     val left: Primitive[D]
 
-    def |(right: Primitive[D]): Primitive[D] = Union(left, right)
+    def |(right: Primitive[D]): Primitive[D] = Union.union(left, right)
     def &(right: Primitive[D]): Primitive[D] = Intersection(left, right)
     def -(right: Primitive[D]): Primitive[D] = Difference(left, right)
 
@@ -36,22 +37,22 @@ package object primitives {
 
     def centered: Primitive[D] = translate((left.maxBound + left.minBound) / -2)
 
-    def above(other: Primitive[D], overlap: Double = 0.0, op: Operator[D] = Union.apply): Primitive[D] = {
+    def above(other: Primitive[D], overlap: Double = 0.0, op: Operator[D] = Union.union): Primitive[D] = {
       val newZ = other.maxBound.z - overlap
       val deltaZ = newZ - left.minBound.z
       op(other, translate(z = deltaZ))
     }
-    def below(other: Primitive[D], overlap: Double = 0.0, op: Operator[D] = Union.apply): Primitive[D] = {
+    def below(other: Primitive[D], overlap: Double = 0.0, op: Operator[D] = Union.union): Primitive[D] = {
       val newZ = other.minBound.z - left.extent.z + overlap
       val deltaZ = newZ - left.minBound.z
       op(other, translate(z = deltaZ))
     }
-    def beside(other: Primitive[D], overlap: Double = 0.0, op: Operator[D] = Union.apply): Primitive[D] = {
+    def beside(other: Primitive[D], overlap: Double = 0.0, op: Operator[D] = Union.union): Primitive[D] = {
       val newX = other.maxBound.x - overlap
       val deltaX = newX - left.minBound.x
       op(other, translate(x = deltaX))
     }
-    def behind(other: Primitive[D], overlap: Double = 0.0, op: Operator[D] = Union.apply): Primitive[D] = {
+    def behind(other: Primitive[D], overlap: Double = 0.0, op: Operator[D] = Union.union): Primitive[D] = {
       val newY = other.maxBound.y - overlap
       val deltaY = newY - left.minBound.y
       op(other, translate(y = deltaY))

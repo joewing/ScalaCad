@@ -11,6 +11,7 @@ sealed trait RenderedObject extends Product with Serializable {
   val maxBound: Vertex
 
   def facets: IndexedSeq[Facet]
+  def polygons: IndexedSeq[Polygon3d]
   def treeFuture(implicit ec: ExecutionContext): Future[BSPTree]
 
   def invert: RenderedObject
@@ -33,8 +34,8 @@ sealed trait RenderedObject extends Product with Serializable {
         leftClipped <- left.clip(right)
         rightClipped <- right.clip(leftClipped)
         invertClipped <- rightClipped.inverted.clip(leftClipped)
-        merged <- leftClipped.merge(invertClipped.inverted)
-      } yield BSPTreeRenderedObject(merged)
+        merged = leftClipped.allPolygons ++ invertClipped.inverted.allPolygons
+      } yield PolygonRenderedObject(dim, merged)
     } else merge(other)
   }
 
@@ -47,10 +48,6 @@ sealed trait RenderedObject extends Product with Serializable {
   }
 
   final def map(f: Facet => Facet): FacetRenderedObject = RenderedObject.fromFacets(facets.map(f))
-
-  final def filter(f: Facet => Boolean): FacetRenderedObject = RenderedObject.fromFacets(facets.filter(f))
-
-  final def filterNot(f: Facet => Boolean): FacetRenderedObject = RenderedObject.fromFacets(facets.filterNot(f))
 }
 
 final case class FacetRenderedObject(dim: Dim, facets: IndexedSeq[Facet]) extends RenderedObject {
@@ -58,51 +55,43 @@ final case class FacetRenderedObject(dim: Dim, facets: IndexedSeq[Facet]) extend
   lazy val minBound: Vertex = facets.foldLeft(Vertex.max) { (v, f) => f.minBound.min(v) }
   lazy val maxBound: Vertex = facets.foldLeft(Vertex.min) { (v, f) => f.maxBound.max(v) }
 
+  def polygons: IndexedSeq[Polygon3d] = facets.map(f => Polygon3d(f.vertices))
+
   def treeFuture(implicit ec: ExecutionContext): Future[BSPTree] = {
     require(dim == Dim.three, s"cannot convert 2d object to BSPTree")
-    BSPTree(facets.map(f => Polygon3d(f.vertices)))
+    BSPTree(polygons)
   }
 
   def invert: RenderedObject = FacetRenderedObject(dim, facets.map(_.flip))
 
-  def merge(other: RenderedObject)(implicit ec: ExecutionContext): Future[RenderedObject] = {
+  def merge(other: RenderedObject)(implicit ec: ExecutionContext): Future[RenderedObject] = Future {
     other match {
-      case BSPTreeRenderedObject(otherTree)    =>
-        for {
-          tree <- treeFuture
-          merged <- tree.merge(otherTree)
-        } yield BSPTreeRenderedObject(merged)
-      case FacetRenderedObject(_, otherFacets) => Future {
-        FacetRenderedObject(dim, facets ++ otherFacets)
-      }
+      case FacetRenderedObject(_, otherFacets) => FacetRenderedObject(dim, facets ++ otherFacets)
+      case _ => PolygonRenderedObject(dim, polygons ++ other.polygons)
     }
   }
 }
 
-final case class BSPTreeRenderedObject(tree: BSPTree) extends RenderedObject {
-  val dim: Dim = Dim.three
+final case class PolygonRenderedObject(dim: Dim, polygons: IndexedSeq[Polygon3d]) extends RenderedObject {
 
-  lazy val vertices: Seq[Vertex] = tree.allPolygons.flatMap(_.vertices)
-  lazy val minBound: Vertex = vertices.foldLeft(Vertex.max) { (v, p) => p.min(v) }
-  lazy val maxBound: Vertex = vertices.foldLeft(Vertex.min) { (v, p) => p.max(v) }
+  lazy val minBound: Vertex = polygons.foldLeft(Vertex.max) { (v, p) => p.minBound.min(v) }
+  lazy val maxBound: Vertex = polygons.foldLeft(Vertex.min) { (v, p) => p.maxBound.max(v) }
+
+  def treeFuture(implicit ec: ExecutionContext): Future[BSPTree] = BSPTree(polygons)
 
   def facets: IndexedSeq[Facet] = {
-    val polygons = tree.allPolygons
-    val vertices = polygons.par.flatMap(_.vertices).seq.distinct
+    val vertices = polygons.flatMap(_.vertices).distinct
     val octree = Octree(vertices)
     polygons.par.flatMap { p =>
       Facet.fromVertices(p.vertices).flatMap(f => RenderedObject.insertPoints(f, octree))
     }.seq.toIndexedSeq
   }
 
-  def treeFuture(implicit ec: ExecutionContext): Future[BSPTree] = Future.successful(tree)
+  def invert: RenderedObject = PolygonRenderedObject(dim, polygons.map(_.flip))
 
-  def invert: RenderedObject = BSPTreeRenderedObject(tree.inverted)
-
-  def merge(other: RenderedObject)(implicit ec: ExecutionContext): Future[RenderedObject] = for {
-    otherTree <- other.treeFuture
-    merged <- tree.merge(otherTree)
-  } yield BSPTreeRenderedObject(merged)
+  def merge(other: RenderedObject)(implicit ec: ExecutionContext): Future[RenderedObject] = Future {
+    PolygonRenderedObject(dim, polygons ++ other.polygons)
+  }
 }
 
 object RenderedObject {
