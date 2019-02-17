@@ -3,6 +3,10 @@ package net.joewing.scalacad.examples
 import net.joewing.scalacad._
 import net.joewing.scalacad.primitives._
 
+/** Gear bearing example.
+  * Based off of the Gear Bearing by emmett:
+  * https://www.thingiverse.com/thing:53451
+  */
 object GearBearing extends App {
 
   private def herringbone(
@@ -77,15 +81,9 @@ object GearBearing extends App {
     val index = Vector.range(0, 6)
     val startAngle = math.max(involuteIntersectAngle(baseRadius, minRadius) - math.toRadians(5), 0)
     val stopAngle = involuteIntersectAngle(baseRadius, outerRadius)
-    val angle = index.map(i => i * (stopAngle - startAngle) / index.last)
+    val angle = index.map(i => startAngle + i * (stopAngle - startAngle) / index.last)
     polygon(
-      0.0 -> 0.0,
-      involute(baseRadius, angle(0) + startAngle),
-      involute(baseRadius, angle(1) + startAngle),
-      involute(baseRadius, angle(2) + startAngle),
-      involute(baseRadius, angle(3) + startAngle),
-      involute(baseRadius, angle(4) + startAngle),
-      involute(baseRadius, angle(5) + startAngle)
+      (0.0 -> 0.0) +: angle.map(a => involute(baseRadius, a)): _*
     ).rotate(-pitchAngle - halfThickAngle) - square(2 * outerRadius)
   }
 
@@ -137,7 +135,7 @@ object GearBearing extends App {
     : _*
   )
 
-  val obj = planets
+  val obj = disjointUnion(sun, planets, ring)
   io.AwtRenderer.show(obj)
 
 }
