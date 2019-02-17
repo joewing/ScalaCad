@@ -9,7 +9,7 @@ object TextExample extends App {
 
   val text = "Hello!"
   val textDepth = 5
-  val textObj = Raster.fromText(text, Font.getFont(Font.DIALOG).deriveFont(64f)).extrude(textDepth).centered
+  val textObj = Raster.fromText(text, Font.decode(Font.DIALOG).deriveFont(64f)).extrude(textDepth).centered
 
   val padding = 16
   val boxWidth = textObj.extent.x + padding
