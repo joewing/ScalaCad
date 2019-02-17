@@ -10,12 +10,4 @@ class UnionSpec extends FunSpec with Matchers {
       Union.union(o1, o2).rendered.facets should not be empty
     }
   }
-
-  describe("2d") {
-    it("should render something") {
-      val o1 = square(10)
-      val o2 = Translate(square(1), 1, 1)
-      Union.union(o1, o2).rendered.facets should not be empty
-    }
-  }
 }

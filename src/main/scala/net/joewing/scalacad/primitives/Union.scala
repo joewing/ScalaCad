@@ -13,7 +13,7 @@ final case class Union[D <: Dim](a: Primitive[D], b: Primitive[D], disjoint: Boo
     for {
       left <- leftFuture
       right <- rightFuture
-      result <- if (disjoint) left.merge(right) else left.union(right)
+      result <- if (disjoint || !left.overlaps(right)) left.merge(right) else left.union(right)
     } yield result
   }
 

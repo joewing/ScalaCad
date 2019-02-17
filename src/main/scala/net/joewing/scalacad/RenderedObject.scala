@@ -18,25 +18,23 @@ sealed trait RenderedObject extends Product with Serializable {
 
   def merge(other: RenderedObject)(implicit ec: ExecutionContext): Future[RenderedObject]
 
-  private def overlaps(right: RenderedObject): Boolean = {
+  final def overlaps(right: RenderedObject): Boolean = {
     val (mina, maxa) = (minBound, maxBound)
     val (minb, maxb) = (right.minBound, right.maxBound)
     !(maxa.x < minb.x || maxa.y < minb.y || maxa.z < minb.z || mina.x > maxb.x || mina.y > maxb.y || mina.z > maxb.z)
   }
 
   final def union(other: RenderedObject)(implicit ec: ExecutionContext): Future[RenderedObject] = {
-    if (overlaps(other)) {
-      val leftFuture = treeFuture
-      val rightFuture = other.treeFuture
-      for {
-        left <- leftFuture
-        right <- rightFuture
-        leftClipped <- left.clip(right)
-        rightClipped <- right.clip(leftClipped)
-        invertClipped <- rightClipped.inverted.clip(leftClipped)
-        merged = leftClipped.allPolygons ++ invertClipped.inverted.allPolygons
-      } yield PolygonRenderedObject(dim, merged)
-    } else merge(other)
+    val leftFuture = treeFuture
+    val rightFuture = other.treeFuture
+    for {
+      left <- leftFuture
+      right <- rightFuture
+      leftClipped <- left.clip(right)
+      rightClipped <- right.clip(leftClipped)
+      invertClipped <- rightClipped.inverted.clip(leftClipped)
+      merged = leftClipped.allPolygons ++ invertClipped.inverted.allPolygons
+    } yield PolygonRenderedObject(dim, merged)
   }
 
   final def intersect(other: RenderedObject)(implicit ec: ExecutionContext): Future[RenderedObject] = {
