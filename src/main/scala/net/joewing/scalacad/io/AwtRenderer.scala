@@ -166,12 +166,10 @@ class AwtRenderer(
   private object WheelListener extends MouseWheelListener {
     def mouseWheelMoved(e: MouseWheelEvent): Unit = {
       val units = e.getUnitsToScroll
-      if (units > 0) {
-        scale *= 1.1
-      } else {
-        scale *= 0.9
+      if (units != 0) {
+        scale *= (if (units > 0) 1.1 else 0.9)
+        render()
       }
-      render()
     }
   }
 
