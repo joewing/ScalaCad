@@ -18,6 +18,10 @@ sealed trait RenderedObject extends Product with Serializable {
 
   def merge(other: RenderedObject)(implicit ec: ExecutionContext): Future[RenderedObject]
 
+  final def map(f: Polygon3d => Polygon3d): PolygonRenderedObject = {
+    PolygonRenderedObject(dim, polygons.map(f))
+  }
+
   final def overlaps(right: RenderedObject): Boolean = {
     val (mina, maxa) = (minBound, maxBound)
     val (minb, maxb) = (right.minBound, right.maxBound)
@@ -44,8 +48,6 @@ sealed trait RenderedObject extends Product with Serializable {
   final def minus(other: RenderedObject)(implicit ec: ExecutionContext): Future[RenderedObject] = {
     invert.union(other).map(_.invert)
   }
-
-  final def map(f: Facet => Facet): FacetRenderedObject = RenderedObject.fromFacets(facets.map(f))
 }
 
 final case class FacetRenderedObject(dim: Dim, facets: IndexedSeq[Facet]) extends RenderedObject {
