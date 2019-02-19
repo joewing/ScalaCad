@@ -1,6 +1,6 @@
 package net.joewing.scalacad.primitives
 
-import net.joewing.scalacad.{Facet, Vertex}
+import net.joewing.scalacad.{Polygon3d, Vertex}
 
 object Sphere {
   def apply(r: Double = 1, slicesOverride: Int = 0, stacksOverride: Int = 0): Primitive3d = {
@@ -32,13 +32,13 @@ object Sphere {
       val v3 = vertex(x + 1, y + 1)
       val v4 = vertex(x, y + 1)
       if (y == 0) {
-        Vector(Facet(v1, v3, v4))
+        Polygon3d(Array(v1, v3, v4))
       } else if (y == stacks - 1) {
-        Vector(Facet(v1, v2, v4))
+        Polygon3d(Array(v1, v2, v4))
       } else {
-        Facet.fromVertices(Seq(v1, v2, v3, v4))
+        Polygon3d(Array(v1, v2, v3, v4))
       }
-    }.flatten.flatten
+    }.flatten
 
     Primitive3d(facets)
   }

@@ -11,10 +11,10 @@ import javax.imageio.ImageIO
 object Raster {
 
   def apply(grid: Vector[Vector[Boolean]], resolution: Double): Primitive2d = {
-    val rect = Rectangle(resolution, resolution).rendered.facets
+    val rect = Rectangle(resolution, resolution).rendered.polygons
     val width = grid.head.length
     val height = grid.length
-    val facets = {
+    val polygons = {
       (0 until height).flatMap { y =>
         (0 until width).flatMap { x =>
           if (grid(height - y - 1)(x)) {
@@ -23,7 +23,7 @@ object Raster {
         }
       }
     }
-    Primitive2d(facets)
+    Primitive2d(polygons)
   }
 
   def fromImage(

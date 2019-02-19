@@ -1,6 +1,6 @@
 package net.joewing.scalacad.primitives
 
-import net.joewing.scalacad.{Facet, Vertex}
+import net.joewing.scalacad.{Polygon3d, Vertex}
 
 object Cylinder {
   def apply(
@@ -21,14 +21,14 @@ object Cylinder {
 
     val angle = 2.0 * math.Pi / sides
 
-    def renderEnd(r: Double, z: Double): Vector[Facet] = {
+    def renderEnd(r: Double, z: Double): Vector[Polygon3d] = {
       if (r > 0) {
         val vertices = Vector.range(0, sides).map { i =>
           val theta1 = angle * i
           val theta2 = angle * (i + 1)
           Vertex(r * math.cos(theta1), r * math.sin(theta1), z)
         }
-        Facet.fromVertices(vertices)
+        Vector(Polygon3d(vertices))
       } else {
         Vector.empty
       }
@@ -38,7 +38,7 @@ object Cylinder {
     val bottom = renderEnd(bottomRadius, length)
 
     // 1 square per side.
-    val shaft = Vector.tabulate[Seq[Vertex]](sides) { i =>
+    val shaft = Vector.tabulate[Polygon3d](sides) { i =>
       val theta1 = angle * i
       val theta2 = angle * (i + 1)
       val x1a = topRadius * math.cos(theta1)
@@ -54,13 +54,13 @@ object Cylinder {
       val v3 = Vertex(x2b, y2b, length)
       val v4 = Vertex(x1b, y1b, length)
       if (topRadius == 0) {
-        Seq(v4, v2, v3)
+        Polygon3d(Array(v4, v2, v3))
       } else if (bottomRadius == 0) {
-        Seq(v3, v2, v1)
+        Polygon3d(Array(v3, v2, v1))
       } else {
-        Seq(v3, v4, v2, v1)
+        Polygon3d(Array(v3, v4, v2, v1))
       }
     }
-    Primitive3d(top ++ shaft.flatMap(Facet.fromVertices) ++ bottom)
+    Primitive3d(top ++ shaft ++ bottom)
   }
 }

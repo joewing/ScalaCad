@@ -1,6 +1,6 @@
 package net.joewing.scalacad.primitives
 
-import net.joewing.scalacad.{Facet, RenderedObject, Vertex}
+import net.joewing.scalacad.{Polygon3d, RenderedObject, Vertex}
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -14,7 +14,7 @@ final case class LinearExtrude(
 
   protected def render(implicit ec: ExecutionContext): Future[RenderedObject] = {
     obj.renderedFuture.map { base =>
-      RenderedObject.fromFacets(LinearExtrude.extrude(base.facets, length, slices, func))
+      RenderedObject(dim, LinearExtrude.extrude(base.polygons, length, slices, func))
     }
   }
 
@@ -75,32 +75,32 @@ object LinearExtrude {
     }
   }
 
-  private def segments(base: Seq[Facet]): Seq[(Vertex, Vertex)] = {
+  private def segments(base: Seq[Polygon3d]): Seq[(Vertex, Vertex)] = {
     val allEdges = base.flatMap(_.edges)
     allEdges.filter(includeEdge(allEdges))
   }
 
   def extrude(
-    base: IndexedSeq[Facet],
+    base: Seq[Polygon3d],
     length: Double,
     slices: Int,
     func: (Int, Vertex) => Vertex
-  ): IndexedSeq[Facet] = {
+  ): Seq[Polygon3d] = {
     val perimeter = segments(base)
-    val sides = Vector.range(0, slices).foldLeft(Vector.empty[Facet]) { (prev, i) =>
+    val sides = Vector.range(0, slices).foldLeft(Vector.empty[Polygon3d]) { (prev, i) =>
       prev ++ perimeter.flatMap { case (base1, base2) =>
         val b1 = func(i, base1)
         val b2 = func(i, base2)
         val t1 = func(i + 1, base1)
         val t2 = func(i + 1, base2)
         Vector(
-          Facet(b1, t1, b2),
-          Facet(b2, t1, t2)
+          Polygon3d(Array(b1, t1, b2)),
+          Polygon3d(Array(b2, t1, t2))
         )
       }
     }
-    val top = base.map { facet =>
-      Facet(func(slices, facet.v3), func(slices, facet.v2), func(slices, facet.v1))
+    val top = base.map { polygon =>
+      Polygon3d(polygon.vertices.map(v => func(slices, v)).reverse)
     }
     base ++ sides ++ top
   }

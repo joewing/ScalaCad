@@ -4,31 +4,20 @@ import net.joewing.scalacad.primitives.{Dim, LinearExtrude, ThreeDimensional, Tw
 
 import scala.concurrent.{ExecutionContext, Future}
 
-sealed trait RenderedObject extends Product with Serializable {
-  implicit val dim: Dim
+final case class RenderedObject(dim: Dim, polygons: Seq[Polygon3d]) {
 
-  val minBound: Vertex
-  val maxBound: Vertex
+  lazy val minBound: Vertex = polygons.foldLeft(Vertex.max) { (v, p) => p.minBound.min(v) }
+  lazy val maxBound: Vertex = polygons.foldLeft(Vertex.min) { (v, p) => p.maxBound.max(v) }
 
-  def facets: IndexedSeq[Facet]
-  def polygons: IndexedSeq[Polygon3d]
-  def treeFuture(implicit ec: ExecutionContext): Future[BSPTree]
+  def map(f: Polygon3d => Polygon3d): RenderedObject = RenderedObject(dim, polygons.map(f))
 
-  def invert: RenderedObject
-
-  def merge(other: RenderedObject)(implicit ec: ExecutionContext): Future[RenderedObject]
-
-  final def map(f: Polygon3d => Polygon3d): PolygonRenderedObject = {
-    PolygonRenderedObject(dim, polygons.map(f))
-  }
-
-  final def overlaps(right: RenderedObject): Boolean = {
+  def overlaps(right: RenderedObject): Boolean = {
     val (mina, maxa) = (minBound, maxBound)
     val (minb, maxb) = (right.minBound, right.maxBound)
     !(maxa.x < minb.x || maxa.y < minb.y || maxa.z < minb.z || mina.x > maxb.x || mina.y > maxb.y || mina.z > maxb.z)
   }
 
-  final def union(other: RenderedObject)(implicit ec: ExecutionContext): Future[RenderedObject] = {
+  def union(other: RenderedObject)(implicit ec: ExecutionContext): Future[RenderedObject] = {
     val leftFuture = treeFuture
     val rightFuture = other.treeFuture
     for {
@@ -38,46 +27,18 @@ sealed trait RenderedObject extends Product with Serializable {
       rightClipped <- right.clip(leftClipped)
       invertClipped <- rightClipped.inverted.clip(leftClipped)
       merged = leftClipped.allPolygons ++ invertClipped.inverted.allPolygons
-    } yield PolygonRenderedObject(dim, merged)
+    } yield RenderedObject(dim, merged)
   }
 
-  final def intersect(other: RenderedObject)(implicit ec: ExecutionContext): Future[RenderedObject] = {
+  def intersect(other: RenderedObject)(implicit ec: ExecutionContext): Future[RenderedObject] = {
     invert.union(other.invert).map(_.invert)
   }
 
-  final def minus(other: RenderedObject)(implicit ec: ExecutionContext): Future[RenderedObject] = {
+  def minus(other: RenderedObject)(implicit ec: ExecutionContext): Future[RenderedObject] = {
     invert.union(other).map(_.invert)
   }
-}
 
-final case class FacetRenderedObject(dim: Dim, facets: IndexedSeq[Facet]) extends RenderedObject {
-
-  lazy val minBound: Vertex = facets.foldLeft(Vertex.max) { (v, f) => f.minBound.min(v) }
-  lazy val maxBound: Vertex = facets.foldLeft(Vertex.min) { (v, f) => f.maxBound.max(v) }
-
-  def polygons: IndexedSeq[Polygon3d] = facets.map(f => Polygon3d(f.vertices))
-
-  def treeFuture(implicit ec: ExecutionContext): Future[BSPTree] = {
-    require(dim == Dim.three, s"cannot convert 2d object to BSPTree")
-    BSPTree(polygons)
-  }
-
-  def invert: RenderedObject = FacetRenderedObject(dim, facets.map(_.flip))
-
-  def merge(other: RenderedObject)(implicit ec: ExecutionContext): Future[RenderedObject] = Future {
-    other match {
-      case FacetRenderedObject(_, otherFacets) => FacetRenderedObject(dim, facets ++ otherFacets)
-      case _ => PolygonRenderedObject(dim, polygons ++ other.polygons)
-    }
-  }
-}
-
-final case class PolygonRenderedObject(dim: Dim, polygons: IndexedSeq[Polygon3d]) extends RenderedObject {
-
-  lazy val minBound: Vertex = polygons.foldLeft(Vertex.max) { (v, p) => p.minBound.min(v) }
-  lazy val maxBound: Vertex = polygons.foldLeft(Vertex.min) { (v, p) => p.maxBound.max(v) }
-
-  def treeFuture(implicit ec: ExecutionContext): Future[BSPTree] = BSPTree(polygons)
+  def treeFuture(implicit ec: ExecutionContext): Future[BSPTree] = BSPTree(polygons.toIndexedSeq)
 
   def facets: IndexedSeq[Facet] = {
     val vertices = polygons.flatMap(_.vertices).distinct
@@ -87,21 +48,15 @@ final case class PolygonRenderedObject(dim: Dim, polygons: IndexedSeq[Polygon3d]
     }.seq.toIndexedSeq
   }
 
-  def invert: RenderedObject = PolygonRenderedObject(dim, polygons.map(_.flip))
+  def invert: RenderedObject = RenderedObject(dim, polygons.map(_.flip))
 
-  def merge(other: RenderedObject)(implicit ec: ExecutionContext): Future[RenderedObject] = Future {
-    PolygonRenderedObject(dim, polygons ++ other.polygons)
-  }
+  def merge(other: RenderedObject): RenderedObject = RenderedObject(dim, polygons ++ other.polygons)
 }
 
 object RenderedObject {
 
-  def fromFacets(facets: IndexedSeq[Facet])(implicit dim: Dim): FacetRenderedObject = {
-    FacetRenderedObject(dim, facets)
-  }
-
-  def fromVertices(vertices: Seq[Vertex])(implicit dim: Dim): FacetRenderedObject = {
-    fromFacets(Facet.fromVertices(vertices))
+  def fromVertices(vertices: Seq[Vertex])(implicit dim: Dim): RenderedObject = {
+    RenderedObject(dim, Array(Polygon3d(vertices)))
   }
 
   // Insert a point to the facet by splitting it.

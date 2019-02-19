@@ -1,6 +1,6 @@
 package net.joewing.scalacad.primitives
 
-import net.joewing.scalacad.{Facet, Vertex}
+import net.joewing.scalacad.{Polygon3d, Vertex}
 
 object Circle {
   def apply(r: Double, sidesOverride: Int = 0): Primitive2d = {
@@ -11,10 +11,10 @@ object Circle {
       math.ceil(math.max(math.min(360.0 / fa, r * 2.0 * math.Pi / fs), 5)).toInt
     }
 
-    val vs = Vector.tabulate(sides) { i =>
+    val vs = Array.tabulate(sides) { i =>
       val angle = -i * math.Pi * 2.0 / sides
       Vertex(r * math.cos(angle), r * math.sin(angle), 0)
     }
-    Primitive2d(Facet.fromVertices(vs))
+    Primitive2d(Vector(Polygon3d(vs)))
   }
 }

@@ -51,8 +51,10 @@ final case class BSPTreeNode(
   // Clip facets to this BSPTree.
   def clipPolygons(ps: IndexedSeq[Polygon3d])(implicit ec: ExecutionContext): Future[IndexedSeq[Polygon3d]] = {
     val result = plane.split(ps)
-    val filteredFrontFuture = front.clipPolygons(result.front ++ result.coFront)
-    val filteredBackFuture = back.clipPolygons(result.back ++ result.coBack)
+    result.front ++= result.coFront.result
+    result.back ++= result.coBack.result
+    val filteredFrontFuture = front.clipPolygons(result.front.result)
+    val filteredBackFuture = back.clipPolygons(result.back.result)
     for {
       filteredFront <- filteredFrontFuture
       filteredBack <- filteredBackFuture
@@ -110,12 +112,16 @@ object BSPTree {
       val plane = Plane(current)
       val result = plane.split(polygons.filter(_ != current))
 
-      val frontFuture = if (result.front.nonEmpty) helper(result.front, plane.normal) else Future.successful(BSPTreeIn)
-      val backFuture = if (result.back.nonEmpty) helper(result.back, plane.normal) else Future.successful(BSPTreeOut)
+      val rfront = result.front.result
+      val rback = result.back.result
+      result.coFront ++= result.coBack.result
+      result.coFront += current
+      val frontFuture = if (rfront.nonEmpty) helper(rfront, plane.normal) else Future.successful(BSPTreeIn)
+      val backFuture = if (rback.nonEmpty) helper(rback, plane.normal) else Future.successful(BSPTreeOut)
       for {
         f <- frontFuture
         b <- backFuture
-      } yield BSPTreeNode(plane, current +: (result.coFront ++ result.coBack), f, b)
+      } yield BSPTreeNode(plane, result.coFront.result, f, b)
     }
   }
 

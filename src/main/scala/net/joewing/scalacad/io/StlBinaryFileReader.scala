@@ -4,7 +4,7 @@ import java.io.{FileInputStream, InputStream}
 import java.nio.{ByteBuffer, ByteOrder}
 
 import net.joewing.scalacad.primitives.Primitive3d
-import net.joewing.scalacad.{Facet, Vertex}
+import net.joewing.scalacad.{Facet, Polygon3d, Vertex}
 
 import scala.annotation.tailrec
 import scala.collection.mutable.ArrayBuffer
@@ -55,7 +55,7 @@ class StlBinaryFileReader(is: InputStream) {
     val facets = (0 until facetCount).map { _ =>
       readFacet(buffer)
     }
-    Primitive3d(facets)
+    Primitive3d(facets.map(f => Polygon3d(f.vertices)))
   }
 }
 

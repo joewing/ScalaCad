@@ -2,6 +2,7 @@ package net.joewing.scalacad.io
 
 import java.io.{ByteArrayInputStream, ByteArrayOutputStream}
 
+import net.joewing.scalacad.Polygon3d
 import net.joewing.scalacad.primitives.Cube
 import org.scalatest.{FunSpec, Matchers}
 
@@ -14,7 +15,7 @@ class StlFileReaderSpec extends FunSpec with Matchers {
       StlBinaryFileWriter.write(obj, os)
 
       val is = new ByteArrayInputStream(os.toByteArray)
-      StlFileReader.read(is).facets shouldBe obj.rendered.facets
+      StlFileReader.read(is).polygons shouldBe obj.rendered.facets.map(f => Polygon3d(f.vertices))
     }
 
     it("should read an ASCII STL file") {
@@ -22,7 +23,7 @@ class StlFileReaderSpec extends FunSpec with Matchers {
       StlAsciiFileWriter.write(obj, os)
 
       val is = new ByteArrayInputStream(os.toByteArray)
-      StlFileReader.read(is).facets shouldBe obj.rendered.facets
+      StlFileReader.read(is).polygons shouldBe obj.rendered.facets.map(f => Polygon3d(f.vertices))
     }
   }
 }

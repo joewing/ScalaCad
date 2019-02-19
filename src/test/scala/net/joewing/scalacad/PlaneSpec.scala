@@ -34,10 +34,10 @@ class PlaneSpec extends FunSpec with Matchers {
       val f = Polygon3d(Vector(Vertex(0, 0, -1), Vertex(1, 0, -1), Vertex(1, 1, -1)))
       val result = new Plane.SplitResult()
       plane.splitPolygon(f, result)
-      result.back shouldBe Seq(f)
-      result.front shouldBe Seq.empty
-      result.coFront shouldBe Seq.empty
-      result.coBack shouldBe Seq.empty
+      result.back.result shouldBe Array(f)
+      result.front.result shouldBe Array.empty
+      result.coFront.result shouldBe Array.empty
+      result.coBack.result shouldBe Array.empty
     }
 
     it("splits polygons in front of the plane") {
@@ -45,10 +45,10 @@ class PlaneSpec extends FunSpec with Matchers {
       val f = Polygon3d(Vector(Vertex(0, 0, 1), Vertex(1, 0, 1), Vertex(1, 1, 1)))
       val result = new Plane.SplitResult()
       plane.splitPolygon(f, result)
-      result.back shouldBe Seq.empty
-      result.front shouldBe Seq(f)
-      result.coFront shouldBe Seq.empty
-      result.coBack shouldBe Seq.empty
+      result.back.result shouldBe Array.empty
+      result.front.result shouldBe Array(f)
+      result.coFront.result shouldBe Array.empty
+      result.coBack.result shouldBe Array.empty
     }
 
     it("splits polygons co-planar in front of the plane") {
@@ -56,10 +56,10 @@ class PlaneSpec extends FunSpec with Matchers {
       val f = Polygon3d(Vector(Vertex(0, 0, 0), Vertex(1, 0, 0), Vertex(1, 1, 0)))
       val result = new Plane.SplitResult()
       plane.splitPolygon(f, result)
-      result.back shouldBe Seq.empty
-      result.front shouldBe Seq.empty
-      result.coFront shouldBe Seq(f)
-      result.coBack shouldBe Seq.empty
+      result.back.result shouldBe Array.empty
+      result.front.result shouldBe Array.empty
+      result.coFront.result shouldBe Array(f)
+      result.coBack.result shouldBe Array.empty
     }
 
     it("splits polygons co-planar in back of the plane") {
@@ -67,10 +67,10 @@ class PlaneSpec extends FunSpec with Matchers {
       val f = Polygon3d(Vector(Vertex(1, 1, 0), Vertex(1, 0, 0), Vertex(0, 0, 0)))
       val result = new Plane.SplitResult()
       plane.splitPolygon(f, result)
-      result.back shouldBe Seq.empty
-      result.front shouldBe Seq.empty
-      result.coFront shouldBe Seq.empty
-      result.coBack shouldBe Seq(f)
+      result.back.result shouldBe Array.empty
+      result.front.result shouldBe Array.empty
+      result.coFront.result shouldBe Array.empty
+      result.coBack.result shouldBe Array(f)
     }
 
     it("splits polygons spanning the plane") {
@@ -78,12 +78,12 @@ class PlaneSpec extends FunSpec with Matchers {
       val f = Polygon3d(Vector(Vertex(0, 0, -1), Vertex(1, 0, 1), Vertex(1, 1, 1)))
       val result = new Plane.SplitResult()
       plane.splitPolygon(f, result)
-      result.front shouldBe Seq(
+      result.front.result shouldBe Array(
         Polygon3d(Vector(Vertex(0.5, 0, 0), Vertex(1, 0, 1), Vertex(1, 1, 1), Vertex(0.5, 0.5, 0)))
       )
-      result.back shouldBe Seq(Polygon3d(Vector(Vertex(0, 0, -1), Vertex(0.5, 0, 0), Vertex(0.5, 0.5, 0))))
-      result.coFront shouldBe Seq.empty
-      result.coBack shouldBe Seq.empty
+      result.back.result shouldBe Array(Polygon3d(Vector(Vertex(0, 0, -1), Vertex(0.5, 0, 0), Vertex(0.5, 0.5, 0))))
+      result.coFront.result shouldBe Array.empty
+      result.coBack.result shouldBe Array.empty
     }
   }
 
@@ -93,10 +93,10 @@ class PlaneSpec extends FunSpec with Matchers {
       val f1 = Polygon3d(Vector(Vertex(0, 0, -1), Vertex(1, 0, -1), Vertex(1, 1, -1)))
       val f2 = Polygon3d(Vector(Vertex(0, 0, 1), Vertex(1, 0, 1), Vertex(1, 1, 1)))
       val result = plane.split(Vector(f1, f2))
-      result.back shouldBe Seq(f1)
-      result.front shouldBe Seq(f2)
-      result.coFront shouldBe Seq.empty
-      result.coBack shouldBe Seq.empty
+      result.back.result shouldBe Array(f1)
+      result.front.result shouldBe Array(f2)
+      result.coFront.result shouldBe Array.empty
+      result.coBack.result shouldBe Array.empty
     }
   }
 }

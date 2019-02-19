@@ -39,8 +39,8 @@ final case class Plane(normal: Vertex, w: Double) {
     } else if (hasBack && !hasFront) {
       result.back += polygon
     } else {
-      val fs = scala.collection.mutable.ArrayBuffer.empty[Vertex]
-      val bs = scala.collection.mutable.ArrayBuffer.empty[Vertex]
+      val fs = scala.collection.mutable.ArrayBuilder.make[Vertex]
+      val bs = scala.collection.mutable.ArrayBuilder.make[Vertex]
       i = 0
       while (i < len) {
         val j = (i + 1) % len
@@ -59,8 +59,8 @@ final case class Plane(normal: Vertex, w: Double) {
         }
         i += 1
       }
-      result.front += Polygon3d(fs)
-      result.back += Polygon3d(bs)
+      result.front += Polygon3d(fs.result)
+      result.back += Polygon3d(bs.result)
     }
   }
 
@@ -210,10 +210,10 @@ final case class Plane(normal: Vertex, w: Double) {
 object Plane {
 
   final class SplitResult {
-    val front: scala.collection.mutable.ArrayBuffer[Polygon3d] = scala.collection.mutable.ArrayBuffer.empty
-    val back: scala.collection.mutable.ArrayBuffer[Polygon3d] = scala.collection.mutable.ArrayBuffer.empty
-    val coFront: scala.collection.mutable.ArrayBuffer[Polygon3d] = scala.collection.mutable.ArrayBuffer.empty
-    val coBack: scala.collection.mutable.ArrayBuffer[Polygon3d] = scala.collection.mutable.ArrayBuffer.empty
+    val front: scala.collection.mutable.ArrayBuilder[Polygon3d] = scala.collection.mutable.ArrayBuilder.make[Polygon3d]
+    val back: scala.collection.mutable.ArrayBuilder[Polygon3d] = scala.collection.mutable.ArrayBuilder.make[Polygon3d]
+    val coFront: scala.collection.mutable.ArrayBuilder[Polygon3d] = scala.collection.mutable.ArrayBuilder.make[Polygon3d]
+    val coBack: scala.collection.mutable.ArrayBuilder[Polygon3d] = scala.collection.mutable.ArrayBuilder.make[Polygon3d]
   }
 
   // These are mutable to improve performance during construction.

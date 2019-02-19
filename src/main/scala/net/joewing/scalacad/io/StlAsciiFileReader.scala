@@ -52,7 +52,7 @@ class StlAsciiFileReader(is: InputStream) {
 
   def read: Primitive3d = {
     StlParser.parse(is) match {
-      case StlParser.Success(stl,_ ) => Primitive3d(stl.facets)
+      case StlParser.Success(stl,_ ) => Primitive3d(stl.facets.map(f => Polygon3d(f.vertices)))
       case StlParser.Error(msg, _)   => throw new IllegalArgumentException(s"parse error: $msg")
       case StlParser.Failure(msg, _) => throw new IllegalArgumentException(s"parse failure: $msg")
     }
