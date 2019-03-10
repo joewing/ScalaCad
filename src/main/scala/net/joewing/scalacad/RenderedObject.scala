@@ -1,6 +1,6 @@
 package net.joewing.scalacad
 
-import net.joewing.scalacad.primitives.{Dim, LinearExtrude, ThreeDimensional, TwoDimensional}
+import net.joewing.scalacad.primitives.Dim
 
 import scala.concurrent.{ExecutionContext, Future}
 

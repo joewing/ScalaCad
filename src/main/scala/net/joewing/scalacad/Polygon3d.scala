@@ -9,6 +9,13 @@ final class Polygon3d(val vertices: Array[Vertex]) {
     (b - a).cross(c - a).unit
   }
 
+  def area: Double = {
+    val total = vertices.zip(vertices.tail :+ vertices.head).foldLeft(Vertex(0, 0, 0)) { case (acc, (v1, v2)) =>
+      acc + v1.cross(v2)
+    }
+    math.abs(total.dot(normal) * 0.5)
+  }
+
   def minBound: Vertex = vertices.tail.foldLeft(vertices.head)(_ min _)
   def maxBound: Vertex = vertices.tail.foldLeft(vertices.head)(_ max _)
 
@@ -30,7 +37,7 @@ final class Polygon3d(val vertices: Array[Vertex]) {
   )
 
   override def equals(obj: Any): Boolean = obj match {
-    case p: Polygon3d if vertices.length == p.vertices.length => vertices.sameElements(p.vertices)
+    case p: Polygon3d => vertices.sameElements(p.vertices)
     case _ => false
   }
 }

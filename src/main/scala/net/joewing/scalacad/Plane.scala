@@ -1,5 +1,7 @@
 package net.joewing.scalacad
 
+import scala.collection.mutable
+
 final case class Plane(normal: Vertex, w: Double) {
 
   def flip: Plane = Plane(normal.negated, -w)
@@ -24,8 +26,8 @@ final case class Plane(normal: Vertex, w: Double) {
     var i = 0
     while (i < len) {
       types(i) = classify(polygon.vertices(i))
-      hasFront = hasFront || (types(i) == Plane.Front)
-      hasBack = hasBack || (types(i) == Plane.Back)
+      hasFront = hasFront || types(i) == Plane.Front
+      hasBack = hasBack || types(i) == Plane.Back
       i += 1
     }
     if (!hasFront && !hasBack) {
@@ -39,8 +41,8 @@ final case class Plane(normal: Vertex, w: Double) {
     } else if (hasBack && !hasFront) {
       result.back += polygon
     } else {
-      val fs = scala.collection.mutable.ArrayBuilder.make[Vertex]
-      val bs = scala.collection.mutable.ArrayBuilder.make[Vertex]
+      val fs = new mutable.ArrayBuilder.ofRef[Vertex]
+      val bs = new mutable.ArrayBuilder.ofRef[Vertex]
       i = 0
       while (i < len) {
         val j = (i + 1) % len
@@ -110,7 +112,7 @@ final case class Plane(normal: Vertex, w: Double) {
   }
 
   def split(polygons: IndexedSeq[Polygon3d]): Plane.SplitResult = {
-    val result = new Plane.SplitResult()
+    val result = new Plane.SplitResult
     var i = 0
     val len = polygons.length
     while (i < len) {
@@ -210,10 +212,10 @@ final case class Plane(normal: Vertex, w: Double) {
 object Plane {
 
   final class SplitResult {
-    val front: scala.collection.mutable.ArrayBuilder[Polygon3d] = scala.collection.mutable.ArrayBuilder.make[Polygon3d]
-    val back: scala.collection.mutable.ArrayBuilder[Polygon3d] = scala.collection.mutable.ArrayBuilder.make[Polygon3d]
-    val coFront: scala.collection.mutable.ArrayBuilder[Polygon3d] = scala.collection.mutable.ArrayBuilder.make[Polygon3d]
-    val coBack: scala.collection.mutable.ArrayBuilder[Polygon3d] = scala.collection.mutable.ArrayBuilder.make[Polygon3d]
+    val front: mutable.ArrayBuilder[Polygon3d] = new mutable.ArrayBuilder.ofRef[Polygon3d]
+    val back: mutable.ArrayBuilder[Polygon3d] = new mutable.ArrayBuilder.ofRef[Polygon3d]
+    val coFront: mutable.ArrayBuilder[Polygon3d] = new mutable.ArrayBuilder.ofRef[Polygon3d]
+    val coBack: mutable.ArrayBuilder[Polygon3d] = new mutable.ArrayBuilder.ofRef[Polygon3d]
   }
 
   // These are mutable to improve performance during construction.

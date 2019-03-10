@@ -28,11 +28,10 @@ object Transform {
   def rotateFunc(radius: Double, angle: Double)(v: Vertex): Vertex = {
     val theta = angle / (2 * math.Pi * radius)
     val t = v.x
-    Vertex(
-      x = radius * math.sin(t * theta),
-      y = v.y,
-      z = v.z + radius * math.cos(t * theta)
-    )
+    val x = (radius + v.z) * math.sin(t * theta)
+    val y = v.y
+    val z = v.z + radius * math.cos(t * theta)
+    Vertex(x, y, z)
   }
 
   def rotate[D <: Dim](obj: Primitive[D], radius: Double, angle: Double): Transform[D] = {

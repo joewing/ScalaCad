@@ -103,30 +103,49 @@ final case class BSPTreeNode(
 
 object BSPTree {
 
-  private def helper(polygons: IndexedSeq[Polygon3d], prev: Vertex)(implicit ec: ExecutionContext): Future[BSPTree] = {
-    if (polygons.isEmpty) {
-      Future.successful(BSPTreeOut)
-    } else {
-      // Find the plane most orthogonal to prev.
-      val current = polygons.minBy(p => math.abs(p.normal.dot(prev)))
-      val plane = Plane(current)
-      val result = plane.split(polygons.filter(_ != current))
+  @inline
+  private def partition(
+    polygons: IndexedSeq[Polygon3d],
+    prev: Vertex
+  ): (Plane, IndexedSeq[Polygon3d], IndexedSeq[Polygon3d], IndexedSeq[Polygon3d]) = {
+    val current = polygons.minBy(p => math.abs(p.normal.dot(prev)))   // Most orthogonal to prev.
+    val plane = Plane(current)
+    val result = plane.split(polygons.filter(_ != current))
+    result.coFront ++= result.coBack.result
+    result.coFront += current
+    (plane, result.front.result, result.coFront.result, result.back.result)
+  }
 
-      val rfront = result.front.result
-      val rback = result.back.result
-      result.coFront ++= result.coBack.result
-      result.coFront += current
-      val frontFuture = if (rfront.nonEmpty) helper(rfront, plane.normal) else Future.successful(BSPTreeIn)
-      val backFuture = if (rback.nonEmpty) helper(rback, plane.normal) else Future.successful(BSPTreeOut)
+  private def build(polygons: IndexedSeq[Polygon3d], prev: Vertex): BSPTree = {
+    if (polygons.nonEmpty) {
+      val (plane, front, coplanar, back) = partition(polygons, prev)
+      val f = if (front.nonEmpty) build(front, plane.normal) else BSPTreeIn
+      val b = build(back, plane.normal)
+      BSPTreeNode(plane, coplanar, f, b)
+    } else {
+      BSPTreeOut
+    }
+  }
+
+  private def buildFuture(
+    polygons: IndexedSeq[Polygon3d],
+    prev: Vertex
+  )(implicit ec: ExecutionContext): Future[BSPTree] = {
+    if (polygons.lengthCompare(128) > 0) {
+      val (plane, front, coplanar, back) = partition(polygons, prev)
+      val frontFuture = if (front.nonEmpty) buildFuture(front, plane.normal) else Future.successful(BSPTreeIn)
+      val backFuture = buildFuture(back, plane.normal)
       for {
         f <- frontFuture
         b <- backFuture
-      } yield BSPTreeNode(plane, result.coFront.result, f, b)
+      } yield BSPTreeNode(plane, coplanar, f, b)
+    } else {
+      Future(build(polygons, prev))
     }
   }
 
   def apply(polygons: IndexedSeq[Polygon3d])(implicit ec: ExecutionContext): Future[BSPTree] = {
-    helper(polygons, Vertex(1, 0, 0))
+    buildFuture(polygons, Vertex(1, 0, 0))
   }
 
 }

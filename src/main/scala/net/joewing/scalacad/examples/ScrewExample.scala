@@ -35,6 +35,5 @@ object ScrewExample extends App {
   val end = System.currentTimeMillis
   println(s"Duration: ${end - start} ms")
 
-  //AwtRenderer.show(StlFileReader.read("screw.stl"))
-  AwtRenderer.show(obj)
+  AwtRenderer.show(StlFileReader.read("screw.stl"))
 }
