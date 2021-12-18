@@ -8,7 +8,7 @@ startYear := Some(2018)
 description := "A Scala DSL for Constructive Solid Geometry"
 licenses += ("BSD Simplified", url("https://opensource.org/licenses/BSD-3-Clause"))
 
-scalaVersion := "2.12.8"
+scalaVersion := "2.13.2"
 
 libraryDependencies ++= Seq(
   "org.scala-lang.modules" %% "scala-parser-combinators" % "1.0.6",

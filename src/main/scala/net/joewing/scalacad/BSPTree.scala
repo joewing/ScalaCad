@@ -108,11 +108,18 @@ object BSPTree {
     polygons: IndexedSeq[Polygon3d],
     prev: Vertex
   ): (Plane, IndexedSeq[Polygon3d], IndexedSeq[Polygon3d], IndexedSeq[Polygon3d]) = {
-    val current = polygons.minBy(p => math.abs(p.normal.dot(prev)))   // Most orthogonal to prev.
-    val plane = Plane(current)
-    val result = plane.split(polygons.filter(_ != current))
+
+    val (plane, currentPolygons) = polygons.foldLeft(Map.empty[Plane, Set[Polygon3d]]) { case (m, polygon) =>
+      val plane = Plane(polygon)
+      m + (plane -> (m.getOrElse(plane, Set.empty) + polygon))
+    }.maxBy { case (p, ps) =>
+      ps.size * (1 - math.abs(p.normal.dot(prev)))
+    }
+
+    val currentSet = currentPolygons.toSet
+    val result = plane.split(polygons.filterNot(currentSet.contains))
     result.coFront ++= result.coBack.result
-    result.coFront += current
+    result.coFront ++= currentPolygons
     (plane, result.front.result, result.coFront.result, result.back.result)
   }
 
